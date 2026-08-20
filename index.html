@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Configuración para que la pantalla se adapte a celulares y computadoras -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Asistencia - Grupo 502</title>
+    
+    <!-- Importamos la herramienta oficial de Supabase para poder usar sus funciones en JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* ==========================================
+           SECCIÓN DE ESTILOS VISUALES (CSS)
+           ========================================== */
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f4f7f6; 
+            margin: 0; 
+            padding: 15px; 
+        }
+        .contenedor { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        h2 { 
+            text-align: center; 
+            color: #2c3e50; 
+        }
+        .boton-maestro, .btn-guardar { 
+            width: 100%; 
+            color: white; 
+            padding: 15px; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-bottom: 20px; 
+        }
+        .boton-maestro { background-color: #3498db; }
+        .boton-maestro:hover { background-color: #2980b9; }
+        
+        .btn-guardar { background-color: #27ae60; margin-top: 20px; }
+        .btn-guardar:hover { background-color: #219653; }
+
+        .tarjeta-estudiante { 
+            border-bottom: 1px solid #eee; 
+            padding: 15px 0; 
+        }
+        .nombre-estudiante { 
+            font-weight: bold; 
+            margin-bottom: 10px; 
+            font-size: 16px; 
+        }
+        .grupo-botones { 
+            display: flex; 
+            gap: 10px; 
+        }
+        .btn-estado { 
+            flex: 1; 
+            padding: 10px; 
+            border: 2px solid #ddd; 
+            background: white; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.2s;
+        }
+        /* Colores dinámicos al seleccionar un estado de asistencia */
+        .btn-estado.seleccionado-p { background-color: #2ecc71; color: white; border-color: #2ecc71; }
+        .btn-estado.seleccionado-e { background-color: #f1c40f; color: white; border-color: #f1c40f; }
+        .btn-estado.seleccionado-t { background-color: #e67e22; color: white; border-color: #e67e22; }
+        .btn-estado.seleccionado-a { background-color: #e74c3c; color: white; border-color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<div class="contenedor">
+    <h2>Control de Asistencia</h2>
+    
+    <!-- Aquí mostraremos la fecha actual automáticamente -->
+    <p style="text-align: center;" id="fecha-hoy"></p>
+
+    <!-- Botón para marcar a todos de manera rápida -->
+    <button class="boton-maestro" onclick="marcarTodosPresentes()">⚡ Marcar Todos Presentes (P)</button>
+
+    <!-- En este espacio insertaremos la lista de estudiantes desde la base de datos -->
+    <div id="lista-estudiantes">
+        <p style="text-align:center;">Conectando con la base de datos...</p>
+    </div>
+
+    <!-- Botón final para enviar la información -->
+    <button class="btn-guardar" onclick="guardarAsistencia()">💾 Guardar Asistencia en Nube</button>
+</div>
+
+<script>
+    // ==========================================
+    // SECCIÓN DE LÓGICA DE PROGRAMACIÓN (JAVASCRIPT)
+    // ==========================================
+
+    // 1. CONFIGURACIÓN DE CONEXIÓN A SUPABASE
+    // Usamos tu URL y llave pública para autorizar la lectura y escritura
+    const SUPABASE_URL = 'https://qmgyobgahiyvgysjjhax.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0'; 
+    
+    // Creamos el cliente que nos permitirá comunicarnos con las tablas
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 2. INTERFAZ: Mostrar la fecha actual
+    document.getElementById('fecha-hoy').innerText = "Fecha: " + new Date().toLocaleDateString();
+
+    // 3. OBTENER DATOS: Función para leer los estudiantes de Supabase
+    async function cargarEstudiantes() {
+        // AHORA: Pedimos a Supabase solo los estudiantes 'Activos' del año '2026'
+        const { data, error } = await supabase
+            .from('estudiantes')
+            .select('*')
+            .eq('estado', 'Activo')
+            .eq('año_lectivo', 2026)
+            .order('id');
+        
+        if (error) {
+            console.error("Error cargando estudiantes:", error);
+            document.getElementById('lista-estudiantes').innerHTML = '<p style="color:red; text-align:center;">Error al conectar con la base de datos.</p>';
+            return; // Si hay error, detenemos la función aquí
+        }
+
+        const contenedor = document.getElementById('lista-estudiantes');
+        contenedor.innerHTML = ''; // Limpiamos el mensaje de "Conectando..."
+
+        // Iteramos sobre cada estudiante recibido y creamos su tarjeta visual en HTML
+        data.forEach(estudiante => {
+            const html = `
+            <div class="tarjeta-estudiante" data-id="${estudiante.id}">
+                <div class="nombre-estudiante">${estudiante.id}. ${estudiante.nombre_completo}</div>
+                <div class="grupo-botones">
+                    <button class="btn-estado btn-p" onclick="seleccionarEstado(this, 'p', ${estudiante.id})">P</button>
+                    <button class="btn-estado btn-e" onclick="seleccionarEstado(this, 'e', ${estudiante.id})">E</button>
+                    <button class="btn-estado btn-t" onclick="seleccionarEstado(this, 't', ${estudiante.id})">T</button>
+                    <button class="btn-estado btn-a" onclick="seleccionarEstado(this, 'a', ${estudiante.id})">A</button>
+                </div>
+            </div>`;
+            // Agregamos la tarjeta al contenedor principal
+            contenedor.innerHTML += html;
+        });
+    }
+
+    // 4. LÓGICA TEMPORAL: Objeto para recordar qué botón presionó el usuario
+    let asistenciasTemporales = {};
+
+    // Función que se ejecuta al presionar un botón de asistencia (P, E, T, A)
+    function seleccionarEstado(boton, estado, estudianteId) {
+        // Buscamos la tarjeta completa del estudiante
+        let tarjeta = boton.closest('.tarjeta-estudiante');
+        
+        // Buscamos todos los botones dentro de esa tarjeta y les quitamos el color
+        let botones = tarjeta.querySelectorAll('.btn-estado');
+        botones.forEach(btn => btn.classList.remove('seleccionado-p', 'seleccionado-e', 'seleccionado-t', 'seleccionado-a'));
+        
+        // Le agregamos el color activo solo al botón que fue presionado
+        boton.classList.add('seleccionado-' + estado);
+        
+        // Guardamos la letra en memoria (en mayúscula) vinculada al ID del estudiante
+        asistenciasTemporales[estudianteId] = estado.toUpperCase();
+    }
+
+    // Función del botón maestro para acelerar el proceso
+    function marcarTodosPresentes() {
+        // Seleccionamos todos los botones que tienen la clase 'btn-p'
+        let botonesP = document.querySelectorAll('.btn-p');
+        // Simulamos un clic en cada uno de ellos
+        botonesP.forEach(boton => boton.click());
+    }
+
+    // 5. GUARDAR DATOS: Enviar la información final a Supabase
+    async function guardarAsistencia() {
+        let datosParaInsertar = [];
+        
+        // Convertimos la memoria temporal en el formato exacto que pide nuestra base de datos
+        for (const [id, estado] of Object.entries(asistenciasTemporales)) {
+            datosParaInsertar.push({ estudiante_id: id, estado: estado });
+        }
+
+        // Validación: evitamos enviar información vacía
+        if(datosParaInsertar.length === 0) {
+            alert("No has marcado la asistencia de ningún estudiante.");
+            return;
+        }
+
+        // Insertamos el bloque de datos en la tabla 'asistencia'
+        const { error } = await supabase.from('asistencia').insert(datosParaInsertar);
+
+        if (error) {
+            alert("Hubo un error al guardar: " + error.message);
+        } else {
+            alert("¡Asistencia guardada exitosamente en la base de datos!");
+        }
+    }
+
+    // ==========================================
+    // EJECUCIÓN INICIAL
+    // ==========================================
+    // Llamamos a la función de carga apenas se abre la página
+    cargarEstudiantes();
+</script>
+
+</body>
+</html>

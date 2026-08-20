@@ -104,20 +104,19 @@
     // ==========================================
 
     // 1. CONFIGURACIÓN DE CONEXIÓN A SUPABASE
-    // Usamos tu URL y llave pública para autorizar la lectura y escritura
     const SUPABASE_URL = 'https://qmgyobgahiyvgysjjhax.supabase.co'; 
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0'; 
     
-    // Creamos el cliente que nos permitirá comunicarnos con las tablas
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // SOLUCIÓN AL ERROR 1: Cambiamos el nombre de la variable a 'clienteSupabase'
+    const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 2. INTERFAZ: Mostrar la fecha actual
     document.getElementById('fecha-hoy').innerText = "Fecha: " + new Date().toLocaleDateString();
 
     // 3. OBTENER DATOS: Función para leer los estudiantes de Supabase
     async function cargarEstudiantes() {
-        // AHORA: Pedimos a Supabase solo los estudiantes 'Activos' del año '2026'
-        const { data, error } = await supabase
+        // Usamos la nueva variable clienteSupabase
+        const { data, error } = await clienteSupabase
             .from('estudiantes')
             .select('*')
             .eq('estado', 'Activo')
@@ -127,13 +126,12 @@
         if (error) {
             console.error("Error cargando estudiantes:", error);
             document.getElementById('lista-estudiantes').innerHTML = '<p style="color:red; text-align:center;">Error al conectar con la base de datos.</p>';
-            return; // Si hay error, detenemos la función aquí
+            return; 
         }
 
         const contenedor = document.getElementById('lista-estudiantes');
-        contenedor.innerHTML = ''; // Limpiamos el mensaje de "Conectando..."
+        contenedor.innerHTML = ''; 
 
-        // Iteramos sobre cada estudiante recibido y creamos su tarjeta visual en HTML
         data.forEach(estudiante => {
             const html = `
             <div class="tarjeta-estudiante" data-id="${estudiante.id}">
@@ -145,55 +143,42 @@
                     <button class="btn-estado btn-a" onclick="seleccionarEstado(this, 'a', ${estudiante.id})">A</button>
                 </div>
             </div>`;
-            // Agregamos la tarjeta al contenedor principal
             contenedor.innerHTML += html;
         });
     }
 
-    // 4. LÓGICA TEMPORAL: Objeto para recordar qué botón presionó el usuario
+    // 4. LÓGICA TEMPORAL
     let asistenciasTemporales = {};
 
-    // Función que se ejecuta al presionar un botón de asistencia (P, E, T, A)
     function seleccionarEstado(boton, estado, estudianteId) {
-        // Buscamos la tarjeta completa del estudiante
         let tarjeta = boton.closest('.tarjeta-estudiante');
-        
-        // Buscamos todos los botones dentro de esa tarjeta y les quitamos el color
         let botones = tarjeta.querySelectorAll('.btn-estado');
         botones.forEach(btn => btn.classList.remove('seleccionado-p', 'seleccionado-e', 'seleccionado-t', 'seleccionado-a'));
         
-        // Le agregamos el color activo solo al botón que fue presionado
         boton.classList.add('seleccionado-' + estado);
-        
-        // Guardamos la letra en memoria (en mayúscula) vinculada al ID del estudiante
         asistenciasTemporales[estudianteId] = estado.toUpperCase();
     }
 
-    // Función del botón maestro para acelerar el proceso
     function marcarTodosPresentes() {
-        // Seleccionamos todos los botones que tienen la clase 'btn-p'
         let botonesP = document.querySelectorAll('.btn-p');
-        // Simulamos un clic en cada uno de ellos
         botonesP.forEach(boton => boton.click());
     }
 
-    // 5. GUARDAR DATOS: Enviar la información final a Supabase
+    // 5. GUARDAR DATOS
     async function guardarAsistencia() {
         let datosParaInsertar = [];
         
-        // Convertimos la memoria temporal en el formato exacto que pide nuestra base de datos
         for (const [id, estado] of Object.entries(asistenciasTemporales)) {
             datosParaInsertar.push({ estudiante_id: id, estado: estado });
         }
 
-        // Validación: evitamos enviar información vacía
         if(datosParaInsertar.length === 0) {
             alert("No has marcado la asistencia de ningún estudiante.");
             return;
         }
 
-        // Insertamos el bloque de datos en la tabla 'asistencia'
-        const { error } = await supabase.from('asistencia').insert(datosParaInsertar);
+        // Usamos la nueva variable clienteSupabase aquí también
+        const { error } = await clienteSupabase.from('asistencia').insert(datosParaInsertar);
 
         if (error) {
             alert("Hubo un error al guardar: " + error.message);
@@ -202,10 +187,7 @@
         }
     }
 
-    // ==========================================
     // EJECUCIÓN INICIAL
-    // ==========================================
-    // Llamamos a la función de carga apenas se abre la página
     cargarEstudiantes();
 </script>
 

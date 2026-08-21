@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel principal · Mi Clase 502</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app-shell">
+<nav class="navbar">
+  <div class="brand">
+    <div class="brand-mark">🎓</div>
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Panel del docente</div></div>
+  </div>
+  <div class="nav-actions">
+    <a class="nav-btn" href="index.html">📋 Asistencia</a>
+    <div class="menu-wrap" id="menuWrap">
+      <button class="menu-btn" id="menuBtn">☰ Opciones</button>
+      <div class="menu-panel">
+        <a href="dashboard.html">🏠 Panel principal</a>
+        <a href="index.html">📋 Control de asistencia</a>
+        <a href="reportes.html">📊 Reportes y Filtros</a>
+        <a href="calificaciones.html">📝 Notas (Próximamente)</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+<section class="hero">
+  <div>
+    <div class="eyebrow">● Resumen docente</div>
+    <h1>Buenos días, docente 👋</h1>
+    <p>Aquí tienes una vista rápida de lo que requiere atención.</p>
+  </div>
+  <div class="date-pill">📅 <span id="fecha">Cargando...</span></div>
+</section>
+
+<!-- TARJETAS DE ESTADÍSTICAS -->
+<section class="dashboard-grid">
+  <div class="card stat"><div class="stat-label">👥 Estudiantes activos</div><div class="stat-value" id="total-estudiantes">—</div><div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div></div>
+  <div class="card stat"><div class="stat-label">📝 Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Pendientes de entrega</div></div>
+  <div class="card stat"><div class="stat-label">⚡ Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
+</section>
+
+<!-- NUEVO FORMULARIO PARA CREAR TAREA -->
+<section class="card">
+  <div class="toolbar">
+    <div><div class="toolbar-title">📝 Asignar Nueva Tarea</div></div>
+  </div>
+  <div class="form-content">
+      <div class="form-group">
+          <label for="materia-tarea">Materia:</label>
+          <select id="materia-tarea" class="form-control">
+              <option value="">Seleccione una materia...</option>
+          </select>
+      </div>
+      <div class="form-group">
+          <label for="titulo-tarea">Título de la Actividad:</label>
+          <input type="text" id="titulo-tarea" class="form-control" placeholder="Ej. Taller de Divisiones">
+      </div>
+      <div class="form-group">
+          <label for="desc-tarea">Descripción:</label>
+          <textarea id="desc-tarea" rows="2" class="form-control" placeholder="Ej. Resolver los puntos del 1 al 5"></textarea>
+      </div>
+      <div class="form-group">
+          <label for="fecha-tarea">Fecha de Vencimiento:</label>
+          <input type="date" id="fecha-tarea" class="form-control">
+      </div>
+      <button class="primary-btn" onclick="crearTarea()">💾 Guardar y Publicar Tarea</button>
+  </div>
+</section>
+
+<!-- LISTA DE TAREAS -->
+<section class="card task-card">
+  <div class="toolbar">
+    <div><div class="toolbar-title">📌 Tareas pendientes de la semana</div><div class="toolbar-meta">Ordenadas por fecha de vencimiento</div></div>
+  </div>
+  <div class="task-list" id="contenedor-tareas"><div class="loading">Cargando información…</div></div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// LLAVES CORREGIDAS PARA QUE SE CONECTE
+const SUPABASE_URL = 'https://qmgyobgahiyvgysjjhax.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0';
+const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const toast=(msg)=>{const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(window._toast);window._toast=setTimeout(()=>el.style.display='none',3000)};
+document.getElementById('fecha').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+// Lógica del menú
+document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('menuWrap').classList.toggle('open'));
+document.addEventListener('click',e=>{if(!document.getElementById('menuWrap').contains(e.target))document.getElementById('menuWrap').classList.remove('open')});
+
+// 1. Cargar Materias en el selector
+async function cargarMaterias() {
+    const { data } = await clienteSupabase.from('materias').select('*');
+    if (data) {
+        const select = document.getElementById('materia-tarea');
+        data.forEach(m => select.innerHTML += `<option value="${m.id}">${m.nombre_materia}</option>`);
+    }
+}
+
+// 2. Crear Tarea con Configuración Global
+async function crearTarea() {
+    const materiaId = document.getElementById('materia-tarea').value;
+    const titulo = document.getElementById('titulo-tarea').value;
+    const descripcion = document.getElementById('desc-tarea').value;
+    const fechaVencimiento = document.getElementById('fecha-tarea').value;
+
+    if (!materiaId || !titulo || !fechaVencimiento) { toast("⚠️ Faltan datos obligatorios"); return; }
+
+    const { data: config } = await clienteSupabase.from('configuracion_global').select('periodo_actual').limit(1).single();
+    const periodoActual = config ? config.periodo_actual : 1;
+
+    const { error } = await clienteSupabase.from('tareas').insert([{ 
+        materia_id: materiaId, titulo: titulo, descripcion: descripcion, fecha_vencimiento: fechaVencimiento, periodo: periodoActual
+    }]);
+
+    if (error) { toast("Error al guardar: " + error.message); } 
+    else {
+        toast("✓ Tarea creada exitosamente");
+        document.getElementById('materia-tarea').value = ''; document.getElementById('titulo-tarea').value = '';
+        document.getElementById('desc-tarea').value = ''; document.getElementById('fecha-tarea').value = '';
+        cargarDashboard(); // Refresca la lista
+    }
+}
+
+// 3. Cargar Dashboard (Estadísticas y Lista)
+async function cargarDashboard(){
+  const [{data:estudiantes, error:e1}, {data:tareas, error:e2}, {data:config}] = await Promise.all([
+    clienteSupabase.from('estudiantes').select('id').eq('estado','Activo'),
+    clienteSupabase.from('tareas').select('*, materias(nombre_materia)').order('fecha_vencimiento',{ascending:true}),
+    clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single()
+  ]);
+  
+  if (config) document.getElementById('lbl-anio').textContent = config.año_actual;
+  document.getElementById('total-estudiantes').textContent = e1 ? '—' : estudiantes.length;
+  document.getElementById('total-tareas').textContent = e2 ? '—' : tareas.length;
+  
+  const cont = document.getElementById('contenedor-tareas');
+  if(e2) { cont.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div>No fue posible cargar las tareas.</div>'; return; }
+  if(!tareas.length) { cont.innerHTML='<div class="empty"><div class="empty-icon">🎉</div>No hay tareas pendientes registradas.</div>'; return; }
+  
+  cont.innerHTML='';
+  tareas.forEach(t=>{
+    const nombreMateria = t.materias ? t.materias.nombre_materia : 'General';
+    const row = document.createElement('div'); row.className='task';
+    const info = document.createElement('div');
+    const badge = document.createElement('div'); badge.className='task-badge'; badge.textContent = nombreMateria;
+    const title = document.createElement('div'); title.className='task-title'; title.textContent = t.titulo || 'Sin título';
+    const desc = document.createElement('div'); desc.className='task-desc'; desc.textContent = t.descripcion || 'Sin descripción adicional';
+    
+    info.append(badge, title, desc);
+    const deadline = document.createElement('div'); deadline.className='deadline'; deadline.innerHTML=`Vence:<br>${t.fecha_vencimiento||'Sin fecha'}`;
+    row.append(info, deadline); cont.appendChild(row);
+  });
+}
+
+cargarMaterias();
+cargarDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calificaciones · Mi Clase</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; white-space: nowrap; }
+  th, td { padding: 12px 10px; border: 1px solid var(--border); }
+  th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2;}
+  td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
+  th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; }
+  .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
+  
+  /* ESTILOS PARA CELDAS EDITABLES (TIPO EXCEL) */
+  .celda-nota { background-color: #f8fafc; transition: 0.2s; cursor: text; min-width: 50px; font-weight: bold;}
+  .celda-nota:focus { background-color: #e0f2fe; outline: 2px solid var(--primary); outline-offset: -2px; }
+  .celda-nota:hover { background-color: #f1f5f9; }
+
+  .btn-wa { background-color: #25D366; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-wa:hover { background-color: #128C7E; transform: translateY(-1px); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+<nav class="navbar">
+  <div class="brand">
+    <div class="brand-mark">🎓</div>
+    <div><div class="brand-title">Mi Clase</div><div class="brand-subtitle">Consolidado de Notas</div></div>
+  </div>
+  <div class="nav-actions">
+    <div class="menu-wrap" id="menuWrap">
+      <button class="menu-btn" id="menuBtn">☰ Opciones</button>
+      <div class="menu-panel">
+        <a href="dashboard.html">🏠 Panel principal</a>
+        <a href="index.html">📋 Control de asistencia</a>
+        <a href="reportes.html">📊 Reportes y Filtros</a>
+        <a href="calificaciones.html">📝 Calificaciones</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="hero" style="margin-bottom: 15px;">
+    <div>
+      <div class="eyebrow">● Rendimiento Académico</div>
+      <h1>Consolidado por Periodo</h1>
+      <p>Haz clic en cualquier celda para escribir la nota y luego presiona "Guardar".</p>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <label for="filtro-periodo" style="font-weight: bold; font-size: 14px;">Periodo:</label>
+        <select id="filtro-periodo" class="form-control" style="width: 120px;" onchange="cargarPlanilla()">
+            <option value="1">Periodo 1</option>
+            <option value="2">Periodo 2</option>
+            <option value="3">Periodo 3</option>
+            <option value="4">Periodo 4</option>
+        </select>
+        <!-- BOTÓN NUEVO PARA GUARDAR MASIVAMENTE -->
+        <button class="primary-btn" onclick="guardarNotas()" style="margin-left: 15px;">💾 Guardar Notas</button>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 0;">
+    <div class="table-container">
+      <table id="tabla-notas">
+        <thead>
+          <tr id="cabecera-materias">
+            <th class="text-left">Estudiante</th>
+            <th class="promedio-col">Prom</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-planilla">
+            <tr><td colspan="15" class="loading">Conectando con la base de datos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// CONEXIÓN
+const SUPABASE_URL = 'https://qmgyobgahiyvgysjjhax.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0';
+const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const toast=(msg)=>{const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(window._toast);window._toast=setTimeout(()=>el.style.display='none',3000)};
+
+document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('menuWrap').classList.toggle('open'));
+document.addEventListener('click',e=>{if(!document.getElementById('menuWrap').contains(e.target))document.getElementById('menuWrap').classList.remove('open')});
+
+let listaMaterias = [];
+
+// FUNCIÓN 1: DIBUJAR LA PLANILLA
+async function cargarPlanilla() {
+    const periodo = document.getElementById('filtro-periodo').value;
+    const tbody = document.getElementById('cuerpo-planilla');
+    tbody.innerHTML = '<tr><td colspan="15" class="loading">Cargando planilla del Periodo '+periodo+'...</td></tr>';
+
+    const [resEst, resMat, resNotas] = await Promise.all([
+        clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
+        clienteSupabase.from('materias').select('id, nombre_materia').order('id'),
+        clienteSupabase.from('calificaciones').select('*').eq('periodo', periodo)
+    ]);
+
+    if (resEst.error || resMat.error) { toast('Error de conexión'); return; }
+
+    listaMaterias = resMat.data;
+    const estudiantes = resEst.data;
+    const notas = resNotas.data || [];
+
+    const thead = document.getElementById('cabecera-materias');
+    thead.innerHTML = '<th class="text-left">Estudiante</th>';
+    listaMaterias.forEach(m => {
+        thead.innerHTML += `<th>${m.nombre_materia.substring(0, 5).toUpperCase()}</th>`;
+    });
+    thead.innerHTML += '<th class="promedio-col">PROM</th><th>Acción</th>';
+
+    tbody.innerHTML = '';
+    estudiantes.forEach(est => {
+        let sumaNotas = 0;
+        let cantidadNotas = 0;
+        let filaHtml = `<tr><td class="text-left">${est.nombre_completo}</td>`;
+
+        listaMaterias.forEach(m => {
+            const notaEncontrada = notas.find(n => n.estudiante_id === est.id && n.materia_id === m.id);
+            const valorNota = notaEncontrada ? notaEncontrada.nota : '';
+            
+            if(notaEncontrada) {
+                sumaNotas += parseFloat(valorNota);
+                cantidadNotas++;
+            }
+            
+            // LA MAGIA DE EXCEL: contenteditable="true" permite escribir en la celda
+            // Guardamos el ID del estudiante y la materia escondidos en la celda
+            filaHtml += `<td contenteditable="true" class="celda-nota" data-est="${est.id}" data-mat="${m.id}">${valorNota}</td>`;
+        });
+
+        let promedio = cantidadNotas > 0 ? (sumaNotas / cantidadNotas).toFixed(2) : '0.00';
+        filaHtml += `<td class="promedio-col">${promedio}</td>`;
+        filaHtml += `<td><button class="btn-wa" onclick="enviarWhatsApp('${est.nombre_completo}', '${promedio}', '${periodo}')">💬 Reporte</button></td></tr>`;
+        
+        tbody.innerHTML += filaHtml;
+    });
+}
+
+// FUNCIÓN 2: GUARDAR LAS NOTAS ESCRITAS
+async function guardarNotas() {
+    toast('Guardando calificaciones...');
+    const periodo = document.getElementById('filtro-periodo').value;
+    const celdas = document.querySelectorAll('.celda-nota');
+    let datosAGuardar = [];
+
+    // Recorremos todas las celdas de la tabla para ver si tienen texto
+    celdas.forEach(celda => {
+        let texto = celda.innerText.trim();
+        // Cambiamos comas por puntos por si el teclado está en español (ej. 8,5 -> 8.5)
+        texto = texto.replace(',', '.'); 
+        
+        if (texto !== '') {
+            let notaNumerica = parseFloat(texto);
+            // Si lo que escribieron es un número válido, lo preparamos para guardar
+            if (!isNaN(notaNumerica)) {
+                datosAGuardar.push({
+                    estudiante_id: parseInt(celda.dataset.est),
+                    materia_id: parseInt(celda.dataset.mat),
+                    periodo: parseInt(periodo),
+                    nota: notaNumerica
+                });
+            }
+        }
+    });
+
+    if (datosAGuardar.length === 0) {
+        toast('⚠️ No hay notas válidas escritas en la planilla.');
+        return;
+    }
+
+    // El comando UPSERT inserta la nota nueva o actualiza la vieja automáticamente
+    const { error } = await clienteSupabase
+        .from('calificaciones')
+        .upsert(datosAGuardar, { onConflict: 'estudiante_id, materia_id, periodo' });
+
+    if (error) {
+        alert("Error al guardar las notas: " + error.message);
+    } else {
+        alert("¡Calificaciones guardadas exitosamente!");
+        cargarPlanilla(); // Recargamos para que se calculen los promedios nuevos
+    }
+}
+
+function enviarWhatsApp(nombre, promedio, periodo) {
+    if(promedio === '0.00' || promedio === '-') {
+        alert("⚠️ El estudiante necesita tener notas registradas en este periodo para generar un promedio real.");
+        return;
+    }
+    const mensaje = `Hola, cordial saludo. Le comparto el reporte académico parcial de *${nombre}* correspondiente al *Periodo ${periodo}*. Su promedio general actual es de: *${promedio}*. Quedo atento a cualquier duda.`;
+    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+}
+
+cargarPlanilla();
+</script>
+</body>
+</html>

@@ -107,27 +107,46 @@ async function cargarMaterias() {
 }
 
 // 2. Crear Tarea con Configuración Global
+// 2. Crear Tarea con diagnóstico profundo y conversión de datos
 async function crearTarea() {
     const materiaId = document.getElementById('materia-tarea').value;
     const titulo = document.getElementById('titulo-tarea').value;
     const descripcion = document.getElementById('desc-tarea').value;
     const fechaVencimiento = document.getElementById('fecha-tarea').value;
 
-    if (!materiaId || !titulo || !fechaVencimiento) { toast("⚠️ Faltan datos obligatorios"); return; }
+    if (!materiaId || !titulo || !fechaVencimiento) { 
+        alert("⚠️ Faltan datos obligatorios. Revisa la materia, el título y la fecha."); 
+        return; 
+    }
 
+    // Leemos el periodo actual
     const { data: config } = await clienteSupabase.from('configuracion_global').select('periodo_actual').limit(1).single();
     const periodoActual = config ? config.periodo_actual : 1;
 
+    // Intentamos guardar en la base de datos convirtiendo la materia a un número entero (parseInt)
     const { error } = await clienteSupabase.from('tareas').insert([{ 
-        materia_id: materiaId, titulo: titulo, descripcion: descripcion, fecha_vencimiento: fechaVencimiento, periodo: periodoActual
+        materia_id: parseInt(materiaId), 
+        titulo: titulo, 
+        descripcion: descripcion, 
+        fecha_vencimiento: fechaVencimiento, 
+        periodo: periodoActual
     }]);
 
-    if (error) { toast("Error al guardar: " + error.message); } 
-    else {
-        toast("✓ Tarea creada exitosamente");
-        document.getElementById('materia-tarea').value = ''; document.getElementById('titulo-tarea').value = '';
-        document.getElementById('desc-tarea').value = ''; document.getElementById('fecha-tarea').value = '';
-        cargarDashboard(); // Refresca la lista
+    // Evaluación del resultado
+    if (error) { 
+        // Esta alerta detendrá la pantalla y nos dirá EXACTAMENTE qué está fallando
+        alert("Detalle técnico del error:\nMensaje: " + error.message + "\nCódigo: " + error.code); 
+    } else {
+        alert("¡Excelente! Tarea creada y guardada exitosamente en la base de datos.");
+        
+        // Limpiamos los campos
+        document.getElementById('materia-tarea').value = ''; 
+        document.getElementById('titulo-tarea').value = '';
+        document.getElementById('desc-tarea').value = ''; 
+        document.getElementById('fecha-tarea').value = '';
+        
+        // Recargamos la lista visual
+        cargarDashboard(); 
     }
 }
 

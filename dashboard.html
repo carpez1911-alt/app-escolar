@@ -6,6 +6,7 @@
 <title>Panel principal · Mi Clase 502</title>
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -15,14 +16,17 @@
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Panel del docente</div></div>
   </div>
   <div class="nav-actions">
-    <a class="nav-btn" href="index.html">📋 Asistencia</a>
     <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn">☰ Opciones</button>
-      <div class="menu-panel">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
+            <div class="menu-panel">
         <a href="dashboard.html">🏠 Panel principal</a>
         <a href="index.html">📋 Control de asistencia</a>
-        <a href="reportes.html">📊 Reportes y Filtros</a>
-        <a href="calificaciones.html">📝 Notas (Próximamente)</a>
+        <a href="actividades.html">📚 Gestionar actividades</a>
+        <a href="calificaciones.html">📝 Calificaciones</a>
+        <a href="consolidado.html">📈 Consolidado de Notas</a>
+        <a href="reportes.html">📊 Reportes y filtros</a>
+        <a href="directorio.html">👥 Estudiantes y Materias</a>
+        <a href="configuracion.html">⚙️ Configuración</a>
       </div>
     </div>
   </div>
@@ -38,151 +42,246 @@
   <div class="date-pill">📅 <span id="fecha">Cargando...</span></div>
 </section>
 
-<!-- TARJETAS DE ESTADÍSTICAS -->
 <section class="dashboard-grid">
   <div class="card stat"><div class="stat-label">👥 Estudiantes activos</div><div class="stat-value" id="total-estudiantes">—</div><div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div></div>
-  <div class="card stat"><div class="stat-label">📝 Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Pendientes de entrega</div></div>
+  <div class="card stat"><div class="stat-label">📝 Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Periodo actual: <span id="lbl-periodo">...</span></div></div>
   <div class="card stat"><div class="stat-label">⚡ Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
 </section>
 
-<!-- NUEVO FORMULARIO PARA CREAR TAREA -->
+<!-- ASIGNAR TAREA CON FECHA INTELIGENTE -->
 <section class="card">
   <div class="toolbar">
-    <div><div class="toolbar-title">📝 Asignar Nueva Tarea</div></div>
+    <div><div class="toolbar-title">📝 Asignar Nueva Actividad / Tarea</div></div>
   </div>
   <div class="form-content">
       <div class="form-group">
           <label for="materia-tarea">Materia:</label>
-          <select id="materia-tarea" class="form-control">
+          <select id="materia-tarea" class="form-control" onchange="sugerirFechaClase()">
               <option value="">Seleccione una materia...</option>
+          </select>
+      </div>
+          <div class="form-group">
+            <label for="periodo-tarea">Periodo académico:</label>
+            <select id="periodo-tarea" class="form-control" onchange="cambiarPeriodoTarea()"></select>
+          </div>
+      <div class="form-group">
+          <label for="categoria-tarea">Categoría de Actividad:</label>
+          <select id="categoria-tarea" class="form-control">
+              <option value="">Seleccione una categoría...</option>
           </select>
       </div>
       <div class="form-group">
           <label for="titulo-tarea">Título de la Actividad:</label>
-          <input type="text" id="titulo-tarea" class="form-control" placeholder="Ej. Taller de Divisiones">
+          <input type="text" id="titulo-tarea" class="form-control" placeholder="Ej. Taller de Fracciones">
       </div>
       <div class="form-group">
           <label for="desc-tarea">Descripción:</label>
-          <textarea id="desc-tarea" rows="2" class="form-control" placeholder="Ej. Resolver los puntos del 1 al 5"></textarea>
+          <textarea id="desc-tarea" rows="2" class="form-control" placeholder="Instrucciones de la actividad"></textarea>
       </div>
       <div class="form-group">
-          <label for="fecha-tarea">Fecha de Vencimiento:</label>
+          <label for="fecha-tarea">Fecha de Entrega / Clase:</label>
           <input type="date" id="fecha-tarea" class="form-control">
+          <small id="sugerencia-nota" style="color: var(--muted); margin-top: 4px; display: block;"></small>
       </div>
-      <button class="primary-btn" onclick="crearTarea()">💾 Guardar y Publicar Tarea</button>
+      <button class="primary-btn" onclick="crearTarea()">💾 Guardar y Publicar Actividad</button>
   </div>
 </section>
 
-<!-- LISTA DE TAREAS -->
 <section class="card task-card">
   <div class="toolbar">
-    <div><div class="toolbar-title">📌 Tareas pendientes de la semana</div><div class="toolbar-meta">Ordenadas por fecha de vencimiento</div></div>
+    <div><div class="toolbar-title">📌 Actividades Registradas</div><div class="toolbar-meta">Ordenadas por fecha de vencimiento</div></div>
   </div>
-  <div class="task-list" id="contenedor-tareas"><div class="loading">Cargando información…</div></div>
+  <div class="task-list" id="contenedor-tareas"><div class="loading">Cargando actividades…</div></div>
 </section>
 </main>
 <div class="toast" id="toast"></div>
 </div>
 
 <script>
-// LLAVES CORREGIDAS PARA QUE SE CONECTE
-const SUPABASE_URL = 'https://qmgyobgahiyvgysjjhax.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0';
-const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const clienteSupabase = window.clienteSupabaseCompartido;
 
-const toast=(msg)=>{const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(window._toast);window._toast=setTimeout(()=>el.style.display='none',3000)};
-document.getElementById('fecha').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('fecha').textContent = formatearFechaCorta(fechaLocalISO());
 
-// Lógica del menú
-document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('menuWrap').classList.toggle('open'));
-document.addEventListener('click',e=>{if(!document.getElementById('menuWrap').contains(e.target))document.getElementById('menuWrap').classList.remove('open')});
+let materias = [];
+let horarios = [];
+let marcoPeriodoActual = null;
+let marcosPeriodos = [];
 
-// 1. Cargar Materias en el selector
-async function cargarMaterias() {
-    const { data } = await clienteSupabase.from('materias').select('*');
-    if (data) {
-        const select = document.getElementById('materia-tarea');
-        data.forEach(m => select.innerHTML += `<option value="${m.id}">${m.nombre_materia}</option>`);
-    }
+function esFinDeSemana(fecha) {
+  const diaSemana = fecha.getDay(); // 0 = Domingo, 6 = Sábado
+  return diaSemana === 0 || diaSemana === 6;
 }
 
-// 2. Crear Tarea con Configuración Global
-// 2. Crear Tarea con diagnóstico profundo y conversión de datos
-async function crearTarea() {
-    const materiaId = document.getElementById('materia-tarea').value;
-    const titulo = document.getElementById('titulo-tarea').value;
-    const descripcion = document.getElementById('desc-tarea').value;
-    const fechaVencimiento = document.getElementById('fecha-tarea').value;
-
-    if (!materiaId || !titulo || !fechaVencimiento) { 
-        alert("⚠️ Faltan datos obligatorios. Revisa la materia, el título y la fecha."); 
-        return; 
-    }
-
-    // Leemos el periodo actual
-    const { data: config } = await clienteSupabase.from('configuracion_global').select('periodo_actual').limit(1).single();
-    const periodoActual = config ? config.periodo_actual : 1;
-
-    // Intentamos guardar en la base de datos convirtiendo la materia a un número entero (parseInt)
-    const { error } = await clienteSupabase.from('tareas').insert([{ 
-        materia_id: parseInt(materiaId), 
-        titulo: titulo, 
-        descripcion: descripcion, 
-        fecha_vencimiento: fechaVencimiento, 
-        periodo: periodoActual
-    }]);
-
-    // Evaluación del resultado
-    if (error) { 
-        // Esta alerta detendrá la pantalla y nos dirá EXACTAMENTE qué está fallando
-        alert("Detalle técnico del error:\nMensaje: " + error.message + "\nCódigo: " + error.code); 
-    } else {
-        alert("¡Excelente! Tarea creada y guardada exitosamente en la base de datos.");
-        
-        // Limpiamos los campos
-        document.getElementById('materia-tarea').value = ''; 
-        document.getElementById('titulo-tarea').value = '';
-        document.getElementById('desc-tarea').value = ''; 
-        document.getElementById('fecha-tarea').value = '';
-        
-        // Recargamos la lista visual
-        cargarDashboard(); 
-    }
+function getLeyendaCategoria(nombre) {
+  if (nombre.includes("Aula")) return "Actividades en clase, tareas y revisión de cuadernos";
+  if (nombre.includes("Producción")) return "Talleres estructurados, exposiciones y mesas redondas";
+  if (nombre.includes("Final")) return "Evaluación final del periodo o recuperación";
+  if (nombre.includes("Auto")) return "Rúbrica de responsabilidad y actitud";
+  return "";
 }
 
-// 3. Cargar Dashboard (Estadísticas y Lista)
-async function cargarDashboard(){
-  const [{data:estudiantes, error:e1}, {data:tareas, error:e2}, {data:config}] = await Promise.all([
-    clienteSupabase.from('estudiantes').select('id').eq('estado','Activo'),
-    clienteSupabase.from('tareas').select('*, materias(nombre_materia)').order('fecha_vencimiento',{ascending:true}),
-    clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single()
+async function cargarDatosIniciales() {
+  const [resMat, resHor, resCfg, resCat] = await Promise.all([
+    clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia'),
+    clienteSupabase.from('horario_semanal').select('id, materia_id, dia_semana'),
+    clienteSupabase.from('configuracion_global').select('año_actual, cantidad_periodos, periodo_actual').limit(1).single(),
+    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre')
   ]);
+
+  materias = resMat.data || [];
+  horarios = resHor.data || [];
+
+  const selectCat = document.getElementById('categoria-tarea');
+  if (resCat.data) {
+    resCat.data.forEach(c => selectCat.innerHTML += `<option value="${c.id}" title="${getLeyendaCategoria(c.nombre)}">${c.nombre} (${c.porcentaje}%)</option>`);
+  }
+
+  const select = document.getElementById('materia-tarea');
+  select.innerHTML = '<option value="">Seleccione una materia...</option>';
+  materias.forEach(m => select.innerHTML += `<option value="${m.id}">${m.nombre_materia}</option>`);
+
+  if (resCfg.data) {
+    document.getElementById('lbl-anio').textContent = resCfg.data.año_actual;
+    document.getElementById('lbl-periodo').textContent = `Periodo ${resCfg.data.periodo_actual}`;
+    const selectorPeriodo = document.getElementById('periodo-tarea');
+    const cantidadPeriodos = Number(resCfg.data.cantidad_periodos) || 3;
+    selectorPeriodo.innerHTML = Array.from({ length: cantidadPeriodos }, (_, index) => `<option value="${index + 1}">Periodo ${index + 1}</option>`).join('');
+    selectorPeriodo.value = String(resCfg.data.periodo_actual || 1);
+    const { data: marcos } = await clienteSupabase.from('marcos_periodos').select('año, periodo, fecha_inicio, fecha_fin').eq('año', resCfg.data.año_actual).order('periodo');
+    marcosPeriodos = marcos || [];
+    cambiarPeriodoTarea();
+  }
+
+  cargarDashboard();
+}
+
+function cambiarPeriodoTarea() {
+  const periodo = Number.parseInt(document.getElementById('periodo-tarea').value, 10);
+  marcoPeriodoActual = marcosPeriodos.find(marco => Number(marco.periodo) === periodo) || null;
+  sugerirFechaClase();
+}
+
+function sugerirFechaClase() {
+  const materiaId = parseInt(document.getElementById('materia-tarea').value);
+  const infoSpan = document.getElementById('sugerencia-nota');
+  const inputFecha = document.getElementById('fecha-tarea');
   
-  if (config) document.getElementById('lbl-anio').textContent = config.año_actual;
-  document.getElementById('total-estudiantes').textContent = e1 ? '—' : estudiantes.length;
-  document.getElementById('total-tareas').textContent = e2 ? '—' : tareas.length;
+  if (!materiaId) { infoSpan.textContent = ''; return; }
+
+  const diasClase = horarios.filter(h => h.materia_id === materiaId).map(h => h.dia_semana);
   
+  if (diasClase.length === 0) {
+    infoSpan.textContent = 'ℹ️ Esta materia aún no tiene días configurados en el Horario.';
+    return;
+  }
+
+  // Buscar el próximo día válido de clase a partir de mañana
+  let fechaBusqueda = new Date();
+  let encontrada = false;
+
+  for (let i = 1; i <= 14; i++) {
+    fechaBusqueda.setDate(fechaBusqueda.getDate() + 1);
+    let diaSem = fechaBusqueda.getDay(); // 1 = Lunes, 5 = Viernes
+    const fechaISO = fechaLocalISO(fechaBusqueda);
+    const dentroPeriodo = !marcoPeriodoActual || (fechaISO >= marcoPeriodoActual.fecha_inicio && fechaISO <= marcoPeriodoActual.fecha_fin);
+    if (diasClase.includes(diaSem) && !esFinDeSemana(fechaBusqueda) && dentroPeriodo) {
+      encontrada = true;
+      break;
+    }
+  }
+
+  if (encontrada) {
+    const fechaISO = fechaLocalISO(fechaBusqueda);
+    inputFecha.value = fechaISO;
+    infoSpan.textContent = `💡 Sugerencia automática: Próxima clase según horario (${formatearFechaCorta(fechaISO)}).`;
+  }
+}
+
+async function crearTarea() {
+  const materiaId = document.getElementById('materia-tarea').value;
+  const categoriaId = document.getElementById('categoria-tarea').value;
+  const titulo = document.getElementById('titulo-tarea').value;
+  const descripcion = document.getElementById('desc-tarea').value;
+  const fechaVencimiento = document.getElementById('fecha-tarea').value;
+
+  if (!materiaId || !categoriaId || !titulo || !fechaVencimiento) {
+    mostrarToast('⚠️ Completa los campos obligatorios, incluyendo la categoría');
+    return;
+  }
+
+  if (marcoPeriodoActual && (fechaVencimiento < marcoPeriodoActual.fecha_inicio || fechaVencimiento > marcoPeriodoActual.fecha_fin)) {
+    mostrarToast('La fecha debe estar dentro del periodo académico actual.');
+    return;
+  }
+  if (!marcoPeriodoActual) {
+    mostrarToast('No existe un marco académico para el periodo seleccionado.');
+    return;
+  }
+
+  const diaSeleccionado = new Date(`${fechaVencimiento}T00:00:00`).getDay();
+  const diasMateria = horarios.filter(h => h.materia_id === parseInt(materiaId)).map(h => h.dia_semana);
+  if (diasMateria.length && !diasMateria.includes(diaSeleccionado)) {
+    if (!confirm('⚠️ Atención: La fecha seleccionada no coincide con los días de clase configurados en el horario para esta materia.\n\n¿Deseas registrar la actividad de todos modos (crear una novedad)?')) {
+      return;
+    }
+  }
+
+  const periodoActual = Number.parseInt(document.getElementById('periodo-tarea').value, 10) || 1;
+
+  const { error } = await clienteSupabase.from('tareas').insert([{
+    materia_id: parseInt(materiaId),
+    categoria_id: parseInt(categoriaId),
+    titulo: titulo,
+    descripcion: descripcion,
+    fecha_vencimiento: fechaVencimiento,
+    periodo: periodoActual
+  }]);
+
+  if (error) {
+    mostrarToast('Error al guardar la actividad');
+  } else {
+    mostrarToast('✓ Actividad registrada correctamente');
+    document.getElementById('materia-tarea').value = '';
+    document.getElementById('titulo-tarea').value = '';
+    document.getElementById('desc-tarea').value = '';
+    document.getElementById('fecha-tarea').value = '';
+    document.getElementById('sugerencia-nota').textContent = '';
+    cargarDashboard();
+  }
+}
+
+async function cargarDashboard() {
+  const [{ data: estudiantes }, { data: tareas }] = await Promise.all([
+    clienteSupabase.from('estudiantes').select('id').eq('estado', 'Activo'),
+    clienteSupabase.from('tareas').select('*, materias(nombre_materia)').order('fecha_vencimiento', { ascending: true })
+  ]);
+
+  document.getElementById('total-estudiantes').textContent = estudiantes ? estudiantes.length : 0;
+  document.getElementById('total-tareas').textContent = tareas ? tareas.length : 0;
+
   const cont = document.getElementById('contenedor-tareas');
-  if(e2) { cont.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div>No fue posible cargar las tareas.</div>'; return; }
-  if(!tareas.length) { cont.innerHTML='<div class="empty"><div class="empty-icon">🎉</div>No hay tareas pendientes registradas.</div>'; return; }
-  
-  cont.innerHTML='';
-  tareas.forEach(t=>{
-    const nombreMateria = t.materias ? t.materias.nombre_materia : 'General';
-    const row = document.createElement('div'); row.className='task';
-    const info = document.createElement('div');
-    const badge = document.createElement('div'); badge.className='task-badge'; badge.textContent = nombreMateria;
-    const title = document.createElement('div'); title.className='task-title'; title.textContent = t.titulo || 'Sin título';
-    const desc = document.createElement('div'); desc.className='task-desc'; desc.textContent = t.descripcion || 'Sin descripción adicional';
-    
-    info.append(badge, title, desc);
-    const deadline = document.createElement('div'); deadline.className='deadline'; deadline.innerHTML=`Vence:<br>${t.fecha_vencimiento||'Sin fecha'}`;
-    row.append(info, deadline); cont.appendChild(row);
+  if (!tareas || tareas.length === 0) {
+    cont.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div>No hay actividades pendientes.</div>';
+    return;
+  }
+
+  cont.innerHTML = '';
+  tareas.forEach(t => {
+    const row = document.createElement('div'); row.className = 'task';
+    row.innerHTML = `
+      <div class="datos-tarea">
+        <span class="task-badge">${t.materias?.nombre_materia || 'General'}</span>
+        <div class="task-title">${t.titulo}</div>
+        <div class="task-desc">${t.descripcion || 'Sin descripción adicional'} · <em>Periodo ${t.periodo}</em></div>
+      </div>
+      <div class="deadline">Entrega:<br>${formatearFechaCorta(t.fecha_vencimiento)}</div>
+    `;
+    cont.appendChild(row);
   });
 }
 
-cargarMaterias();
-cargarDashboard();
+cargarDatosIniciales();
 </script>
 </body>
 </html>

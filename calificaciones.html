@@ -6,6 +6,7 @@
 <title>Calificaciones · Mi Clase</title>
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
 <style>
   .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; white-space: nowrap; }
@@ -33,12 +34,16 @@
   </div>
   <div class="nav-actions">
     <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn">☰ Opciones</button>
-      <div class="menu-panel">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
+            <div class="menu-panel">
         <a href="dashboard.html">🏠 Panel principal</a>
         <a href="index.html">📋 Control de asistencia</a>
-        <a href="reportes.html">📊 Reportes y Filtros</a>
+        <a href="actividades.html">📚 Gestionar actividades</a>
         <a href="calificaciones.html">📝 Calificaciones</a>
+        <a href="consolidado.html">📈 Consolidado de Notas</a>
+        <a href="reportes.html">📊 Reportes y filtros</a>
+        <a href="directorio.html">👥 Estudiantes y Materias</a>
+        <a href="configuracion.html">⚙️ Configuración</a>
       </div>
     </div>
   </div>
@@ -48,20 +53,24 @@
   <section class="hero" style="margin-bottom: 15px;">
     <div>
       <div class="eyebrow">● Rendimiento Académico</div>
-      <h1>Consolidado por Periodo</h1>
-      <p>Haz clic en cualquier celda para escribir la nota y luego presiona "Guardar".</p>
+      <h1>Calificar Actividades</h1>
+      <p>Asigna notas a los estudiantes según la materia y actividad seleccionada.</p>
     </div>
     
     <div style="display: flex; gap: 10px; align-items: center;">
         <label for="filtro-periodo" style="font-weight: bold; font-size: 14px;">Periodo:</label>
         <select id="filtro-periodo" class="form-control" style="width: 120px;" onchange="cargarPlanilla()">
-            <option value="1">Periodo 1</option>
-            <option value="2">Periodo 2</option>
-            <option value="3">Periodo 3</option>
-            <option value="4">Periodo 4</option>
+            <option value="">Cargando...</option>
         </select>
-        <!-- BOTÓN NUEVO PARA GUARDAR MASIVAMENTE -->
-        <button class="primary-btn" onclick="guardarNotas()" style="margin-left: 15px;">💾 Guardar Notas</button>
+        <label for="filtro-materia" id="label-materia" style="font-weight: bold; font-size: 14px;">Materia:</label>
+        <select id="filtro-materia" class="form-control" style="width: 200px;" onchange="cargarPlanilla()">
+          <option value="">Selecciona una materia...</option>
+        </select>
+        <label for="filtro-actividad" id="label-actividad" style="font-weight: bold; font-size: 14px;">Actividad:</label>
+        <select id="filtro-actividad" class="form-control" style="width: 200px;" onchange="renderizarPlanillaCalificar()">
+          <option value="">Cargando...</option>
+        </select>
+        <button class="secondary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()">💾 Guardar notas</button>
     </div>
   </section>
 
@@ -70,10 +79,11 @@
       <table id="tabla-notas">
         <thead>
           <tr id="cabecera-materias">
-            <th class="text-left">Estudiante</th>
-            <th class="promedio-col">Prom</th>
-            <th>Acción</th>
+            <th class="text-left" rowspan="2">Estudiante</th>
+            <th class="promedio-col" rowspan="2">Definitiva</th>
+            <th rowspan="2">Reporte</th>
           </tr>
+          <tr id="cabecera-actividades" hidden></tr>
         </thead>
         <tbody id="cuerpo-planilla">
             <tr><td colspan="15" class="loading">Conectando con la base de datos...</td></tr>
@@ -87,72 +97,198 @@
 
 <script>
 // CONEXIÓN
-const SUPABASE_URL = 'https://qmgyobgahiyvgysjjhax.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0';
-const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const clienteSupabase = window.clienteSupabaseCompartido;
 
-const toast=(msg)=>{const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(window._toast);window._toast=setTimeout(()=>el.style.display='none',3000)};
+const toast = mostrarToast;
 
-document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('menuWrap').classList.toggle('open'));
-document.addEventListener('click',e=>{if(!document.getElementById('menuWrap').contains(e.target))document.getElementById('menuWrap').classList.remove('open')});
-
+let listaTareas = [];
+let listaEstudiantes = [];
 let listaMaterias = [];
+let notasCargadas = [];
+
+function crearCelda(tag, texto, clase = '') {
+  const celda = document.createElement(tag);
+  celda.textContent = texto;
+  if (clase) celda.className = clase;
+  return celda;
+}
+
+function configurarPeriodos(cantidadPeriodos) {
+  const selector = document.getElementById('filtro-periodo');
+  const cantidad = [3, 4].includes(Number(cantidadPeriodos)) ? Number(cantidadPeriodos) : 3;
+  selector.innerHTML = '';
+  for (let periodo = 1; periodo <= cantidad; periodo += 1) {
+    selector.appendChild(new Option(`Periodo ${periodo}`, periodo));
+  }
+}
+
+function configurarMaterias(materias) {
+  const selector = document.getElementById('filtro-materia');
+  selector.innerHTML = '<option value="">Selecciona una materia...</option>';
+  materias.forEach(materia => selector.appendChild(new Option(materia.nombre_materia, materia.id)));
+}
+
+function promedioDeFila(fila) {
+  return fila.querySelector('.promedio-general')?.textContent || '-';
+}
+
+function enviarWhatsApp(nombre, promedio, periodo) {
+  if (promedio === '-') {
+    mostrarToast('El estudiante todavía no tiene calificaciones.');
+    return;
+  }
+  const mensaje = `Hola, cordial saludo. Le comparto el reporte de calificaciones de *${nombre}* en el *Periodo ${periodo}*. Su promedio general es: *${promedio}*.`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+}
+
+function actualizarPromedios(fila) {
+  const celdaEditada = fila.querySelector('.celda-nota');
+  if (!celdaEditada) return;
+  
+  const materiaId = celdaEditada.dataset.materia;
+  const estudianteId = celdaEditada.dataset.estudiante;
+  const tareaId = celdaEditada.dataset.tarea;
+  
+  let notasDelEstudiante = notasCargadas.filter(n => String(n.estudiante_id) === String(estudianteId) && String(n.materia_id) === String(materiaId));
+  
+  const notasPorTarea = {};
+  notasDelEstudiante.forEach(n => { notasPorTarea[n.tarea_id] = Number(n.nota); });
+  
+  const notaEditada = Number.parseFloat(celdaEditada.textContent.trim().replace(',', '.'));
+  if (!Number.isNaN(notaEditada)) {
+      notasPorTarea[tareaId] = notaEditada;
+  } else {
+      delete notasPorTarea[tareaId];
+  }
+  
+  const valores = Object.values(notasPorTarea);
+  const promedio = valores.length ? (valores.reduce((a,b) => a+b, 0) / valores.length).toFixed(2) : '-';
+  
+  fila.querySelectorAll('.promedio-materia').forEach(celda => celda.textContent = promedio);
+  const celdaGeneral = fila.querySelector('.promedio-general');
+  if (celdaGeneral) celdaGeneral.textContent = promedio;
+}
+
+function mostrarSinActividades() {
+  document.getElementById('cabecera-materias').innerHTML = '<th class="text-left">Estudiante</th><th class="promedio-col">Definitiva</th><th>Reporte</th>';
+  document.getElementById('cabecera-actividades').hidden = true;
+  document.getElementById('cuerpo-planilla').innerHTML = '<tr><td colspan="3" class="empty"><div class="empty-icon">📚</div>No hay actividades creadas para este periodo.<br>Primero crea tareas desde el Panel Principal.</td></tr>';
+}
 
 // FUNCIÓN 1: DIBUJAR LA PLANILLA
 async function cargarPlanilla() {
-    const periodo = document.getElementById('filtro-periodo').value;
-    const tbody = document.getElementById('cuerpo-planilla');
-    tbody.innerHTML = '<tr><td colspan="15" class="loading">Cargando planilla del Periodo '+periodo+'...</td></tr>';
+  const periodo = document.getElementById('filtro-periodo').value;
+  const materiaId = document.getElementById('filtro-materia').value;
+  const selectorActividad = document.getElementById('filtro-actividad');
+  const tbody = document.getElementById('cuerpo-planilla');
+  const thead = document.getElementById('cabecera-materias');
+  const subthead = document.getElementById('cabecera-actividades');
+  
+  if (!periodo || !materiaId) {
+    thead.innerHTML = '<th class="text-left">Estudiante</th><th class="promedio-col">Definitiva</th><th>Reporte</th>';
+    subthead.hidden = true;
+    tbody.innerHTML = '<tr><td colspan="3" class="empty">Selecciona una materia para comenzar a calificar.</td></tr>';
+    selectorActividad.innerHTML = '<option value="">Selecciona una materia primero...</option>';
+    return;
+  }
+  tbody.innerHTML = `<tr><td colspan="15" class="loading">Cargando actividades del Periodo ${periodo}...</td></tr>`;
+  const [resEst, resTareas, resNotas] = await Promise.all([
+    clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
+    clienteSupabase.from('tareas').select('id, titulo, materia_id, periodo').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
+    clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota').eq('materia_id', materiaId).eq('periodo', periodo)
+  ]);
+  if (resEst.error || resTareas.error || resNotas.error) { toast('Error al cargar la planilla'); return; }
+  
+  listaEstudiantes = resEst.data || [];
+  listaTareas = resTareas.data || [];
+  notasCargadas = resNotas.data || [];
+  
+  if (!listaTareas.length) { 
+    mostrarSinActividades(); 
+    selectorActividad.innerHTML = '<option value="">Sin actividades</option>';
+    return; 
+  }
 
-    const [resEst, resMat, resNotas] = await Promise.all([
-        clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
-        clienteSupabase.from('materias').select('id, nombre_materia').order('id'),
-        clienteSupabase.from('calificaciones').select('*').eq('periodo', periodo)
-    ]);
+  const selectedTareaId = selectorActividad.value;
+  selectorActividad.innerHTML = '<option value="">Selecciona una actividad...</option>';
+  listaTareas.forEach(tarea => {
+    selectorActividad.innerHTML += `<option value="${tarea.id}">${tarea.titulo}</option>`;
+  });
+  
+  if (listaTareas.some(t => String(t.id) === selectedTareaId)) {
+    selectorActividad.value = selectedTareaId;
+  }
 
-    if (resEst.error || resMat.error) { toast('Error de conexión'); return; }
+  renderizarPlanillaCalificar();
+}
 
-    listaMaterias = resMat.data;
-    const estudiantes = resEst.data;
-    const notas = resNotas.data || [];
+function renderizarPlanillaCalificar() {
+  const tbody = document.getElementById('cuerpo-planilla');
+  const thead = document.getElementById('cabecera-materias');
+  const subthead = document.getElementById('cabecera-actividades');
+  const materiaId = document.getElementById('filtro-materia').value;
+  const tareaSeleccionadaId = document.getElementById('filtro-actividad').value;
+  const periodo = document.getElementById('filtro-periodo').value;
 
-    const thead = document.getElementById('cabecera-materias');
-    thead.innerHTML = '<th class="text-left">Estudiante</th>';
-    listaMaterias.forEach(m => {
-        thead.innerHTML += `<th>${m.nombre_materia.substring(0, 5).toUpperCase()}</th>`;
-    });
-    thead.innerHTML += '<th class="promedio-col">PROM</th><th>Acción</th>';
+  if (!tareaSeleccionadaId) {
+    thead.innerHTML = '<th class="text-left">Estudiante</th><th class="promedio-col">Definitiva</th><th>Reporte</th>';
+    subthead.hidden = true;
+    tbody.innerHTML = '<tr><td colspan="3" class="empty">Selecciona una actividad para calificarla.</td></tr>';
+    return;
+  }
 
-    tbody.innerHTML = '';
-    estudiantes.forEach(est => {
-        let sumaNotas = 0;
-        let cantidadNotas = 0;
-        let filaHtml = `<tr><td class="text-left">${est.nombre_completo}</td>`;
+  const tarea = listaTareas.find(t => String(t.id) === tareaSeleccionadaId);
 
-        listaMaterias.forEach(m => {
-            const notaEncontrada = notas.find(n => n.estudiante_id === est.id && n.materia_id === m.id);
-            const valorNota = notaEncontrada ? notaEncontrada.nota : '';
-            
-            if(notaEncontrada) {
-                sumaNotas += parseFloat(valorNota);
-                cantidadNotas++;
-            }
-            
-            // LA MAGIA DE EXCEL: contenteditable="true" permite escribir en la celda
-            // Guardamos el ID del estudiante y la materia escondidos en la celda
-            filaHtml += `<td contenteditable="true" class="celda-nota" data-est="${est.id}" data-mat="${m.id}">${valorNota}</td>`;
-        });
+  thead.innerHTML = '<th class="text-left">Estudiante</th>';
+  subthead.innerHTML = '';
+  subthead.hidden = true;
+  
+  const encabezado = crearCelda('th', tarea.titulo || 'Actividad');
+  encabezado.title = tarea.titulo || 'Actividad';
+  thead.appendChild(encabezado);
 
-        let promedio = cantidadNotas > 0 ? (sumaNotas / cantidadNotas).toFixed(2) : '0.00';
-        filaHtml += `<td class="promedio-col">${promedio}</td>`;
-        filaHtml += `<td><button class="btn-wa" onclick="enviarWhatsApp('${est.nombre_completo}', '${promedio}', '${periodo}')">💬 Reporte</button></td></tr>`;
-        
-        tbody.innerHTML += filaHtml;
-    });
+  thead.insertAdjacentHTML('beforeend', '<th class="promedio-col">Definitiva</th><th>Reporte</th>');
+  tbody.innerHTML = '';
+  
+  listaEstudiantes.forEach(estudiante => {
+    const fila = document.createElement('tr');
+    fila.appendChild(crearCelda('td', estudiante.nombre_completo, 'text-left'));
+    
+    // Celda de la actividad seleccionada
+    const nota = notasCargadas.find(item => item.estudiante_id === estudiante.id && item.tarea_id === tarea.id);
+    const celda = crearCelda('td', nota?.nota ?? '', 'celda-nota');
+    celda.contentEditable = 'true';
+    celda.dataset.estudiante = estudiante.id;
+    celda.dataset.materia = materiaId;
+    celda.dataset.tarea = tarea.id;
+    celda.addEventListener('input', () => actualizarPromedios(fila));
+    fila.appendChild(celda);
+
+    const promedioMateria = crearCelda('td', '-', 'promedio-col promedio-materia');
+    promedioMateria.dataset.materia = materiaId;
+    fila.appendChild(promedioMateria);
+    fila.appendChild(crearCelda('td', '-', 'promedio-col promedio-general'));
+    const acciones = crearCelda('td', '', 'acciones-celda');
+    const botonReporte = crearCelda('button', '💬 Enviar', 'btn-wa');
+    botonReporte.type = 'button';
+    const nombreMateria = document.getElementById('filtro-materia').selectedOptions[0]?.textContent || 'la materia';
+    botonReporte.addEventListener('click', () => enviarWhatsApp(estudiante.nombre_completo, promedioDeFila(fila), periodo, nombreMateria));
+    acciones.appendChild(botonReporte);
+    fila.appendChild(acciones);
+    tbody.appendChild(fila);
+    actualizarPromedios(fila);
+  });
 }
 
 // FUNCIÓN 2: GUARDAR LAS NOTAS ESCRITAS
 async function guardarNotas() {
+    const botonGuardar = document.querySelector('button[onclick="guardarNotas()"]');
+    if (botonGuardar?.disabled) return;
+    if (!document.getElementById('filtro-materia').value) {
+      toast('Selecciona una materia primero.');
+      return;
+    }
+    botonGuardar.disabled = true;
     toast('Guardando calificaciones...');
     const periodo = document.getElementById('filtro-periodo').value;
     const celdas = document.querySelectorAll('.celda-nota');
@@ -160,17 +296,19 @@ async function guardarNotas() {
 
     // Recorremos todas las celdas de la tabla para ver si tienen texto
     celdas.forEach(celda => {
-        let texto = celda.innerText.trim();
+        let texto = celda.textContent.trim();
         // Cambiamos comas por puntos por si el teclado está en español (ej. 8,5 -> 8.5)
         texto = texto.replace(',', '.'); 
         
         if (texto !== '') {
-            let notaNumerica = parseFloat(texto);
+            let notaNumerica = Number(texto);
             // Si lo que escribieron es un número válido, lo preparamos para guardar
             if (!isNaN(notaNumerica)) {
+                if (notaNumerica < 0 || notaNumerica > 10) return;
                 datosAGuardar.push({
-                    estudiante_id: parseInt(celda.dataset.est),
-                    materia_id: parseInt(celda.dataset.mat),
+                    estudiante_id: Number(celda.dataset.estudiante),
+                    materia_id: Number(celda.dataset.materia),
+                    tarea_id: Number(celda.dataset.tarea),
                     periodo: parseInt(periodo),
                     nota: notaNumerica
                 });
@@ -179,34 +317,44 @@ async function guardarNotas() {
     });
 
     if (datosAGuardar.length === 0) {
-        toast('⚠️ No hay notas válidas escritas en la planilla.');
+      toast('⚠️ Escribe notas válidas entre 0 y 10.');
+        botonGuardar.disabled = false;
         return;
     }
 
     // El comando UPSERT inserta la nota nueva o actualiza la vieja automáticamente
-    const { error } = await clienteSupabase
-        .from('calificaciones')
-        .upsert(datosAGuardar, { onConflict: 'estudiante_id, materia_id, periodo' });
+    let { error } = await clienteSupabase
+      .from('calificaciones')
+      .upsert(datosAGuardar, { onConflict: 'estudiante_id, materia_id, periodo, tarea_id' });
 
     if (error) {
-        alert("Error al guardar las notas: " + error.message);
+        console.error('Error al guardar calificaciones:', error);
+        toast('No fue posible guardar las calificaciones.');
     } else {
-        alert("¡Calificaciones guardadas exitosamente!");
-        cargarPlanilla(); // Recargamos para que se calculen los promedios nuevos
+        toast('✓ Calificaciones guardadas correctamente.');
+        await cargarPlanilla();
     }
+      botonGuardar.disabled = false;
 }
 
-function enviarWhatsApp(nombre, promedio, periodo) {
-    if(promedio === '0.00' || promedio === '-') {
-        alert("⚠️ El estudiante necesita tener notas registradas en este periodo para generar un promedio real.");
-        return;
-    }
-    const mensaje = `Hola, cordial saludo. Le comparto el reporte académico parcial de *${nombre}* correspondiente al *Periodo ${periodo}*. Su promedio general actual es de: *${promedio}*. Quedo atento a cualquier duda.`;
-    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
+async function inicializarPlanilla() {
+  const [resConfig, resMaterias] = await Promise.all([
+    clienteSupabase.from('configuracion_global').select('cantidad_periodos, periodo_actual').limit(1).single(),
+    clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
+  ]);
+  if (resConfig.error) toast('No se pudo leer la configuración; se usarán 3 periodos.');
+  if (resMaterias.error) {
+    toast('No se pudieron cargar las materias.');
+    return;
+  }
+  listaMaterias = resMaterias.data || [];
+  configurarPeriodos(resConfig.data?.cantidad_periodos);
+  configurarMaterias(listaMaterias);
+  if (resConfig.data?.periodo_actual) document.getElementById('filtro-periodo').value = String(resConfig.data.periodo_actual);
+  await cargarPlanilla();
 }
 
-cargarPlanilla();
+inicializarPlanilla();
 </script>
 </body>
 </html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consolidado · Mi Clase</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<style>
+  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; white-space: nowrap; }
+  th, td { padding: 12px 10px; border: 1px solid var(--border); }
+  th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2;}
+  td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
+  th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; }
+  .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+<nav class="navbar">
+  <div class="brand">
+    <div class="brand-mark">🎓</div>
+    <div><div class="brand-title">Mi Clase</div><div class="brand-subtitle">Consolidado General</div></div>
+  </div>
+  <div class="nav-actions">
+    <div class="menu-wrap" id="menuWrap">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
+            <div class="menu-panel">
+        <a href="dashboard.html">🏠 Panel principal</a>
+        <a href="index.html">📋 Control de asistencia</a>
+        <a href="actividades.html">📚 Gestionar actividades</a>
+        <a href="calificaciones.html">📝 Calificaciones</a>
+        <a href="consolidado.html">📈 Consolidado de Notas</a>
+        <a href="reportes.html">📊 Reportes y filtros</a>
+        <a href="directorio.html">👥 Estudiantes y Materias</a>
+        <a href="configuracion.html">⚙️ Configuración</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="hero" style="margin-bottom: 15px;">
+    <div>
+      <div class="eyebrow">● Rendimiento Académico</div>
+      <h1>Consolidado por Periodo</h1>
+      <p>Consulta el consolidado general de notas definitivas de cada materia en el periodo seleccionado.</p>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <label for="filtro-periodo" style="font-weight: bold; font-size: 14px;">Periodo:</label>
+        <select id="filtro-periodo" class="form-control" style="width: 120px;" onchange="cargarConsolidado()">
+            <option value="">Cargando...</option>
+        </select>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 0;">
+    <div class="table-container">
+      <table id="tabla-notas">
+        <thead>
+          <tr id="cabecera-materias">
+            <th class="text-left">Estudiante</th>
+            <th class="promedio-col">Promedio general</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-planilla">
+            <tr><td colspan="15" class="loading">Conectando con la base de datos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const clienteSupabase = window.clienteSupabaseCompartido;
+const toast = mostrarToast;
+
+function crearCelda(tag, texto, clase = '') {
+  const celda = document.createElement(tag);
+  celda.textContent = texto;
+  if (clase) celda.className = clase;
+  return celda;
+}
+
+function configurarPeriodos(cantidadPeriodos) {
+  const selector = document.getElementById('filtro-periodo');
+  const cantidad = [3, 4].includes(Number(cantidadPeriodos)) ? Number(cantidadPeriodos) : 3;
+  selector.innerHTML = '';
+  for (let periodo = 1; periodo <= cantidad; periodo += 1) {
+    selector.appendChild(new Option(`Periodo ${periodo}`, periodo));
+  }
+}
+
+async function cargarConsolidado() {
+  const periodo = document.getElementById('filtro-periodo').value;
+  if (!periodo) return;
+  const tbody = document.getElementById('cuerpo-planilla');
+  const thead = document.getElementById('cabecera-materias');
+  tbody.innerHTML = `<tr><td colspan="15" class="loading">Cargando consolidado del Periodo ${periodo}...</td></tr>`;
+  
+  const [resEst, resNotas, resCat] = await Promise.all([
+    clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
+    clienteSupabase.from('calificaciones').select('estudiante_id, materia_id, nota, materias(nombre_materia), tareas(categoria_id)').eq('periodo', periodo),
+    clienteSupabase.from('categorias_actividades').select('id, porcentaje')
+  ]);
+  
+  if (resEst.error || resNotas.error || resCat.error) { toast('Error al cargar el consolidado.'); return; }
+  
+  const categorias = resCat.data || [];
+  const categoriasMap = {};
+  categorias.forEach(c => categoriasMap[c.id] = c.porcentaje);
+  
+  const notas = resNotas.data || [];
+  const materiasConNotas = [];
+  notas.forEach(nota => {
+    if (!materiasConNotas.some(materia => materia.id === nota.materia_id)) {
+        materiasConNotas.push({ id: nota.materia_id, nombre: nota.materias?.nombre_materia || `Materia #${nota.materia_id}` });
+    }
+  });
+  
+  thead.innerHTML = '<th class="text-left">Estudiante</th>';
+  materiasConNotas.forEach(materia => thead.appendChild(crearCelda('th', materia.nombre)));
+  thead.insertAdjacentHTML('beforeend', '<th class="promedio-col">Promedio general</th>');
+  
+  tbody.innerHTML = '';
+  (resEst.data || []).forEach(estudiante => {
+    const fila = document.createElement('tr');
+    fila.appendChild(crearCelda('td', estudiante.nombre_completo, 'text-left'));
+    const promedios = [];
+    materiasConNotas.forEach(materia => {
+      // Filtrar las notas de este estudiante en esta materia
+      const notasMateria = notas.filter(nota => nota.estudiante_id === estudiante.id && nota.materia_id === materia.id);
+      
+      // Agrupar por categoría
+      const notasPorCat = {};
+      notasMateria.forEach(n => {
+        const catId = n.tareas?.categoria_id || 0;
+        if (!notasPorCat[catId]) notasPorCat[catId] = [];
+        const num = Number(n.nota);
+        if (Number.isFinite(num)) notasPorCat[catId].push(num);
+      });
+
+      let sumaPonderada = 0;
+      let pesoTotalAlineado = 0;
+
+      for (const [catId, valores] of Object.entries(notasPorCat)) {
+        if (valores.length > 0) {
+          const promCat = valores.reduce((a, b) => a + b, 0) / valores.length;
+          // Si una tarea no tiene categoría o la categoría fue borrada, asume un peso neutro o 0.
+          const peso = categoriasMap[catId] ? Number(categoriasMap[catId]) : 0; 
+          sumaPonderada += (promCat * peso);
+          pesoTotalAlineado += peso;
+        }
+      }
+
+      let promedio = null;
+      if (pesoTotalAlineado > 0) {
+        // Renormalizar si las categorías evaluadas no suman 100%
+        promedio = sumaPonderada / pesoTotalAlineado;
+      }
+
+      fila.appendChild(crearCelda('td', promedio === null ? '-' : promedio.toFixed(2), 'promedio-col'));
+      if (promedio !== null) promedios.push(promedio);
+    });
+    fila.appendChild(crearCelda('td', promedios.length ? (promedios.reduce((suma, valor) => suma + valor, 0) / promedios.length).toFixed(2) : '-', 'promedio-col'));
+    tbody.appendChild(fila);
+  });
+  
+  if (!materiasConNotas.length) tbody.innerHTML = '<tr><td colspan="15" class="empty"><div class="empty-icon">📚</div>No hay calificaciones registradas para este periodo.</td></tr>';
+}
+
+async function inicializarPlanilla() {
+  const [resConfig] = await Promise.all([
+    clienteSupabase.from('configuracion_global').select('cantidad_periodos, periodo_actual').limit(1).single()
+  ]);
+  if (resConfig.error) toast('No se pudo leer la configuración; se usarán 3 periodos.');
+  
+  configurarPeriodos(resConfig.data?.cantidad_periodos);
+  if (resConfig.data?.periodo_actual) document.getElementById('filtro-periodo').value = String(resConfig.data.periodo_actual);
+  
+  await cargarConsolidado();
+}
+
+inicializarPlanilla();
+</script>
+</body>
+</html>

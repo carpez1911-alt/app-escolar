@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuración · Mi Clase 502</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<style>
+  .dias-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
+  .dia-check { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .dia-check input { cursor: pointer; }
+  .materia-horario-row { padding: 14px 0; border-bottom: 1px solid #eef2f7; }
+  .materia-horario-row:last-child { border-bottom: 0; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+<nav class="navbar">
+  <div class="brand">
+    <div class="brand-mark">⚙️</div>
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Configuración del Sistema</div></div>
+  </div>
+  <div class="nav-actions">
+    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
+    <div class="menu-wrap" id="menuWrap">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
+            <div class="menu-panel">
+        <a href="dashboard.html">🏠 Panel principal</a>
+        <a href="index.html">📋 Control de asistencia</a>
+        <a href="actividades.html">📚 Gestionar actividades</a>
+        <a href="calificaciones.html">📝 Calificaciones</a>
+        <a href="consolidado.html">📈 Consolidado de Notas</a>
+        <a href="reportes.html">📊 Reportes y filtros</a>
+        <a href="directorio.html">👥 Estudiantes y Materias</a>
+        <a href="configuracion.html">⚙️ Configuración</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">● Parámetros Generales</div>
+      <h1>Ajustes Institucionales</h1>
+      <p>Configura el periodo lectivo y el horario semanal de clases.</p>
+    </div>
+  </section>
+
+  <!-- AJUSTES DE PERIODO Y AÑO -->
+  <section class="card">
+    <div class="toolbar"><div class="toolbar-title">📅 Periodos y Año Lectivo</div></div>
+    <div class="form-content">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div class="form-group">
+          <label for="cfg-anio">Año Lectivo:</label>
+          <input type="number" id="cfg-anio" class="form-control" min="2000" max="2100" placeholder="Año lectivo">
+        </div>
+        <div class="form-group">
+          <label for="cfg-total-periodos">Esquema Institucional:</label>
+          <select id="cfg-total-periodos" class="form-control" onchange="ajustarSelectorPeriodoActual()">
+            <option value="3">3 Periodos</option>
+            <option value="4">4 Periodos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="cfg-periodo-actual">Periodo Actual en Curso:</label>
+          <select id="cfg-periodo-actual" class="form-control"></select>
+        </div>
+      </div>
+      <button class="primary-btn" style="margin-top: 10px;" onclick="guardarConfiguracion()">💾 Guardar Ajustes Generales</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <div>
+        <div class="toolbar-title">📆 Marcos de periodos académicos</div>
+        <div class="toolbar-meta">Edita las fechas oficiales de cada periodo.</div>
+      </div>
+      <button class="secondary-btn" id="btn-guardar-periodos" type="button">💾 Guardar periodos</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>Año</th><th>Periodo</th><th>Fecha de inicio</th><th>Fecha de fin</th></tr></thead>
+        <tbody id="lista-periodos"><tr><td colspan="4" class="loading">Cargando periodos...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <div>
+        <div class="toolbar-title">📊 Categorías de Calificación</div>
+        <div class="toolbar-meta">Define las categorías globales y sus porcentajes (ej. Tareas 30%). La suma debe dar 100%.</div>
+      </div>
+      <button class="secondary-btn" id="btn-guardar-categorias" type="button" onclick="guardarCategorias()">💾 Guardar %</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>Nombre de la Categoría</th><th>Porcentaje (%)</th></tr></thead>
+        <tbody id="lista-categorias"><tr><td colspan="2" class="loading">Cargando categorías...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CONFIGURACIÓN DEL HORARIO SEMANAL -->
+  <section class="card">
+    <div class="toolbar">
+      <div>
+        <div class="toolbar-title">⏰ Horario Semanal de Clases (Lunes a Viernes)</div>
+        <div class="toolbar-meta">Marca los días en que se dicta cada asignatura</div>
+      </div>
+      <button class="secondary-btn" onclick="guardarHorario()">💾 Guardar Horario</button>
+    </div>
+    <div class="form-content" id="lista-horarios">
+      <div class="loading">Cargando materias y horario...</div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0';
+const clienteSupabase = window.clienteSupabaseCompartido;
+const mostrarAviso = mostrarToast;
+
+const diasSemana = [
+  { num: 1, nombre: 'Lun' },
+  { num: 2, nombre: 'Mar' },
+  { num: 3, nombre: 'Mié' },
+  { num: 4, nombre: 'Jue' },
+  { num: 5, nombre: 'Vie' }
+];
+
+let materias = [];
+let horariosActuales = [];
+let marcosPeriodos = [];
+let categorias = [];
+
+async function inicializar() {
+  const [resCfg, resMat, resHor, resMarcos, resCat] = await Promise.all([
+    clienteSupabase.from('configuracion_global').select('año_actual, cantidad_periodos, periodo_actual').limit(1).single(),
+    clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia'),
+    clienteSupabase.from('horario_semanal').select('id, materia_id, dia_semana'),
+    clienteSupabase.from('marcos_periodos').select('id, año, periodo, fecha_inicio, fecha_fin').order('periodo'),
+    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre')
+  ]);
+
+  if (resCfg.error || resMat.error || resHor.error || resMarcos.error) {
+    console.error('Error al cargar configuración:', resCfg.error || resMat.error || resHor.error || resMarcos.error);
+    mostrarAviso('No fue posible cargar toda la configuración.');
+  }
+
+  if (resCfg.data) {
+    document.getElementById('cfg-anio').value = resCfg.data.año_actual;
+    document.getElementById('cfg-total-periodos').value = resCfg.data.cantidad_periodos || 3;
+    ajustarSelectorPeriodoActual(resCfg.data.periodo_actual);
+  }
+
+  materias = resMat.data || [];
+  horariosActuales = resHor.data || [];
+  marcosPeriodos = resMarcos.data || [];
+  categorias = resCat.data || [];
+  renderizarPeriodos();
+  renderizarHorario();
+  renderizarCategorias();
+}
+
+function renderizarCategorias() {
+  const contenedor = document.getElementById('lista-categorias');
+  if (!categorias.length) {
+    contenedor.innerHTML = '<tr><td colspan="2" class="empty">No hay categorías configuradas. Por favor ejecuta el script de base de datos.</td></tr>';
+    return;
+  }
+  contenedor.innerHTML = '';
+  categorias.forEach(cat => {
+    const fila = document.createElement('tr');
+    fila.dataset.id = cat.id;
+    fila.innerHTML = `<td><input type="text" class="form-control cat-nombre" value="${cat.nombre}"></td><td><input type="number" class="form-control cat-porcentaje" value="${cat.porcentaje}" min="0" max="100" step="0.01"></td>`;
+    contenedor.appendChild(fila);
+  });
+}
+
+async function guardarCategorias() {
+  const filas = Array.from(document.querySelectorAll('#lista-categorias tr[data-id]'));
+  if (!filas.length) { mostrarAviso('No hay categorías para guardar.'); return; }
+  
+  const cambios = [];
+  let suma = 0;
+  for (const fila of filas) {
+    const val = parseFloat(fila.querySelector('.cat-porcentaje').value) || 0;
+    const nombre = fila.querySelector('.cat-nombre').value.trim();
+    if (!nombre) {
+      mostrarAviso('Todos los nombres de categorías son obligatorios.');
+      return;
+    }
+    suma += val;
+    cambios.push({ id: Number(fila.dataset.id), nombre: nombre, porcentaje: val });
+  }
+  
+  if (Math.abs(suma - 100) > 0.01) {
+    mostrarAviso(`Los porcentajes deben sumar exactamente 100%. Actualmente suman ${suma}%.`);
+    return;
+  }
+  
+  const boton = document.getElementById('btn-guardar-categorias');
+  boton.disabled = true;
+  try {
+    const respuestas = await Promise.all(cambios.map(cambio => clienteSupabase.from('categorias_actividades').update({ nombre: cambio.nombre, porcentaje: cambio.porcentaje }).eq('id', cambio.id)));
+    const error = respuestas.find(respuesta => respuesta.error)?.error;
+    if (error) throw error;
+    mostrarAviso('✓ Categorías y porcentajes actualizados.');
+  } catch (error) {
+    console.error(error);
+    mostrarAviso('Error al guardar las categorías.');
+  } finally {
+    boton.disabled = false;
+  }
+}
+
+function renderizarPeriodos() {
+  const contenedor = document.getElementById('lista-periodos');
+  if (!marcosPeriodos.length) {
+    contenedor.innerHTML = '<tr><td colspan="4" class="empty">No hay marcos de periodo registrados.</td></tr>';
+    return;
+  }
+  contenedor.innerHTML = '';
+  marcosPeriodos.forEach(marco => {
+    const fila = document.createElement('tr');
+    fila.dataset.id = marco.id;
+    fila.innerHTML = `<td>${marco.año ?? '-'}</td><td>Periodo ${marco.periodo ?? '-'}</td><td><input class="form-control periodo-fecha-inicio" type="date" value="${marco.fecha_inicio || ''}"><small class="toolbar-meta fecha-periodo-visible">${formatearFechaCorta(marco.fecha_inicio)}</small></td><td><input class="form-control periodo-fecha-fin" type="date" value="${marco.fecha_fin || ''}"><small class="toolbar-meta fecha-periodo-visible">${formatearFechaCorta(marco.fecha_fin)}</small></td>`;
+    fila.querySelector('.periodo-fecha-inicio').addEventListener('change', evento => { evento.target.nextElementSibling.textContent = formatearFechaCorta(evento.target.value); });
+    fila.querySelector('.periodo-fecha-fin').addEventListener('change', evento => { evento.target.nextElementSibling.textContent = formatearFechaCorta(evento.target.value); });
+    contenedor.appendChild(fila);
+  });
+}
+
+async function guardarPeriodos() {
+  const filas = Array.from(document.querySelectorAll('#lista-periodos tr[data-id]'));
+  if (!filas.length) { mostrarAviso('No hay periodos para guardar.'); return; }
+  const cambios = [];
+  for (const fila of filas) {
+    const inicio = fila.querySelector('.periodo-fecha-inicio').value;
+    const fin = fila.querySelector('.periodo-fecha-fin').value;
+    if (!inicio || !fin || inicio > fin) {
+      mostrarAviso('Revisa las fechas: deben estar completas y la fecha inicial no puede superar la final.');
+      return;
+    }
+    cambios.push({ id: Number(fila.dataset.id), fecha_inicio: inicio, fecha_fin: fin });
+  }
+  const boton = document.getElementById('btn-guardar-periodos');
+  boton.disabled = true;
+  try {
+    const respuestas = await Promise.all(cambios.map(cambio => clienteSupabase.from('marcos_periodos').update({ fecha_inicio: cambio.fecha_inicio, fecha_fin: cambio.fecha_fin }).eq('id', cambio.id)));
+    const error = respuestas.find(respuesta => respuesta.error)?.error;
+    if (error) throw error;
+    marcosPeriodos = marcosPeriodos.map(marco => {
+      const cambio = cambios.find(item => item.id === marco.id);
+      return cambio ? { ...marco, ...cambio } : marco;
+    });
+    mostrarAviso('✓ Fechas de periodos actualizadas correctamente.');
+  } catch (error) {
+    console.error('Error al guardar periodos:', error);
+    mostrarAviso('No fue posible guardar las fechas de los periodos.');
+  } finally {
+    boton.disabled = false;
+  }
+}
+
+function ajustarSelectorPeriodoActual(valorSeleccionado = 1) {
+  const total = parseInt(document.getElementById('cfg-total-periodos').value);
+  const select = document.getElementById('cfg-periodo-actual');
+  select.innerHTML = '';
+  for (let i = 1; i <= total; i++) {
+    select.innerHTML += `<option value="${i}">Periodo ${i}</option>`;
+  }
+  select.value = valorSeleccionado <= total ? valorSeleccionado : 1;
+}
+
+function renderizarHorario() {
+  const cont = document.getElementById('lista-horarios');
+  cont.innerHTML = '';
+
+  materias.forEach(mat => {
+    const row = document.createElement('div');
+    row.className = 'materia-horario-row';
+    
+    let checksHtml = diasSemana.map(d => {
+      const estaMarcado = horariosActuales.some(h => h.materia_id === mat.id && h.dia_semana === d.num);
+      return `
+        <label class="dia-check">
+          <input type="checkbox" class="chk-horario" data-materia="${mat.id}" data-dia="${d.num}" ${estaMarcado ? 'checked' : ''}>
+          ${d.nombre}
+        </label>
+      `;
+    }).join('');
+
+    row.innerHTML = `
+      <div style="font-weight: 750; margin-bottom: 5px;">${mat.nombre_materia}</div>
+      <div class="dias-grid">${checksHtml}</div>
+    `;
+    cont.appendChild(row);
+  });
+}
+
+async function guardarConfiguracion() {
+  const anio = parseInt(document.getElementById('cfg-anio').value);
+  const totalPeriodos = parseInt(document.getElementById('cfg-total-periodos').value);
+  const periodoActual = parseInt(document.getElementById('cfg-periodo-actual').value);
+
+  if (!anio || anio < 2000 || !totalPeriodos || !periodoActual) {
+    mostrarToast('Completa correctamente el año y el periodo actual.');
+    return;
+  }
+
+  const { error } = await clienteSupabase
+    .from('configuracion_global')
+    .update({ año_actual: anio, cantidad_periodos: totalPeriodos, periodo_actual: periodoActual })
+    .eq('id', 1);
+
+  if (error) { console.error(error); mostrarToast(`Error al guardar configuración: ${error.message}`); }
+  else { mostrarToast('✓ Configuración general actualizada'); }
+}
+
+async function guardarHorario() {
+  mostrarToast('Guardando horario...');
+  const checkboxes = document.querySelectorAll('.chk-horario:checked');
+  const nuevosHorarios = Array.from(checkboxes).map(c => ({
+    materia_id: parseInt(c.dataset.materia),
+    dia_semana: parseInt(c.dataset.dia)
+  }));
+
+  // Limpiar horario anterior y guardar el nuevo
+  const { error: errorBorrado } = await clienteSupabase.from('horario_semanal').delete().neq('id', 0);
+  if (errorBorrado) {
+    console.error(errorBorrado);
+    mostrarToast(`Error al actualizar horario: ${errorBorrado.message}`);
+    return;
+  }
+  if (nuevosHorarios.length > 0) {
+    const { error } = await clienteSupabase.from('horario_semanal').insert(nuevosHorarios);
+    if (error) { console.error(error); mostrarToast(`Error al guardar horario: ${error.message}`); return; }
+  }
+  mostrarToast('✓ Horario semanal actualizado');
+}
+
+document.getElementById('btn-guardar-periodos').addEventListener('click', guardarPeriodos);
+inicializar();
+</script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestionar Actividades · Mi Clase 502</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+</head>
+<body>
+<div class="app-shell">
+<nav class="navbar">
+  <div class="brand">
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Gestión de Actividades</div></div>
+  </div>
+  <div class="nav-actions">
+    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
+    <div class="menu-wrap" id="menuWrap">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
+            <div class="menu-panel">
+        <a href="dashboard.html">🏠 Panel principal</a>
+        <a href="index.html">📋 Control de asistencia</a>
+        <a href="actividades.html">📚 Gestionar actividades</a>
+        <a href="calificaciones.html">📝 Calificaciones</a>
+        <a href="consolidado.html">📈 Consolidado de Notas</a>
+        <a href="reportes.html">📊 Reportes y filtros</a>
+        <a href="directorio.html">👥 Estudiantes y Materias</a>
+        <a href="configuracion.html">⚙️ Configuración</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">● Administración Académica</div>
+      <h1>Gestor de Actividades</h1>
+      <p>Filtra, revisa y administra las tareas programadas para tu grupo.</p>
+    </div>
+  </section>
+
+  <!-- SECCIÓN DE FILTROS -->
+  <section class="card">
+    <div class="toolbar">
+      <div><div class="toolbar-title">🔍 Filtros de Búsqueda</div></div>
+    </div>
+    <div class="form-content" style="display: flex; gap: 15px; flex-wrap: wrap;">
+      
+      <div class="form-group" style="flex: 1; min-width: 150px;">
+        <label for="filtro-periodo">Periodo:</label>
+        <select id="filtro-periodo" class="form-control" onchange="cargarActividades()"></select>
+      </div>
+
+      <div class="form-group" style="flex: 2; min-width: 200px;">
+        <label for="filtro-materia">Materia:</label>
+        <select id="filtro-materia" class="form-control" onchange="cargarActividades()">
+          <option value="">Todas las materias</option>
+        </select>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LISTA DE ACTIVIDADES -->
+  <section class="card task-card">
+    <div class="toolbar">
+      <div>
+        <div class="toolbar-title">📌 Actividades Encontradas</div>
+        <div class="toolbar-meta" id="contador-actividades">Cargando...</div>
+      </div>
+    </div>
+    <div class="task-list" id="contenedor-actividades">
+      <div class="loading">Conectando con la base de datos…</div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL DE EDICIÓN DE ACTIVIDAD -->
+<div id="modal-editar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div class="card" style="width:90%; max-width:400px; padding:20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+    <h3 style="margin-top:0;">Editar Actividad</h3>
+    
+    <div class="form-group">
+      <label>Título:</label>
+      <input type="text" id="edit-titulo" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Descripción:</label>
+      <input type="text" id="edit-descripcion" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Fecha de Vencimiento:</label>
+      <input type="date" id="edit-fecha" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Periodo:</label>
+      <select id="edit-periodo" class="form-control"></select>
+    </div>
+    <div class="form-group">
+      <label>Categoría (Tipología):</label>
+      <select id="edit-categoria" class="form-control"></select>
+    </div>
+    
+    <input type="hidden" id="edit-id">
+    
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+      <button class="secondary-btn" onclick="cerrarModalEditar()">Cancelar</button>
+      <button class="primary-btn" onclick="guardarEdicionActividad()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// CONEXIÓN A SUPABASE
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0';
+const clienteSupabase = window.clienteSupabaseCompartido;
+
+const toast = mostrarToast;
+let actividadesCargadas = [];
+let totalPeriodos = 3;
+let marcosPeriodos = [];
+let categorias = [];
+
+// 1. CARGAR FILTROS INICIALES
+function getLeyendaCategoria(nombre) {
+  if (nombre.includes("Aula")) return "Actividades en clase, tareas y revisión de cuadernos";
+  if (nombre.includes("Producción")) return "Talleres estructurados, exposiciones y mesas redondas";
+  if (nombre.includes("Final")) return "Evaluación final del periodo o recuperación";
+  if (nombre.includes("Auto")) return "Rúbrica de responsabilidad y actitud";
+  return "";
+}
+
+async function inicializarFiltros() {
+  const [resCfg, resMat, resMarcos, resCat] = await Promise.all([
+    clienteSupabase.from('configuracion_global').select('cantidad_periodos, periodo_actual').limit(1).single(),
+    clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia'),
+    clienteSupabase.from('marcos_periodos').select('año, periodo, fecha_inicio, fecha_fin').order('periodo'),
+    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre')
+  ]);
+
+  // Poblar select de periodos
+  categorias = resCat.data || [];
+  totalPeriodos = resCfg.data ? (resCfg.data.cantidad_periodos || 3) : 3;
+  marcosPeriodos = resMarcos.data || [];
+  const periodoActual = resCfg.data ? resCfg.data.periodo_actual : 1;
+  const selectPeriodo = document.getElementById('filtro-periodo');
+  
+  selectPeriodo.innerHTML = '<option value="">Todos los periodos</option>';
+  for (let i = 1; i <= totalPeriodos; i++) {
+    selectPeriodo.innerHTML += `<option value="${i}" ${i === periodoActual ? 'selected' : ''}>Periodo ${i}</option>`;
+  }
+
+  // Poblar select de materias
+  if (resMat.data) {
+    const selectMateria = document.getElementById('filtro-materia');
+    resMat.data.forEach(m => {
+      selectMateria.innerHTML += `<option value="${m.id}">${m.nombre_materia}</option>`;
+    });
+  }
+
+  cargarActividades();
+}
+
+// 2. BUSCAR Y MOSTRAR ACTIVIDADES
+async function cargarActividades() {
+  const periodoFiltro = document.getElementById('filtro-periodo').value;
+  const materiaFiltro = document.getElementById('filtro-materia').value;
+  const contenedor = document.getElementById('contenedor-actividades');
+  const contador = document.getElementById('contador-actividades');
+
+  contenedor.innerHTML = '<div class="loading">Buscando actividades...</div>';
+
+  // Construir la consulta paso a paso
+  let consulta = clienteSupabase.from('tareas').select('*, materias(nombre_materia), categorias_actividades(nombre, porcentaje)').order('fecha_vencimiento', { ascending: false });
+
+  // Aplicar filtros solo si el usuario seleccionó algo
+  if (periodoFiltro !== "") {
+    consulta = consulta.eq('periodo', periodoFiltro);
+  }
+  if (materiaFiltro !== "") {
+    consulta = consulta.eq('materia_id', materiaFiltro);
+  }
+
+  const { data, error } = await consulta;
+
+  if (error) {
+    contenedor.innerHTML = '<div class="empty"><div class="empty-icon">❌</div>Error al cargar las actividades.</div>';
+    return;
+  }
+
+  contador.textContent = `${data.length} actividad(es) encontrada(s)`;
+  actividadesCargadas = data;
+
+  if (data.length === 0) {
+    contenedor.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>No hay actividades registradas para estos filtros.</div>';
+    return;
+  }
+
+  // Dibujar cada actividad en la pantalla
+  contenedor.innerHTML = '';
+  data.forEach(tarea => {
+    const nombreMateria = tarea.materias ? tarea.materias.nombre_materia : 'General';
+    const nombreCat = tarea.categorias_actividades ? `${tarea.categorias_actividades.nombre} (${tarea.categorias_actividades.porcentaje}%)` : 'Sin categoría';
+    const html = `
+      <div class="task" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="datos-tarea">
+          <span style="display: inline-block; background-color: var(--warning); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
+          <span style="display: inline-block; background-color: var(--primary); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
+          <div style="font-weight: 750;">${tarea.titulo}</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
+          <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 4px;">Vence: ${formatearFechaCorta(tarea.fecha_vencimiento)}</div>
+        </div>
+        <div>
+          <button class="secondary-btn" onclick="editarActividad(${tarea.id})">✏️ Editar</button>
+          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5;" onclick="eliminarActividad(${tarea.id})">🗑️ Eliminar</button>
+        </div>
+      </div>
+    `;
+    contenedor.innerHTML += html;
+  });
+}
+
+// 3. ELIMINAR ACTIVIDAD
+async function eliminarActividad(id) {
+  const [{ count: cantidadCalificaciones, error: errorCalificaciones }, { count: cantidadEntregas, error: errorEntregas }] = await Promise.all([
+    clienteSupabase.from('calificaciones').select('id', { count: 'exact', head: true }).eq('tarea_id', id),
+    clienteSupabase.from('entregas_tareas').select('id', { count: 'exact', head: true }).eq('tarea_id', id)
+  ]);
+  if (errorCalificaciones || errorEntregas) {
+    console.error(errorCalificaciones || errorEntregas);
+    toast('No se puede comprobar el historial; la actividad no fue eliminada.');
+    return;
+  }
+  if ((cantidadCalificaciones || 0) > 0 || (cantidadEntregas || 0) > 0) {
+    toast('No se puede eliminar: la actividad tiene calificaciones o entregas asociadas.');
+    return;
+  }
+  if (confirm('¿Estás seguro de que deseas eliminar esta actividad?')) {
+    const { error } = await clienteSupabase.from('tareas').delete().eq('id', id);
+    if(error) {
+      toast(`Error al eliminar: ${error.message}`);
+    } else {
+      toast('🗑️ Actividad eliminada correctamente.');
+      cargarActividades();
+    }
+  }
+}
+
+function cerrarModalEditar() {
+  document.getElementById('modal-editar').style.display = 'none';
+}
+
+function editarActividad(id) {
+  const actividad = actividadesCargadas.find(item => Number(item.id) === Number(id));
+  if (!actividad) {
+    toast('No se encontró la actividad para editar.');
+    return;
+  }
+  
+  document.getElementById('edit-id').value = actividad.id;
+  document.getElementById('edit-titulo').value = actividad.titulo || '';
+  document.getElementById('edit-descripcion').value = actividad.descripcion || '';
+  document.getElementById('edit-fecha').value = actividad.fecha_vencimiento || '';
+  
+  const selectPeriodo = document.getElementById('edit-periodo');
+  selectPeriodo.innerHTML = '';
+  for(let i=1; i<=totalPeriodos; i++) {
+    selectPeriodo.innerHTML += `<option value="${i}">Periodo ${i}</option>`;
+  }
+  selectPeriodo.value = actividad.periodo || 1;
+  
+  const selectCat = document.getElementById('edit-categoria');
+  selectCat.innerHTML = '';
+  categorias.forEach(c => {
+    selectCat.innerHTML += `<option value="${c.id}" title="${getLeyendaCategoria(c.nombre)}">${c.nombre} (${c.porcentaje}%)</option>`;
+  });
+  selectCat.value = actividad.categoria_id || '';
+
+  document.getElementById('modal-editar').style.display = 'flex';
+}
+
+async function guardarEdicionActividad() {
+  const id = document.getElementById('edit-id').value;
+  const titulo = document.getElementById('edit-titulo').value.trim();
+  const descripcion = document.getElementById('edit-descripcion').value.trim();
+  const fecha = document.getElementById('edit-fecha').value;
+  const periodo = document.getElementById('edit-periodo').value;
+  const categoria_id = document.getElementById('edit-categoria').value;
+  
+  if (!titulo || !fecha || !periodo || !categoria_id) {
+    toast('Todos los campos principales y la tipología son obligatorios.');
+    return;
+  }
+  
+  const periodoNumero = parseInt(periodo, 10);
+  const catNumero = parseInt(categoria_id, 10);
+  
+  const marco = marcosPeriodos.find(item => Number(item.periodo) === periodoNumero);
+  if (!marco) {
+    toast('No existe un marco académico para el periodo seleccionado.');
+    return;
+  }
+  if (fecha < marco.fecha_inicio || fecha > marco.fecha_fin) {
+    toast(`La fecha debe estar entre ${formatearFechaCorta(marco.fecha_inicio)} y ${formatearFechaCorta(marco.fecha_fin)}.`);
+    return;
+  }
+  
+  const { error } = await clienteSupabase.from('tareas').update({ 
+    titulo: titulo, 
+    descripcion: descripcion, 
+    fecha_vencimiento: fecha, 
+    periodo: periodoNumero, 
+    categoria_id: catNumero 
+  }).eq('id', id);
+  
+  if (error) {
+    console.error(error);
+    toast(`No fue posible editar la actividad: ${error.message}`);
+    return;
+  }
+  
+  cerrarModalEditar();
+  toast('✓ Actividad actualizada correctamente.');
+  cargarActividades();
+}
+
+// Iniciar la pantalla
+inicializarFiltros();
+</script>
+</body>
+</html>

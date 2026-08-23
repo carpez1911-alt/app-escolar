@@ -6,6 +6,7 @@
 <title>Asistencia · Mi Clase 502</title>
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -17,10 +18,16 @@
   <div class="nav-actions">
     <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
     <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn">☰ Opciones</button>
-      <div class="menu-panel">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
+            <div class="menu-panel">
         <a href="dashboard.html">🏠 Panel principal</a>
         <a href="index.html">📋 Control de asistencia</a>
+        <a href="actividades.html">📚 Gestionar actividades</a>
+        <a href="calificaciones.html">📝 Calificaciones</a>
+        <a href="consolidado.html">📈 Consolidado de Notas</a>
+        <a href="reportes.html">📊 Reportes y filtros</a>
+        <a href="directorio.html">👥 Estudiantes y Materias</a>
+        <a href="configuracion.html">⚙️ Configuración</a>
       </div>
     </div>
   </div>
@@ -39,6 +46,11 @@
   <section class="card">
     <div class="toolbar">
       <div><div class="toolbar-title">Estudiantes</div><div class="toolbar-meta" id="contador">Cargando grupo...</div></div>
+      <div class="form-group" style="margin:0; min-width:180px;">
+        <label for="fecha-asistencia">Fecha de asistencia:</label>
+        <input class="form-control" type="date" id="fecha-asistencia">
+        <small id="fecha-asistencia-visible" class="toolbar-meta"></small>
+      </div>
       <button class="secondary-btn" onclick="marcarTodosPresentes()">⚡ Todos presentes</button>
     </div>
     <div class="students" id="lista-estudiantes">
@@ -61,22 +73,40 @@
 
 <script>
 // LLAVES CORREGIDAS
-const SUPABASE_URL = 'https://qmgyobgahiyvgysjjhax.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0';
-const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const clienteSupabase = window.clienteSupabaseCompartido;
 let asistenciasTemporales = {};
+let asistenciasExistentes = {};
+let añoActivo = null;
 
-const toast=(msg)=>{const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(window._toast);window._toast=setTimeout(()=>el.style.display='none',3000)};
-document.getElementById('fecha-hoy').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-document.getElementById('menuBtn').addEventListener('click',()=>document.getElementById('menuWrap').classList.toggle('open'));
-document.addEventListener('click',e=>{if(!document.getElementById('menuWrap').contains(e.target))document.getElementById('menuWrap').classList.remove('open')});
+const toast = mostrarToast;
+const fechaAsistencia = document.getElementById('fecha-asistencia');
+fechaAsistencia.value = fechaLocalISO();
+document.getElementById('fecha-hoy').textContent = formatearFechaCorta(fechaAsistencia.value);
+document.getElementById('fecha-asistencia-visible').textContent = formatearFechaCorta(fechaAsistencia.value);
+fechaAsistencia.addEventListener('change', () => {
+  document.getElementById('fecha-asistencia-visible').textContent = formatearFechaCorta(fechaAsistencia.value);
+  cargarEstudiantes();
+});
 
 async function cargarEstudiantes(){
-  const {data,error} = await clienteSupabase.from('estudiantes').select('*').eq('estado','Activo').eq('año_lectivo',2026).order('id');
   const cont = document.getElementById('lista-estudiantes');
-  
-  if(error){cont.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div>No fue posible cargar los estudiantes.</div>'; toast('Error al conectar con Supabase'); return;}
+  const fecha = fechaAsistencia.value;
+  if (!fecha) { toast('Selecciona una fecha válida.'); return; }
+  const { data: config, error: configError } = await clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single();
+  if (configError || !config?.año_actual) {
+    cont.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>No fue posible cargar el año académico activo.</div>';
+    toast('No se pudo leer la configuración institucional.');
+    return;
+  }
+  añoActivo = config.año_actual;
+  const [{ data, error }, { data: registros, error: errorAsistencia }] = await Promise.all([
+    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado, año_lectivo').eq('estado','Activo').eq('año_lectivo', añoActivo).order('id'),
+    clienteSupabase.from('asistencia').select('id, estudiante_id, estado, fecha').eq('fecha', fecha)
+  ]);
+  if(error || errorAsistencia){cont.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div>No fue posible cargar los estudiantes o la asistencia.</div>'; toast('Error al conectar con Supabase'); return;}
+  asistenciasTemporales = {};
+  asistenciasExistentes = Object.fromEntries((registros || []).map(registro => [String(registro.estudiante_id), registro]));
   
   document.getElementById('contador').textContent=`${data.length} estudiante${data.length===1?'':'s'} activos`;
   cont.innerHTML='';
@@ -91,8 +121,11 @@ async function cargarEstudiantes(){
     text.append(name,id); info.append(avatar,text);
     
     const grid=document.createElement('div'); grid.className='status-grid';
+    const estadoGuardado = asistenciasExistentes[String(e.id)]?.estado?.toLowerCase();
+    if (estadoGuardado) asistenciasTemporales[e.id] = estadoGuardado.toUpperCase();
     [['P','Presente','p'],['E','Excusa','e'],['T','Tardanza','t'],['A','Ausente','a']].forEach(([label,title,key])=>{
       const b=document.createElement('button'); b.className='status-btn'; b.textContent=label; b.title=title;
+      if (estadoGuardado === key) b.classList.add(`selected-${key}`);
       b.onclick=()=>seleccionarEstado(b,key,e.id); grid.appendChild(b);
     });
     row.append(info,grid); cont.appendChild(row);
@@ -116,23 +149,21 @@ function marcarTodosPresentes(){
 }
 
 async function guardarAsistencia(){
-  const datos = Object.entries(asistenciasTemporales).map(([id,estado])=>({estudiante_id:id, estado:estado}));
+  const fecha = fechaAsistencia.value;
+  const datos = Object.entries(asistenciasTemporales).map(([id,estado])=>({estudiante_id:Number(id), estado:estado}));
   
-  if(!datos.length){toast('⚠️ Selecciona al menos un estado'); return;}
-  
-  const {error} = await clienteSupabase.from('asistencia').insert(datos);
-  
-  if(error){
-      // Si salta el error del candado "Una vez al día" que creamos antes
-      if(error.code === '23505') { toast('⚠️ Ya tomaste asistencia hoy para estos alumnos'); }
-      else { toast('Error: No se pudo guardar la asistencia'); console.error(error); }
-      return;
-  }
-  
-  // Limpiar memoria y pantalla tras guardar con éxito
-  asistenciasTemporales={};
-  document.querySelectorAll('.status-btn').forEach(b=>b.className='status-btn');
+  if(!fecha || !datos.length){toast('⚠️ Selecciona una fecha y al menos un estado'); return;}
+  const operaciones = datos.map(dato => {
+    const existente = asistenciasExistentes[String(dato.estudiante_id)];
+    return existente
+      ? clienteSupabase.from('asistencia').update({ estado: dato.estado }).eq('id', existente.id)
+      : clienteSupabase.from('asistencia').insert({ ...dato, fecha });
+  });
+  const respuestas = await Promise.all(operaciones);
+  const error = respuestas.find(respuesta => respuesta.error)?.error;
+  if(error){ toast('Error: No se pudo guardar la asistencia'); console.error(error); return; }
   toast('✓ Asistencia guardada correctamente');
+  await cargarEstudiantes();
 }
 
 cargarEstudiantes();

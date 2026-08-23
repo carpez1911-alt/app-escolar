@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudiantes y Materias · Mi Clase 502</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<style>
+  .directorio-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 768px) { .directorio-grid { grid-template-columns: 1fr 1fr; } }
+  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); margin-top: 15px;}
+  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; white-space: nowrap; }
+  th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+  th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; }
+  .estado-badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+  .estado-activo { background-color: #dcfce7; color: #15803d; }
+  .estado-inactivo { background-color: #fee2e2; color: #b91c1c; }
+  .action-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px; border-radius: 4px;}
+  .action-btn:hover { background: #f1f5f9; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+<nav class="navbar">
+  <div class="brand">
+    <div class="brand-mark">👥</div>
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Directorio</div></div>
+  </div>
+  <div class="nav-actions">
+    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
+    <div class="menu-wrap" id="menuWrap">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
+      <div class="menu-panel">
+        <a href="dashboard.html">🏠 Panel principal</a>
+        <a href="index.html">📋 Control de asistencia</a>
+        <a href="actividades.html">📚 Gestionar actividades</a>
+        <a href="calificaciones.html">📝 Calificaciones</a>
+        <a href="consolidado.html">📈 Consolidado de Notas</a>
+        <a href="reportes.html">📊 Reportes y filtros</a>
+        <a href="directorio.html">👥 Estudiantes y Materias</a>
+        <a href="configuracion.html">⚙️ Configuración</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="hero" style="margin-bottom: 15px;">
+    <div>
+      <div class="eyebrow">● Administración de Datos</div>
+      <h1>Directorio Académico</h1>
+      <p>Administra la lista de estudiantes y las materias de tu curso.</p>
+    </div>
+  </section>
+
+  <div class="directorio-grid">
+    <!-- PANEL DE ESTUDIANTES -->
+    <section class="card" style="padding: 20px;">
+      <div class="toolbar">
+        <div>
+          <div class="toolbar-title">🎓 Estudiantes</div>
+          <div class="toolbar-meta">Control de matrícula</div>
+        </div>
+        <button class="primary-btn" onclick="abrirModalEstudiante()">+ Nuevo</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>ID</th><th>Nombre Completo</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="lista-estudiantes">
+              <tr><td colspan="4" class="loading">Cargando estudiantes...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PANEL DE MATERIAS -->
+    <section class="card" style="padding: 20px;">
+      <div class="toolbar">
+        <div>
+          <div class="toolbar-title">📖 Materias</div>
+          <div class="toolbar-meta">Asignaturas impartidas</div>
+        </div>
+        <button class="primary-btn" onclick="abrirModalMateria()">+ Nueva</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>ID</th><th>Nombre de Materia</th><th>Acciones</th></tr></thead>
+          <tbody id="lista-materias">
+              <tr><td colspan="3" class="loading">Cargando materias...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL ESTUDIANTE -->
+<div id="modal-estudiante" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div class="card" style="width:90%; max-width:400px; padding:20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+    <h3 style="margin-top:0;" id="modal-estudiante-titulo">Nuevo Estudiante</h3>
+    <input type="hidden" id="edit-estudiante-id">
+    
+    <div class="form-group">
+      <label>Nombre Completo:</label>
+      <input type="text" id="edit-estudiante-nombre" class="form-control" placeholder="Apellidos y Nombres">
+    </div>
+    
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+      <button class="secondary-btn" onclick="cerrarModal('modal-estudiante')">Cancelar</button>
+      <button class="primary-btn" onclick="guardarEstudiante()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MATERIA -->
+<div id="modal-materia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div class="card" style="width:90%; max-width:400px; padding:20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+    <h3 style="margin-top:0;" id="modal-materia-titulo">Nueva Materia</h3>
+    <input type="hidden" id="edit-materia-id">
+    
+    <div class="form-group">
+      <label>Nombre de la Materia:</label>
+      <input type="text" id="edit-materia-nombre" class="form-control" placeholder="Ej. Matemáticas">
+    </div>
+    
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+      <button class="secondary-btn" onclick="cerrarModal('modal-materia')">Cancelar</button>
+      <button class="primary-btn" onclick="guardarMateria()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const clienteSupabase = window.clienteSupabaseCompartido;
+const toast = mostrarToast;
+
+let estudiantesData = [];
+let materiasData = [];
+let añoActual = null;
+
+async function cargarDirectorio() {
+  document.getElementById('lista-estudiantes').innerHTML = '<tr><td colspan="4" class="loading">Cargando...</td></tr>';
+  document.getElementById('lista-materias').innerHTML = '<tr><td colspan="3" class="loading">Cargando...</td></tr>';
+  
+  const [resCfg, resEst, resMat] = await Promise.all([
+    clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single(),
+    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado').order('nombre_completo'),
+    clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
+  ]);
+
+  if (resCfg.data) añoActual = resCfg.data.año_actual;
+  
+  if (resEst.error || resMat.error) {
+    toast('Error al cargar datos del directorio.');
+    return;
+  }
+
+  estudiantesData = resEst.data || [];
+  materiasData = resMat.data || [];
+  renderizarEstudiantes();
+  renderizarMaterias();
+}
+
+function renderizarEstudiantes() {
+  const tbody = document.getElementById('lista-estudiantes');
+  if (estudiantesData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty">No hay estudiantes registrados.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = '';
+  estudiantesData.forEach(est => {
+    const estadoClass = est.estado === 'Activo' ? 'estado-activo' : 'estado-inactivo';
+    const toggleAction = est.estado === 'Activo' ? 'Desactivar' : 'Activar';
+    const toggleIcon = est.estado === 'Activo' ? '⛔' : '✅';
+    
+    tbody.innerHTML += `
+      <tr>
+        <td>${est.id}</td>
+        <td style="font-weight: 600;">${est.nombre_completo}</td>
+        <td><span class="estado-badge ${estadoClass}">${est.estado}</span></td>
+        <td>
+          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}')">✏️</button>
+          <button class="action-btn" title="${toggleAction}" onclick="toggleEstadoEstudiante(${est.id}, '${est.estado}')">${toggleIcon}</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function renderizarMaterias() {
+  const tbody = document.getElementById('lista-materias');
+  if (materiasData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty">No hay materias registradas.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = '';
+  materiasData.forEach(mat => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${mat.id}</td>
+        <td style="font-weight: 600;">${mat.nombre_materia}</td>
+        <td>
+          <button class="action-btn" title="Editar" onclick="abrirModalMateria(${mat.id}, '${mat.nombre_materia.replace(/'/g, "\\'")}')">✏️</button>
+          <button class="action-btn" title="Eliminar" onclick="eliminarMateria(${mat.id})">🗑️</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+// === MODALES ===
+function cerrarModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// === ESTUDIANTES ===
+function abrirModalEstudiante(id = null, nombre = '') {
+  document.getElementById('modal-estudiante-titulo').textContent = id ? 'Editar Estudiante' : 'Nuevo Estudiante';
+  document.getElementById('edit-estudiante-id').value = id || '';
+  document.getElementById('edit-estudiante-nombre').value = nombre;
+  document.getElementById('modal-estudiante').style.display = 'flex';
+}
+
+async function guardarEstudiante() {
+  const id = document.getElementById('edit-estudiante-id').value;
+  const nombre = document.getElementById('edit-estudiante-nombre').value.trim();
+  
+  if (!nombre) { toast('El nombre es obligatorio.'); return; }
+  if (!añoActual) { toast('Error: No se ha configurado el año académico.'); return; }
+
+  let error;
+  if (id) {
+    const res = await clienteSupabase.from('estudiantes').update({ nombre_completo: nombre }).eq('id', id);
+    error = res.error;
+  } else {
+    const res = await clienteSupabase.from('estudiantes').insert([{ nombre_completo: nombre, estado: 'Activo', año_lectivo: añoActual }]);
+    error = res.error;
+  }
+
+  if (error) { toast(`Error al guardar: ${error.message}`); return; }
+  
+  cerrarModal('modal-estudiante');
+  toast('✓ Estudiante guardado exitosamente.');
+  cargarDirectorio();
+}
+
+async function toggleEstadoEstudiante(id, estadoActual) {
+  const nuevoEstado = estadoActual === 'Activo' ? 'Inactivo' : 'Activo';
+  if (!confirm(`¿Estás seguro de que deseas ${nuevoEstado === 'Inactivo' ? 'desactivar' : 'activar'} a este estudiante?`)) return;
+  
+  const { error } = await clienteSupabase.from('estudiantes').update({ estado: nuevoEstado }).eq('id', id);
+  if (error) { toast(`Error al cambiar estado: ${error.message}`); return; }
+  
+  toast(`✓ Estudiante marcado como ${nuevoEstado}.`);
+  cargarDirectorio();
+}
+
+// === MATERIAS ===
+function abrirModalMateria(id = null, nombre = '') {
+  document.getElementById('modal-materia-titulo').textContent = id ? 'Editar Materia' : 'Nueva Materia';
+  document.getElementById('edit-materia-id').value = id || '';
+  document.getElementById('edit-materia-nombre').value = nombre;
+  document.getElementById('modal-materia').style.display = 'flex';
+}
+
+async function guardarMateria() {
+  const id = document.getElementById('edit-materia-id').value;
+  const nombre = document.getElementById('edit-materia-nombre').value.trim();
+  
+  if (!nombre) { toast('El nombre es obligatorio.'); return; }
+
+  let error;
+  if (id) {
+    const res = await clienteSupabase.from('materias').update({ nombre_materia: nombre }).eq('id', id);
+    error = res.error;
+  } else {
+    const res = await clienteSupabase.from('materias').insert([{ nombre_materia: nombre }]);
+    error = res.error;
+  }
+
+  if (error) { toast(`Error al guardar: ${error.message}`); return; }
+  
+  cerrarModal('modal-materia');
+  toast('✓ Materia guardada exitosamente.');
+  cargarDirectorio();
+}
+
+async function eliminarMateria(id) {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta materia? Esto solo será posible si no tiene calificaciones, horarios ni tareas asociadas.')) return;
+  
+  const { error } = await clienteSupabase.from('materias').delete().eq('id', id);
+  if (error) { 
+    toast(`No se puede eliminar la materia porque tiene datos asociados.`); 
+    console.error(error);
+    return; 
+  }
+  
+  toast('🗑️ Materia eliminada.');
+  cargarDirectorio();
+}
+
+cargarDirectorio();
+</script>
+</body>
+</html>

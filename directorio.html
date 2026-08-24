@@ -108,6 +108,11 @@
       <input type="text" id="edit-estudiante-nombre" class="form-control" placeholder="Apellidos y Nombres">
     </div>
     
+    <div class="form-group">
+      <label>Teléfono Acudiente (WhatsApp):</label>
+      <input type="tel" id="edit-estudiante-telefono" class="form-control" placeholder="Ej. +573001234567">
+    </div>
+    
     <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
       <button class="secondary-btn" onclick="cerrarModal('modal-estudiante')">Cancelar</button>
       <button class="primary-btn" onclick="guardarEstudiante()">Guardar</button>
@@ -149,7 +154,7 @@ async function cargarDirectorio() {
   
   const [resCfg, resEst, resMat] = await Promise.all([
     clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single(),
-    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado').order('nombre_completo'),
+    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado, telefono_acudiente').order('nombre_completo'),
     clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
   ]);
 
@@ -185,7 +190,7 @@ function renderizarEstudiantes() {
         <td style="font-weight: 600;">${est.nombre_completo}</td>
         <td><span class="estado-badge ${estadoClass}">${est.estado}</span></td>
         <td>
-          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}')">✏️</button>
+          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}', '${(est.telefono_acudiente || '').replace(/'/g, "\\'")}')">✏️</button>
           <button class="action-btn" title="${toggleAction}" onclick="toggleEstadoEstudiante(${est.id}, '${est.estado}')">${toggleIcon}</button>
         </td>
       </tr>
@@ -221,26 +226,28 @@ function cerrarModal(modalId) {
 }
 
 // === ESTUDIANTES ===
-function abrirModalEstudiante(id = null, nombre = '') {
+function abrirModalEstudiante(id = null, nombre = '', telefono = '') {
   document.getElementById('modal-estudiante-titulo').textContent = id ? 'Editar Estudiante' : 'Nuevo Estudiante';
   document.getElementById('edit-estudiante-id').value = id || '';
   document.getElementById('edit-estudiante-nombre').value = nombre;
+  document.getElementById('edit-estudiante-telefono').value = telefono;
   document.getElementById('modal-estudiante').style.display = 'flex';
 }
 
 async function guardarEstudiante() {
   const id = document.getElementById('edit-estudiante-id').value;
   const nombre = document.getElementById('edit-estudiante-nombre').value.trim();
+  const telefono = document.getElementById('edit-estudiante-telefono').value.trim();
   
   if (!nombre) { toast('El nombre es obligatorio.'); return; }
   if (!añoActual) { toast('Error: No se ha configurado el año académico.'); return; }
 
   let error;
   if (id) {
-    const res = await clienteSupabase.from('estudiantes').update({ nombre_completo: nombre }).eq('id', id);
+    const res = await clienteSupabase.from('estudiantes').update({ nombre_completo: nombre, telefono_acudiente: telefono }).eq('id', id);
     error = res.error;
   } else {
-    const res = await clienteSupabase.from('estudiantes').insert([{ nombre_completo: nombre, estado: 'Activo', año_lectivo: añoActual }]);
+    const res = await clienteSupabase.from('estudiantes').insert([{ nombre_completo: nombre, telefono_acudiente: telefono, estado: 'Activo', año_lectivo: añoActual }]);
     error = res.error;
   }
 

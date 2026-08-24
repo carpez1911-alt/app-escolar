@@ -43,22 +43,72 @@
     <div class="date-pill">📅 <span id="fecha-hoy">Cargando fecha...</span></div>
   </section>
 
-  <section class="card">
-    <div class="toolbar">
-      <div><div class="toolbar-title">Estudiantes</div><div class="toolbar-meta" id="contador">Cargando grupo...</div></div>
-      <div class="form-group" style="margin:0; min-width:180px;">
-        <label for="fecha-asistencia">Fecha de asistencia:</label>
-        <input class="form-control" type="date" id="fecha-asistencia">
-        <small id="fecha-asistencia-visible" class="toolbar-meta"></small>
-      </div>
-      <button class="secondary-btn" onclick="marcarTodosPresentes()">⚡ Todos presentes</button>
+  <section class="card report-panel">
+    <div class="report-tabs">
+      <button class="report-tab active" data-tab="registro">📋 Registro Diario</button>
+      <button class="report-tab" data-tab="whatsapp">💬 Reporte WhatsApp</button>
     </div>
-    <div class="students" id="lista-estudiantes">
-      <div class="loading">Conectando con la base de datos…</div>
+    
+    <div id="panel-registro">
+      <div class="toolbar">
+        <div><div class="toolbar-title">Estudiantes</div><div class="toolbar-meta" id="contador">Cargando grupo...</div></div>
+        <div class="form-group" style="margin:0; min-width:180px;">
+          <label for="fecha-asistencia">Fecha de asistencia:</label>
+          <input class="form-control" type="date" id="fecha-asistencia">
+          <small id="fecha-asistencia-visible" class="toolbar-meta"></small>
+        </div>
+        <button class="secondary-btn" onclick="marcarTodosPresentes()">⚡ Todos presentes</button>
+      </div>
+      <div class="students" id="lista-estudiantes">
+        <div class="loading">Conectando con la base de datos…</div>
+      </div>
+    </div>
+    
+    <div id="panel-whatsapp" style="display:none;">
+      <div class="filter-grid">
+        <div class="form-group">
+          <label for="wa-tipo">Tipo de reporte</label>
+          <select class="form-control" id="wa-tipo">
+            <option value="dia">Por Día</option>
+            <option value="semana">Por Semana</option>
+          </select>
+        </div>
+        <div class="form-group" id="wa-group-dia">
+          <label for="wa-fecha-dia">Fecha</label>
+          <input class="form-control" type="date" id="wa-fecha-dia">
+        </div>
+        <div class="form-group" id="wa-group-semana" style="display:none;">
+          <label for="wa-fecha-semana">Semana (Inicio Lunes)</label>
+          <input class="form-control" type="date" id="wa-fecha-semana">
+        </div>
+        <div class="filter-actions">
+          <button class="secondary-btn" onclick="generarPrevisualizacion()">🔄 Generar</button>
+        </div>
+      </div>
+      <div class="form-content" style="padding-top:0;">
+        <div id="wa-table-container" style="display:none; margin-bottom: 20px; overflow-x: auto; background: white; border: 1px solid var(--border); border-radius: 8px;">
+          <table style="width:100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+            <thead>
+              <tr>
+                <th style="padding: 10px; border-bottom: 1px solid var(--border); background-color: var(--primary-soft);">Estudiante</th>
+                <th style="padding: 10px; border-bottom: 1px solid var(--border); background-color: var(--primary-soft);">Asistencia</th>
+                <th style="padding: 10px; border-bottom: 1px solid var(--border); background-color: var(--primary-soft); text-align: right;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="wa-preview-table">
+            </tbody>
+          </table>
+        </div>
+        <div class="form-group">
+          <label for="wa-preview">Reporte General para Coordinación</label>
+          <textarea class="form-control" id="wa-preview" rows="8" placeholder="Haz clic en Generar para cargar el listado completo y la previsualización del reporte general..."></textarea>
+        </div>
+        <button class="primary-btn" style="background:#25D366; border-color:#25D366; color: white;" onclick="enviarWhatsApp()">📲 Enviar Reporte General</button>
+      </div>
     </div>
   </section>
 
-  <div class="save-bar">
+  <div class="save-bar" id="save-bar">
     <div class="legend">
       <span><i class="dot p"></i>Presente</span>
       <span><i class="dot e"></i>Excusa</span>
@@ -88,6 +138,148 @@ fechaAsistencia.addEventListener('change', () => {
   document.getElementById('fecha-asistencia-visible').textContent = formatearFechaCorta(fechaAsistencia.value);
   cargarEstudiantes();
 });
+
+// WA UI Logic
+document.querySelectorAll('.report-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const isWa = tab.dataset.tab === 'whatsapp';
+    document.getElementById('panel-registro').style.display = isWa ? 'none' : 'block';
+    document.getElementById('panel-whatsapp').style.display = isWa ? 'block' : 'none';
+    document.getElementById('save-bar').style.display = isWa ? 'none' : 'flex';
+  });
+});
+
+document.getElementById('wa-tipo').addEventListener('change', (e) => {
+  const isDia = e.target.value === 'dia';
+  document.getElementById('wa-group-dia').style.display = isDia ? 'block' : 'none';
+  document.getElementById('wa-group-semana').style.display = isDia ? 'none' : 'block';
+});
+document.getElementById('wa-fecha-dia').value = fechaLocalISO();
+document.getElementById('wa-fecha-semana').value = fechaLocalISO();
+
+async function generarPrevisualizacion() {
+  const tipo = document.getElementById('wa-tipo').value;
+  let fechaInicio, fechaFin, tituloReporte;
+  
+  if (tipo === 'dia') {
+    fechaInicio = document.getElementById('wa-fecha-dia').value;
+    fechaFin = fechaInicio;
+    tituloReporte = `Fecha: ${formatearFechaCorta(fechaInicio)}`;
+  } else {
+    const d = new Date(document.getElementById('wa-fecha-semana').value + 'T00:00:00');
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const lunes = new Date(d.setDate(diff));
+    const viernes = new Date(lunes); 
+    viernes.setDate(lunes.getDate() + 4);
+    
+    fechaInicio = lunes.toISOString().split('T')[0];
+    fechaFin = viernes.toISOString().split('T')[0];
+    tituloReporte = `Semana: ${formatearFechaCorta(fechaInicio)} al ${formatearFechaCorta(fechaFin)}`;
+  }
+  
+  if (!fechaInicio) return;
+  toast('Generando reporte...');
+  
+  const [{ data: estData, error: estErr }, { data: asisData, error: asisErr }] = await Promise.all([
+    clienteSupabase.from('estudiantes').select('id, nombre_completo, telefono_acudiente').eq('estado','Activo').order('nombre_completo'),
+    clienteSupabase.from('asistencia').select('estudiante_id, estado, fecha').gte('fecha', fechaInicio).lte('fecha', fechaFin).neq('estado', 'P')
+  ]);
+  
+  if (estErr || asisErr) { toast('Error al consultar datos'); return; }
+  
+  // 1. Agrupar datos por estudiante
+  const estudiantesMap = {};
+  estData.forEach(e => {
+    estudiantesMap[e.id] = { nombre: e.nombre_completo, telefono: e.telefono_acudiente, faltas: [] };
+  });
+  
+  const ausentes = [], tardanzas = [], excusas = [];
+  
+  asisData.forEach(a => {
+    if (!estudiantesMap[a.estudiante_id]) return;
+    const est = estudiantesMap[a.estudiante_id];
+    const desc = tipo === 'semana' ? `- ${est.nombre} (${formatearFechaCorta(a.fecha)})` : `- ${est.nombre}`;
+    
+    if (a.estado === 'A') { ausentes.push(desc); est.faltas.push(`Ausente (${formatearFechaCorta(a.fecha)})`); }
+    if (a.estado === 'T') { tardanzas.push(desc); est.faltas.push(`Tardanza (${formatearFechaCorta(a.fecha)})`); }
+    if (a.estado === 'E') { excusas.push(desc); est.faltas.push(`Excusa (${formatearFechaCorta(a.fecha)})`); }
+  });
+  
+  // 2. Renderizar tabla de previsualización
+  const tbody = document.getElementById('wa-preview-table');
+  tbody.innerHTML = '';
+  document.getElementById('wa-table-container').style.display = 'block';
+  
+  estData.forEach(e => {
+    const est = estudiantesMap[e.id];
+    const tr = document.createElement('tr');
+    
+    const tdNombre = document.createElement('td');
+    tdNombre.style.padding = '10px'; tdNombre.style.borderBottom = '1px solid var(--border)';
+    tdNombre.style.fontWeight = '600';
+    tdNombre.textContent = est.nombre;
+    
+    const tdFaltas = document.createElement('td');
+    tdFaltas.style.padding = '10px'; tdFaltas.style.borderBottom = '1px solid var(--border)';
+    if (est.faltas.length > 0) {
+      tdFaltas.innerHTML = est.faltas.join('<br>');
+    } else {
+      tdFaltas.innerHTML = '<span style="color:#15803d; font-weight:bold;">Sin faltas</span>';
+    }
+    
+    const tdAcciones = document.createElement('td');
+    tdAcciones.style.padding = '10px'; tdAcciones.style.borderBottom = '1px solid var(--border)';
+    tdAcciones.style.textAlign = 'right';
+    
+    const btnIndiv = document.createElement('button');
+    btnIndiv.className = 'secondary-btn';
+    btnIndiv.style.fontSize = '12px'; btnIndiv.style.padding = '4px 8px';
+    btnIndiv.innerHTML = '📲 Individual';
+    btnIndiv.onclick = () => enviarWhatsAppIndividual(est, tituloReporte);
+    
+    tdAcciones.appendChild(btnIndiv);
+    tr.append(tdNombre, tdFaltas, tdAcciones);
+    tbody.appendChild(tr);
+  });
+
+  // 3. Renderizar mensaje general
+  let msj = `🏫 *Reporte de Asistencia - Mi Clase 502*\n📅 ${tituloReporte}\n\n`;
+  if (ausentes.length) msj += `🔴 *Ausentes:*\n${ausentes.join('\n')}\n\n`;
+  if (tardanzas.length) msj += `🟠 *Tardanzas:*\n${tardanzas.join('\n')}\n\n`;
+  if (excusas.length) msj += `🟡 *Excusas:*\n${excusas.join('\n')}\n\n`;
+  
+  if (!ausentes.length && !tardanzas.length && !excusas.length) {
+    msj += `✅ *Excelente asistencia.* No hay inasistencias reportadas.\n`;
+  }
+  
+  document.getElementById('wa-preview').value = msj;
+  toast('✓ Listado y reporte cargados');
+}
+
+function enviarWhatsAppIndividual(est, tituloReporte) {
+  if (!est.telefono) {
+    toast('⚠️ Este estudiante no tiene un teléfono de acudiente registrado.');
+    return;
+  }
+  let msj = `🏫 *Reporte de Asistencia - Mi Clase 502*\n👤 Alumno: ${est.nombre}\n📅 ${tituloReporte}\n\n`;
+  if (est.faltas.length === 0) {
+    msj += `✅ Excelente asistencia. No se reportan faltas ni tardanzas en este periodo.`;
+  } else {
+    msj += `⚠️ Se han registrado las siguientes inasistencias:\n- ${est.faltas.join('\n- ')}`;
+  }
+  
+  const phone = est.telefono.replace(/\D/g, ''); // Deja solo números
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msj)}`, '_blank');
+}
+
+function enviarWhatsApp() {
+  const msj = document.getElementById('wa-preview').value;
+  if (!msj.trim()) { toast('⚠️ Genera el reporte primero'); return; }
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msj)}`, '_blank');
+}
 
 async function cargarEstudiantes(){
   const cont = document.getElementById('lista-estudiantes');

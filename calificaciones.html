@@ -24,26 +24,29 @@
   .btn-wa { background-color: #25D366; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
   .btn-wa:hover { background-color: #128C7E; transform: translateY(-1px); }
 </style>
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <div class="brand-mark">🎓</div>
+    <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
     <div><div class="brand-title">Mi Clase</div><div class="brand-subtitle">Consolidado de Notas</div></div>
   </div>
   <div class="nav-actions">
     <div class="menu-wrap" id="menuWrap">
       <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
             <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
+        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
+        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
+        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
+        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Calificaciones</a>
+        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Consolidado de Notas</a>
+        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Reportes y filtros</a>
+        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Estudiantes y Materias</a>
+        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
+        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
+        <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
       </div>
     </div>
   </div>
@@ -105,6 +108,7 @@ let listaTareas = [];
 let listaEstudiantes = [];
 let listaMaterias = [];
 let notasCargadas = [];
+let promediosCargados = [];
 
 function crearCelda(tag, texto, clase = '') {
   const celda = document.createElement(tag);
@@ -142,31 +146,7 @@ function enviarWhatsApp(nombre, promedio, periodo) {
 }
 
 function actualizarPromedios(fila) {
-  const celdaEditada = fila.querySelector('.celda-nota');
-  if (!celdaEditada) return;
-  
-  const materiaId = celdaEditada.dataset.materia;
-  const estudianteId = celdaEditada.dataset.estudiante;
-  const tareaId = celdaEditada.dataset.tarea;
-  
-  let notasDelEstudiante = notasCargadas.filter(n => String(n.estudiante_id) === String(estudianteId) && String(n.materia_id) === String(materiaId));
-  
-  const notasPorTarea = {};
-  notasDelEstudiante.forEach(n => { notasPorTarea[n.tarea_id] = Number(n.nota); });
-  
-  const notaEditada = Number.parseFloat(celdaEditada.textContent.trim().replace(',', '.'));
-  if (!Number.isNaN(notaEditada)) {
-      notasPorTarea[tareaId] = notaEditada;
-  } else {
-      delete notasPorTarea[tareaId];
-  }
-  
-  const valores = Object.values(notasPorTarea);
-  const promedio = valores.length ? (valores.reduce((a,b) => a+b, 0) / valores.length).toFixed(2) : '-';
-  
-  fila.querySelectorAll('.promedio-materia').forEach(celda => celda.textContent = promedio);
-  const celdaGeneral = fila.querySelector('.promedio-general');
-  if (celdaGeneral) celdaGeneral.textContent = promedio;
+  // El cálculo se movió a la vista en BD. Solo recargar al guardar.
 }
 
 function mostrarSinActividades() {
@@ -192,16 +172,18 @@ async function cargarPlanilla() {
     return;
   }
   tbody.innerHTML = `<tr><td colspan="15" class="loading">Cargando actividades del Periodo ${periodo}...</td></tr>`;
-  const [resEst, resTareas, resNotas] = await Promise.all([
+  const [resEst, resTareas, resNotas, resPromedios] = await Promise.all([
     clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
     clienteSupabase.from('tareas').select('id, titulo, materia_id, periodo').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
-    clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota').eq('materia_id', materiaId).eq('periodo', periodo)
+    clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota').eq('materia_id', materiaId).eq('periodo', periodo),
+    clienteSupabase.from('v_promedios_estudiantes').select('estudiante_id, promedio_definitiva').eq('materia_id', materiaId).eq('periodo', periodo)
   ]);
-  if (resEst.error || resTareas.error || resNotas.error) { toast('Error al cargar la planilla'); return; }
+  if (resEst.error || resTareas.error || resNotas.error || resPromedios?.error) { toast('Error al cargar la planilla'); return; }
   
   listaEstudiantes = resEst.data || [];
   listaTareas = resTareas.data || [];
   notasCargadas = resNotas.data || [];
+  promediosCargados = resPromedios?.data || [];
   
   if (!listaTareas.length) { 
     mostrarSinActividades(); 
@@ -264,10 +246,11 @@ function renderizarPlanillaCalificar() {
     celda.addEventListener('input', () => actualizarPromedios(fila));
     fila.appendChild(celda);
 
-    const promedioMateria = crearCelda('td', '-', 'promedio-col promedio-materia');
+    const pro = promediosCargados.find(p => String(p.estudiante_id) === String(estudiante.id));
+    const promedioMateria = crearCelda('td', pro ? pro.promedio_definitiva : '-', 'promedio-col promedio-materia');
     promedioMateria.dataset.materia = materiaId;
     fila.appendChild(promedioMateria);
-    fila.appendChild(crearCelda('td', '-', 'promedio-col promedio-general'));
+    fila.appendChild(crearCelda('td', pro ? pro.promedio_definitiva : '-', 'promedio-col promedio-general'));
     const acciones = crearCelda('td', '', 'acciones-celda');
     const botonReporte = crearCelda('button', '💬 Enviar', 'btn-wa');
     botonReporte.type = 'button';
@@ -329,7 +312,7 @@ async function guardarNotas() {
 
     if (error) {
         console.error('Error al guardar calificaciones:', error);
-        toast('No fue posible guardar las calificaciones.');
+        toast('Error DB: ' + (error.message || 'No fue posible guardar las calificaciones.'));
     } else {
         toast('✓ Calificaciones guardadas correctamente.');
         await cargarPlanilla();
@@ -356,5 +339,6 @@ async function inicializarPlanilla() {
 
 inicializarPlanilla();
 </script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

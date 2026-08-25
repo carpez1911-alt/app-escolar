@@ -7,20 +7,23 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
 <nav class="navbar">
-  <div class="brand"><div class="brand-mark">🎓</div><div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Reportes docentes</div></div></div>
+  <div class="brand"><i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i><div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Reportes docentes</div></div></div>
   <div class="nav-actions"><div class="menu-wrap" id="menuWrap"><button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>      <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
+        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
+        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
+        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
+        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Calificaciones</a>
+        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Consolidado de Notas</a>
+        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Reportes y filtros</a>
+        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Estudiantes y Materias</a>
+        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
+        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
+        <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
       </div></div></div>
 </nav>
 <main class="page">
@@ -108,5 +111,6 @@ document.getElementById('filtro-periodo').addEventListener('change', dibujarRepo
 document.getElementById('btn-limpiar').addEventListener('click', () => { ['filtro-materia','filtro-alumno','filtro-estado'].forEach(id => document.getElementById(id).value = ''); document.getElementById('filtro-periodo').value = String(estado.periodoActual); dibujarReporte(); });
 cargarDatos();
 </script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

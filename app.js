@@ -39,8 +39,27 @@ function formatearFechaCorta(fecha) {
   return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : 'Sin fecha';
 }
 
+async function cerrarSesion() {
+  await window.clienteSupabaseCompartido.auth.signOut();
+  window.location.href = 'login.html';
+}
+
+async function authGuard() {
+  // Ignorar en la página de login
+  if (window.location.pathname.endsWith('login.html')) return;
+
+  const { data: { session } } = await window.clienteSupabaseCompartido.auth.getSession();
+  if (!session) {
+    window.location.href = 'login.html';
+  }
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', configurarMenu, { once: true });
+  document.addEventListener('DOMContentLoaded', () => {
+    configurarMenu();
+    authGuard();
+  }, { once: true });
 } else {
   configurarMenu();
+  authGuard();
 }

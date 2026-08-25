@@ -27,6 +27,18 @@ Este documento sirve como registro continuo de los cambios, decisiones arquitect
   - Reemplazo de los emojis del menú lateral y navbar por iconos.
   - Botón rojo funcional de "Cerrar Sesión" en el menú lateral.
 
+### 4. Resolución de Errores (Bugs)
+- **Problema:** Ocurría un error "Error al cargar la planilla" en la vista de calificaciones al intentar obtener los datos.
+- **Solución:** Se corrigió un desajuste en el nombre de la columna retornada por la vista de Supabase. El código front-end pedía `promedio_definitiva` cuando la base de datos tenía `promedio_definitivo`.
+- **Entregables:** Actualización en `calificaciones.html` y script SQL para asegurar coherencia entre front-end y base de datos.
+
+### 5. Mejoras Funcionales y Experiencia de Usuario (UX)
+- **Ocultamiento de actividades calificadas:** En la vista "Calificar Actividades", las tareas para las cuales todos los estudiantes ya cuentan con una nota ahora desaparecen del menú desplegable automáticamente. Esto mantiene la lista limpia.
+- **Leyendas emergentes (Tooltips):** Al pasar el cursor sobre la cabecera de la actividad en la tabla de calificaciones, ahora se despliega un cuadro emergente mostrando el título y la descripción completa de la actividad.
+- **Depuración total de iconos:** Se reemplazaron de manera automatizada y segura todos los emojis restantes en las interfaces HTML por `Lucide Icons` para darle un diseño 100% profesional.
+  - Se resguardó la lógica para no afectar notificaciones *toast* ni mensajes de WhatsApp.
+  - Se implementó un `MutationObserver` en `app.js` que escucha los cambios del DOM para renderizar automáticamente los iconos `Lucide` cuando se inyecta HTML dinámico.
+
 ### Siguientes pasos (Backlog / Ideas a futuro)
 - Pruebas de regresión automatizadas (Playwright) ya estructuradas.
 - Posibilidad de implementar arquitectura Offline-First (PWA / IndexedDB) si surgen necesidades de uso sin conexión.

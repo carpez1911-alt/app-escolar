@@ -24,7 +24,7 @@
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Configuración del Sistema</div></div>
   </div>
   <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
+    <a class="nav-btn" href="dashboard.html"><i data-lucide="home" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Panel</a>
     <div class="menu-wrap" id="menuWrap">
       <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
             <div class="menu-panel">
@@ -54,7 +54,7 @@
 
   <!-- AJUSTES DE PERIODO Y AÑO -->
   <section class="card">
-    <div class="toolbar"><div class="toolbar-title">📅 Periodos y Año Lectivo</div></div>
+    <div class="toolbar"><div class="toolbar-title"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Periodos y Año Lectivo</div></div>
     <div class="form-content">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
         <div class="form-group">
@@ -73,17 +73,17 @@
           <select id="cfg-periodo-actual" class="form-control"></select>
         </div>
       </div>
-      <button class="primary-btn" style="margin-top: 10px;" onclick="guardarConfiguracion()">💾 Guardar Ajustes Generales</button>
+      <button class="primary-btn" style="margin-top: 10px;" onclick="guardarConfiguracion()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Ajustes Generales</button>
     </div>
   </section>
 
   <section class="card">
     <div class="toolbar">
       <div>
-        <div class="toolbar-title">📆 Marcos de periodos académicos</div>
+        <div class="toolbar-title"><i data-lucide="calendar" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Marcos de periodos académicos</div>
         <div class="toolbar-meta">Edita las fechas oficiales de cada periodo.</div>
       </div>
-      <button class="secondary-btn" id="btn-guardar-periodos" type="button">💾 Guardar periodos</button>
+      <button class="secondary-btn" id="btn-guardar-periodos" type="button"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar periodos</button>
     </div>
     <div class="table-container">
       <table>
@@ -96,10 +96,10 @@
   <section class="card">
     <div class="toolbar">
       <div>
-        <div class="toolbar-title">📊 Categorías de Calificación</div>
+        <div class="toolbar-title"><i data-lucide="bar-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Categorías de Calificación</div>
         <div class="toolbar-meta">Define las categorías globales y sus porcentajes (ej. Tareas 30%). La suma debe dar 100%.</div>
       </div>
-      <button class="secondary-btn" id="btn-guardar-categorias" type="button" onclick="guardarCategorias()">💾 Guardar %</button>
+      <button class="secondary-btn" id="btn-guardar-categorias" type="button" onclick="guardarCategorias()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar %</button>
     </div>
     <div class="table-container">
       <table>
@@ -116,7 +116,7 @@
         <div class="toolbar-title">⏰ Horario Semanal de Clases (Lunes a Viernes)</div>
         <div class="toolbar-meta">Marca los días en que se dicta cada asignatura</div>
       </div>
-      <button class="secondary-btn" onclick="guardarHorario()">💾 Guardar Horario</button>
+      <button class="secondary-btn" onclick="guardarHorario()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Horario</button>
     </div>
     <div class="form-content" id="lista-horarios">
       <div class="loading">Cargando materias y horario...</div>

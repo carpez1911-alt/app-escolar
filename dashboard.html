@@ -42,19 +42,19 @@
     <h1>Buenos días, docente 👋</h1>
     <p>Aquí tienes una vista rápida de lo que requiere atención.</p>
   </div>
-  <div class="date-pill">📅 <span id="fecha">Cargando...</span></div>
+  <div class="date-pill"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> <span id="fecha">Cargando...</span></div>
 </section>
 
 <section class="dashboard-grid">
-  <div class="card stat"><div class="stat-label">👥 Estudiantes activos</div><div class="stat-value" id="total-estudiantes">—</div><div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div></div>
-  <div class="card stat"><div class="stat-label">📝 Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Periodo actual: <span id="lbl-periodo">...</span></div></div>
-  <div class="card stat"><div class="stat-label">⚡ Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
+  <div class="card stat"><div class="stat-label"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiantes activos</div><div class="stat-value" id="total-estudiantes">—</div><div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div></div>
+  <div class="card stat"><div class="stat-label"><i data-lucide="edit" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Periodo actual: <span id="lbl-periodo">...</span></div></div>
+  <div class="card stat"><div class="stat-label"><i data-lucide="zap" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
 </section>
 
 <!-- ASIGNAR TAREA CON FECHA INTELIGENTE -->
 <section class="card">
   <div class="toolbar">
-    <div><div class="toolbar-title">📝 Asignar Nueva Actividad / Tarea</div></div>
+    <div><div class="toolbar-title"><i data-lucide="edit" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Asignar Nueva Actividad / Tarea</div></div>
   </div>
   <div class="form-content">
       <div class="form-group">
@@ -86,13 +86,13 @@
           <input type="date" id="fecha-tarea" class="form-control">
           <small id="sugerencia-nota" style="color: var(--muted); margin-top: 4px; display: block;"></small>
       </div>
-      <button class="primary-btn" onclick="crearTarea()">💾 Guardar y Publicar Actividad</button>
+      <button class="primary-btn" onclick="crearTarea()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar y Publicar Actividad</button>
   </div>
 </section>
 
 <section class="card task-card">
   <div class="toolbar">
-    <div><div class="toolbar-title">📌 Actividades Registradas</div><div class="toolbar-meta">Ordenadas por fecha de vencimiento</div></div>
+    <div><div class="toolbar-title"><i data-lucide="pin" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividades Registradas</div><div class="toolbar-meta">Ordenadas por fecha de vencimiento</div></div>
   </div>
   <div class="task-list" id="contenedor-tareas"><div class="loading">Cargando actividades…</div></div>
 </section>
@@ -197,7 +197,7 @@ function sugerirFechaClase() {
   if (encontrada) {
     const fechaISO = fechaLocalISO(fechaBusqueda);
     inputFecha.value = fechaISO;
-    infoSpan.textContent = `💡 Sugerencia automática: Próxima clase según horario (${formatearFechaCorta(fechaISO)}).`;
+    infoSpan.textContent = `<i data-lucide="lightbulb" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Sugerencia automática: Próxima clase según horario (${formatearFechaCorta(fechaISO)}).`;
   }
 }
 
@@ -209,7 +209,7 @@ async function crearTarea() {
   const fechaVencimiento = document.getElementById('fecha-tarea').value;
 
   if (!materiaId || !categoriaId || !titulo || !fechaVencimiento) {
-    mostrarToast('⚠️ Completa los campos obligatorios, incluyendo la categoría');
+    mostrarToast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Completa los campos obligatorios, incluyendo la categoría');
     return;
   }
 
@@ -265,7 +265,7 @@ async function cargarDashboard() {
 
   const cont = document.getElementById('contenedor-tareas');
   if (!tareas || tareas.length === 0) {
-    cont.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div>No hay actividades pendientes.</div>';
+    cont.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="party-popper" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No hay actividades pendientes.</div>';
     return;
   }
 

@@ -16,7 +16,7 @@
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Gestión de Actividades</div></div>
   </div>
   <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
+    <a class="nav-btn" href="dashboard.html"><i data-lucide="home" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Panel</a>
     <div class="menu-wrap" id="menuWrap">
       <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
             <div class="menu-panel">
@@ -47,7 +47,7 @@
   <!-- SECCIÓN DE FILTROS -->
   <section class="card">
     <div class="toolbar">
-      <div><div class="toolbar-title">🔍 Filtros de Búsqueda</div></div>
+      <div><div class="toolbar-title"><i data-lucide="search" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Filtros de Búsqueda</div></div>
     </div>
     <div class="form-content" style="display: flex; gap: 15px; flex-wrap: wrap;">
       
@@ -70,7 +70,7 @@
   <section class="card task-card">
     <div class="toolbar">
       <div>
-        <div class="toolbar-title">📌 Actividades Encontradas</div>
+        <div class="toolbar-title"><i data-lucide="pin" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividades Encontradas</div>
         <div class="toolbar-meta" id="contador-actividades">Cargando...</div>
       </div>
     </div>
@@ -219,8 +219,8 @@ async function cargarActividades() {
           <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 4px;">Vence: ${formatearFechaCorta(tarea.fecha_vencimiento)}</div>
         </div>
         <div>
-          <button class="secondary-btn" onclick="editarActividad(${tarea.id})">✏️ Editar</button>
-          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5;" onclick="eliminarActividad(${tarea.id})">🗑️ Eliminar</button>
+          <button class="secondary-btn" onclick="editarActividad(${tarea.id})"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Editar</button>
+          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5;" onclick="eliminarActividad(${tarea.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Eliminar</button>
         </div>
       </div>
     `;

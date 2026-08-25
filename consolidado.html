@@ -174,7 +174,7 @@ async function cargarConsolidado() {
     tbody.appendChild(fila);
   });
   
-  if (!materiasConNotas.length) tbody.innerHTML = '<tr><td colspan="15" class="empty"><div class="empty-icon">📚</div>No hay calificaciones registradas para este periodo.</td></tr>';
+  if (!materiasConNotas.length) tbody.innerHTML = '<tr><td colspan="15" class="empty"><div class="empty-icon"><i data-lucide="book" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No hay calificaciones registradas para este periodo.</td></tr>';
 }
 
 async function inicializarPlanilla() {

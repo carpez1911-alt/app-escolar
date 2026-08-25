@@ -58,8 +58,29 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     configurarMenu();
     authGuard();
+    initLucideObserver();
   }, { once: true });
 } else {
   configurarMenu();
   authGuard();
+  initLucideObserver();
+}
+
+function initLucideObserver() {
+  if (window.lucide) {
+    const observer = new MutationObserver((mutations) => {
+      let shouldUpdate = false;
+      for (let m of mutations) {
+        if (m.addedNodes.length > 0) {
+          shouldUpdate = true;
+          break;
+        }
+      }
+      if (shouldUpdate) {
+        clearTimeout(window.lucideTimeout);
+        window.lucideTimeout = setTimeout(() => window.lucide.createIcons(), 50);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
 }

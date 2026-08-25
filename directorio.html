@@ -26,11 +26,11 @@
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <div class="brand-mark">👥</div>
+    <div class="brand-mark"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Directorio</div></div>
   </div>
   <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
+    <a class="nav-btn" href="dashboard.html"><i data-lucide="home" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Panel</a>
     <div class="menu-wrap" id="menuWrap">
       <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
       <div class="menu-panel">
@@ -63,7 +63,7 @@
     <section class="card" style="padding: 20px;">
       <div class="toolbar">
         <div>
-          <div class="toolbar-title">🎓 Estudiantes</div>
+          <div class="toolbar-title"><i data-lucide="graduation-cap" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiantes</div>
           <div class="toolbar-meta">Control de matrícula</div>
         </div>
         <button class="primary-btn" onclick="abrirModalEstudiante()">+ Nuevo</button>
@@ -82,7 +82,7 @@
     <section class="card" style="padding: 20px;">
       <div class="toolbar">
         <div>
-          <div class="toolbar-title">📖 Materias</div>
+          <div class="toolbar-title"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Materias</div>
           <div class="toolbar-meta">Asignaturas impartidas</div>
         </div>
         <button class="primary-btn" onclick="abrirModalMateria()">+ Nueva</button>
@@ -185,7 +185,7 @@ function renderizarEstudiantes() {
   estudiantesData.forEach(est => {
     const estadoClass = est.estado === 'Activo' ? 'estado-activo' : 'estado-inactivo';
     const toggleAction = est.estado === 'Activo' ? 'Desactivar' : 'Activar';
-    const toggleIcon = est.estado === 'Activo' ? '⛔' : '✅';
+    const toggleIcon = est.estado === 'Activo' ? '<i data-lucide="minus-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>' : '<i data-lucide="check-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>';
     
     tbody.innerHTML += `
       <tr>
@@ -193,7 +193,7 @@ function renderizarEstudiantes() {
         <td style="font-weight: 600;">${est.nombre_completo}</td>
         <td><span class="estado-badge ${estadoClass}">${est.estado}</span></td>
         <td>
-          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}', '${(est.telefono_acudiente || '').replace(/'/g, "\\'")}')">✏️</button>
+          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}', '${(est.telefono_acudiente || '').replace(/'/g, "\\'")}')"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
           <button class="action-btn" title="${toggleAction}" onclick="toggleEstadoEstudiante(${est.id}, '${est.estado}')">${toggleIcon}</button>
         </td>
       </tr>
@@ -215,8 +215,8 @@ function renderizarMaterias() {
         <td>${mat.id}</td>
         <td style="font-weight: 600;">${mat.nombre_materia}</td>
         <td>
-          <button class="action-btn" title="Editar" onclick="abrirModalMateria(${mat.id}, '${mat.nombre_materia.replace(/'/g, "\\'")}')">✏️</button>
-          <button class="action-btn" title="Eliminar" onclick="eliminarMateria(${mat.id})">🗑️</button>
+          <button class="action-btn" title="Editar" onclick="abrirModalMateria(${mat.id}, '${mat.nombre_materia.replace(/'/g, "\\'")}')"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
+          <button class="action-btn" title="Eliminar" onclick="eliminarMateria(${mat.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
         </td>
       </tr>
     `;

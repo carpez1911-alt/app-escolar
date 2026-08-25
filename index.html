@@ -17,7 +17,7 @@
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Gestión docente</div></div>
   </div>
   <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
+    <a class="nav-btn" href="dashboard.html"><i data-lucide="home" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Panel</a>
     <div class="menu-wrap" id="menuWrap">
       <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
             <div class="menu-panel">
@@ -43,13 +43,13 @@
       <h1>Control de asistencia</h1>
       <p>Registra la jornada de tu grupo de forma rápida y visual.</p>
     </div>
-    <div class="date-pill">📅 <span id="fecha-hoy">Cargando fecha...</span></div>
+    <div class="date-pill"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> <span id="fecha-hoy">Cargando fecha...</span></div>
   </section>
 
   <section class="card report-panel">
     <div class="report-tabs">
-      <button class="report-tab active" data-tab="registro">📋 Registro Diario</button>
-      <button class="report-tab" data-tab="whatsapp">💬 Reporte WhatsApp</button>
+      <button class="report-tab active" data-tab="registro"><i data-lucide="clipboard-list" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Registro Diario</button>
+      <button class="report-tab" data-tab="whatsapp"><i data-lucide="message-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Reporte WhatsApp</button>
     </div>
     
     <div id="panel-registro">
@@ -60,7 +60,7 @@
           <input class="form-control" type="date" id="fecha-asistencia">
           <small id="fecha-asistencia-visible" class="toolbar-meta"></small>
         </div>
-        <button class="secondary-btn" onclick="marcarTodosPresentes()">⚡ Todos presentes</button>
+        <button class="secondary-btn" onclick="marcarTodosPresentes()"><i data-lucide="zap" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Todos presentes</button>
       </div>
       <div class="students" id="lista-estudiantes">
         <div class="loading">Conectando con la base de datos…</div>
@@ -85,7 +85,7 @@
           <input class="form-control" type="date" id="wa-fecha-semana">
         </div>
         <div class="filter-actions">
-          <button class="secondary-btn" onclick="generarPrevisualizacion()">🔄 Generar</button>
+          <button class="secondary-btn" onclick="generarPrevisualizacion()"><i data-lucide="refresh-cw" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Generar</button>
         </div>
       </div>
       <div class="form-content" style="padding-top:0;">
@@ -106,7 +106,7 @@
           <label for="wa-preview">Reporte General para Coordinación</label>
           <textarea class="form-control" id="wa-preview" rows="8" placeholder="Haz clic en Generar para cargar el listado completo y la previsualización del reporte general..."></textarea>
         </div>
-        <button class="primary-btn" style="background:#25D366; border-color:#25D366; color: white;" onclick="enviarWhatsApp()">📲 Enviar Reporte General</button>
+        <button class="primary-btn" style="background:#25D366; border-color:#25D366; color: white;" onclick="enviarWhatsApp()"><i data-lucide="smartphone" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar Reporte General</button>
       </div>
     </div>
   </section>
@@ -118,7 +118,7 @@
       <span><i class="dot t"></i>Tardanza</span>
       <span><i class="dot a"></i>Ausente</span>
     </div>
-    <button class="primary-btn" style="width:auto;" onclick="guardarAsistencia()">💾 Guardar asistencia</button>
+    <button class="primary-btn" style="width:auto;" onclick="guardarAsistencia()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar asistencia</button>
   </div>
 </main>
 <div class="toast" id="toast"></div>
@@ -240,7 +240,7 @@ async function generarPrevisualizacion() {
     const btnIndiv = document.createElement('button');
     btnIndiv.className = 'secondary-btn';
     btnIndiv.style.fontSize = '12px'; btnIndiv.style.padding = '4px 8px';
-    btnIndiv.innerHTML = '📲 Individual';
+    btnIndiv.innerHTML = '<i data-lucide="smartphone" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Individual';
     btnIndiv.onclick = () => enviarWhatsAppIndividual(est, tituloReporte);
     
     tdAcciones.appendChild(btnIndiv);
@@ -290,7 +290,7 @@ async function cargarEstudiantes(){
   if (!fecha) { toast('Selecciona una fecha válida.'); return; }
   const { data: config, error: configError } = await clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single();
   if (configError || !config?.año_actual) {
-    cont.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>No fue posible cargar el año académico activo.</div>';
+    cont.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No fue posible cargar el año académico activo.</div>';
     toast('No se pudo leer la configuración institucional.');
     return;
   }

@@ -73,7 +73,7 @@
         <select id="filtro-actividad" class="form-control" style="width: 200px;" onchange="renderizarPlanillaCalificar()">
           <option value="">Cargando...</option>
         </select>
-        <button class="secondary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()">💾 Guardar notas</button>
+        <button class="secondary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar notas</button>
     </div>
   </section>
 
@@ -152,7 +152,7 @@ function actualizarPromedios(fila) {
 function mostrarSinActividades() {
   document.getElementById('cabecera-materias').innerHTML = '<th class="text-left">Estudiante</th><th class="promedio-col">Definitiva</th><th>Reporte</th>';
   document.getElementById('cabecera-actividades').hidden = true;
-  document.getElementById('cuerpo-planilla').innerHTML = '<tr><td colspan="3" class="empty"><div class="empty-icon">📚</div>No hay actividades creadas para este periodo.<br>Primero crea tareas desde el Panel Principal.</td></tr>';
+  document.getElementById('cuerpo-planilla').innerHTML = '<tr><td colspan="3" class="empty"><div class="empty-icon"><i data-lucide="book" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No hay actividades creadas para este periodo.<br>Primero crea tareas desde el Panel Principal.</td></tr>';
 }
 
 // FUNCIÓN 1: DIBUJAR LA PLANILLA
@@ -174,11 +174,18 @@ async function cargarPlanilla() {
   tbody.innerHTML = `<tr><td colspan="15" class="loading">Cargando actividades del Periodo ${periodo}...</td></tr>`;
   const [resEst, resTareas, resNotas, resPromedios] = await Promise.all([
     clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
-    clienteSupabase.from('tareas').select('id, titulo, materia_id, periodo').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
+    clienteSupabase.from('tareas').select('id, titulo, descripcion, materia_id, periodo').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
     clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota').eq('materia_id', materiaId).eq('periodo', periodo),
-    clienteSupabase.from('v_promedios_estudiantes').select('estudiante_id, promedio_definitiva').eq('materia_id', materiaId).eq('periodo', periodo)
+    clienteSupabase.from('v_promedios_estudiantes').select('estudiante_id, promedio_definitivo').eq('materia_id', materiaId).eq('periodo', periodo)
   ]);
-  if (resEst.error || resTareas.error || resNotas.error || resPromedios?.error) { toast('Error al cargar la planilla'); return; }
+  if (resEst.error || resTareas.error || resNotas.error || resPromedios?.error) { 
+    console.error('Error est:', resEst.error);
+    console.error('Error tareas:', resTareas.error);
+    console.error('Error notas:', resNotas.error);
+    console.error('Error promedios:', resPromedios?.error);
+    toast('Error al cargar la planilla'); 
+    return; 
+  }
   
   listaEstudiantes = resEst.data || [];
   listaTareas = resTareas.data || [];
@@ -191,14 +198,26 @@ async function cargarPlanilla() {
     return; 
   }
 
+  const tareasPendientes = listaTareas.filter(tarea => {
+    const notasDeTarea = notasCargadas.filter(n => n.tarea_id === tarea.id && n.nota !== null && n.nota !== undefined);
+    return notasDeTarea.length < listaEstudiantes.length;
+  });
+
   const selectedTareaId = selectorActividad.value;
   selectorActividad.innerHTML = '<option value="">Selecciona una actividad...</option>';
-  listaTareas.forEach(tarea => {
-    selectorActividad.innerHTML += `<option value="${tarea.id}">${tarea.titulo}</option>`;
-  });
   
-  if (listaTareas.some(t => String(t.id) === selectedTareaId)) {
+  if (tareasPendientes.length === 0 && listaTareas.length > 0) {
+    selectorActividad.innerHTML = '<option value="">Todas las actividades están calificadas <i data-lucide="party-popper" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></option>';
+  } else {
+    tareasPendientes.forEach(tarea => {
+      selectorActividad.innerHTML += `<option value="${tarea.id}">${tarea.titulo}</option>`;
+    });
+  }
+  
+  if (tareasPendientes.some(t => String(t.id) === selectedTareaId)) {
     selectorActividad.value = selectedTareaId;
+  } else {
+    selectorActividad.value = "";
   }
 
   renderizarPlanillaCalificar();
@@ -226,7 +245,7 @@ function renderizarPlanillaCalificar() {
   subthead.hidden = true;
   
   const encabezado = crearCelda('th', tarea.titulo || 'Actividad');
-  encabezado.title = tarea.titulo || 'Actividad';
+  encabezado.title = tarea.descripcion ? `${tarea.titulo}\n\n${tarea.descripcion}` : (tarea.titulo || 'Actividad');
   thead.appendChild(encabezado);
 
   thead.insertAdjacentHTML('beforeend', '<th class="promedio-col">Definitiva</th><th>Reporte</th>');
@@ -247,12 +266,12 @@ function renderizarPlanillaCalificar() {
     fila.appendChild(celda);
 
     const pro = promediosCargados.find(p => String(p.estudiante_id) === String(estudiante.id));
-    const promedioMateria = crearCelda('td', pro ? pro.promedio_definitiva : '-', 'promedio-col promedio-materia');
+    const promedioMateria = crearCelda('td', pro ? pro.promedio_definitivo : '-', 'promedio-col promedio-materia');
     promedioMateria.dataset.materia = materiaId;
     fila.appendChild(promedioMateria);
-    fila.appendChild(crearCelda('td', pro ? pro.promedio_definitiva : '-', 'promedio-col promedio-general'));
+    fila.appendChild(crearCelda('td', pro ? pro.promedio_definitivo : '-', 'promedio-col promedio-general'));
     const acciones = crearCelda('td', '', 'acciones-celda');
-    const botonReporte = crearCelda('button', '💬 Enviar', 'btn-wa');
+    const botonReporte = crearCelda('button', '<i data-lucide="message-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar', 'btn-wa');
     botonReporte.type = 'button';
     const nombreMateria = document.getElementById('filtro-materia').selectedOptions[0]?.textContent || 'la materia';
     botonReporte.addEventListener('click', () => enviarWhatsApp(estudiante.nombre_completo, promedioDeFila(fila), periodo, nombreMateria));

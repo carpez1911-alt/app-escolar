@@ -57,7 +57,7 @@ SELECT
     estudiante_id,
     materia_id,
     periodo,
-    ROUND(AVG(nota)::numeric, 2) AS promedio_definitiva
+    ROUND(AVG(nota)::numeric, 2) AS promedio_definitivo
 FROM
     public.calificaciones
 GROUP BY

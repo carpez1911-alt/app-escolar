@@ -27,15 +27,15 @@
       </div></div></div>
 </nav>
 <main class="page">
-  <section class="hero"><div><div class="eyebrow">● Consulta académica</div><h1>Reportes y filtros</h1><p>Consulta el historial de calificaciones y asistencia de tu grupo.</p></div><div class="date-pill">📅 <span id="fecha-reporte"></span></div></section>
+  <section class="hero"><div><div class="eyebrow">● Consulta académica</div><h1>Reportes y filtros</h1><p>Consulta el historial de calificaciones y asistencia de tu grupo.</p></div><div class="date-pill"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> <span id="fecha-reporte"></span></div></section>
   <section class="card report-panel">
-    <div class="report-tabs"><button class="report-tab active" data-reporte="calificaciones">📝 Calificaciones</button><button class="report-tab" data-reporte="asistencia">📋 Asistencia</button></div>
+    <div class="report-tabs"><button class="report-tab active" data-reporte="calificaciones"><i data-lucide="edit" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Calificaciones</button><button class="report-tab" data-reporte="asistencia"><i data-lucide="clipboard-list" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Asistencia</button></div>
     <div class="filter-grid">
       <div class="form-group"><label for="filtro-periodo">Periodo académico</label><select class="form-control" id="filtro-periodo"></select></div>
       <div class="form-group"><label for="filtro-materia">Materia</label><select class="form-control" id="filtro-materia"><option value="">Todas las materias</option></select></div>
       <div class="form-group"><label for="filtro-alumno">Alumno</label><select class="form-control" id="filtro-alumno"><option value="">Todos los alumnos</option></select></div>
       <div class="form-group attendance-only"><label for="filtro-estado">Estado</label><select class="form-control" id="filtro-estado"><option value="">Todos</option><option value="PRESENTE">Presente</option><option value="EXCUSA">Excusa</option><option value="TARDANZA">Tardanza</option><option value="AUSENTE">Ausente</option></select></div>
-      <div class="filter-actions"><button class="primary-btn" id="btn-aplicar">🔎 Aplicar filtros</button><button class="secondary-btn" id="btn-limpiar">Limpiar</button></div>
+      <div class="filter-actions"><button class="primary-btn" id="btn-aplicar"><i data-lucide="search" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Aplicar filtros</button><button class="secondary-btn" id="btn-limpiar">Limpiar</button></div>
     </div>
   </section>
   <section class="card" style="padding:0"><div class="toolbar"><div><div class="toolbar-title" id="titulo-tabla">Calificaciones encontradas</div><div class="toolbar-meta" id="meta-tabla">Cargando...</div></div><button class="secondary-btn" id="btn-exportar">⬇ Exportar CSV</button></div><div class="table-container"><table><thead id="reporte-head"></thead><tbody id="reporte-body"><tr><td class="loading">Cargando información...</td></tr></tbody></table></div></section>

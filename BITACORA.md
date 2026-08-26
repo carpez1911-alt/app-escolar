@@ -69,7 +69,7 @@ Este documento sirve como registro continuo de los cambios, decisiones arquitect
 - **Conservaci√≥n de mejoras:** Todas las optimizaciones visuales y de dise√±o responsive implementadas recientemente (ajustes en tama√±os de inputs, layout de tablas, modales y el nuevo Horario Semanal compactado) fueron respetadas y conservadas intactas sin sufrir ninguna alteraci√≥n.
 - **Resultado de la verificaci√≥n:** La plataforma vuelve a lucir 100% consistente con la librer√≠a Lucide Icons tanto en visualizaci√≥n de PC como en Celular, sin emojis residuales en la interfaz gr√°fica base, cumpliendo con la fuente de verdad original del proyecto.
 
-## Fecha: 25 de Agosto de 2026 - 20:43 (RecuperaciÛn y Horarios)
-### RestauraciÛn de CÛdigo
-- **Problema:** Un error de codificaciÛn y reemplazo de cadenas daÒÛ 'dashboard.html', ocultando el horario y corrompiendo caracteres.
-- **SoluciÛn:** Se aplicÛ 'git checkout' para restaurar 'dashboard.html' y 'configuracion.html' al ˙ltimo commit estable (24 de Agosto), revirtiendo temporalmente el componente visual del horario para evitar mayores daÒos y asegurar un punto de recuperaciÛn limpio.
+## Fecha: 25 de Agosto de 2026 - 20:43 (Recuperaci√≥n y Horarios)
+### Restauraci√≥n de C√≥digo
+- **Problema:** Un error de codificaci√≥n y reemplazo de cadenas da√±√≥ 'dashboard.html', ocultando el horario y corrompiendo caracteres.
+- **Soluci√≥n:** Se aplic√≥ 'git checkout' para restaurar 'dashboard.html' y 'configuracion.html' al √∫ltimo commit estable (24 de Agosto), revirtiendo temporalmente el componente visual del horario para evitar mayores da√±os y asegurar un punto de recuperaci√≥n limpio.

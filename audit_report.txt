@@ -1,0 +1,63 @@
+File: actividades.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: ☰ ❌ 📭 🗑 ✓
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------
+File: calificaciones.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: ☰ ⚠ ✓
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------
+File: configuracion.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: ☰ ✓
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------
+File: consolidado.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: ☰
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------
+File: dashboard.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: ☰ 👋 💡 ⚠ ✓
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------
+File: directorio.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: ☰ ✓ 🗑
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------
+File: index.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: ☰ 🏫 📅 🔴 ✅ ✓ ⚠ 👤 ⚡
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------
+File: login.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: 
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------
+File: reportes.html
+  - Lucide Script: true
+  - Lucide Create Call: true
+  - Remaining Emojis/Symbols: ☰
+  - Unclosed DIVs (approx): OK
+  - Unclosed SECTIONs: OK
+--------------------------------------

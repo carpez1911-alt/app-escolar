@@ -8,13 +8,16 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <style>
-  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; white-space: nowrap; }
-  th, td { padding: 12px 10px; border: 1px solid var(--border); }
-  th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2;}
-  td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
-  th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; }
+  /* Tabla consolidado */
+  #tabla-notas { font-size: 13px; text-align: center; white-space: nowrap; }
+  #tabla-notas th, #tabla-notas td { padding: 12px 10px; border: 1px solid var(--border); }
+  #tabla-notas th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2; }
+  #tabla-notas td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05); min-width: 140px; white-space: normal; }
+  #tabla-notas th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; background-color: var(--primary-soft); }
   .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
+  @media (max-width: 768px) {
+    #tabla-notas td.text-left { min-width: 120px; max-width: 140px; font-size: 12px; }
+  }
 </style>
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -51,12 +54,17 @@
       <h1>Consolidado por Periodo</h1>
       <p>Consulta el consolidado general de notas definitivas de cada materia en el periodo seleccionado.</p>
     </div>
-    
-    <div style="display: flex; gap: 10px; align-items: center;">
-        <label for="filtro-periodo" style="font-weight: bold; font-size: 14px;">Periodo:</label>
-        <select id="filtro-periodo" class="form-control" style="width: 120px;" onchange="cargarConsolidado()">
+  </section>
+
+  <!-- FILTRO PERIODO EN CARD RESPONSIVE -->
+  <section class="card" style="padding: 0;">
+    <div class="filter-grid" style="grid-template-columns: 1fr auto; align-items: end;">
+      <div class="form-group" style="margin:0;">
+        <label for="filtro-periodo">Periodo académico</label>
+        <select id="filtro-periodo" class="form-control" onchange="cargarConsolidado()">
             <option value="">Cargando...</option>
         </select>
+      </div>
     </div>
   </section>
 

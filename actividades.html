@@ -19,7 +19,7 @@
     <a class="nav-btn" href="dashboard.html"><i data-lucide="home" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Panel</a>
     <div class="menu-wrap" id="menuWrap">
       <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
+      <div class="menu-panel">
         <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
         <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
         <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
@@ -49,20 +49,17 @@
     <div class="toolbar">
       <div><div class="toolbar-title"><i data-lucide="search" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Filtros de Búsqueda</div></div>
     </div>
-    <div class="form-content" style="display: flex; gap: 15px; flex-wrap: wrap;">
-      
-      <div class="form-group" style="flex: 1; min-width: 150px;">
+    <div class="filter-grid">
+      <div class="form-group" style="margin:0;">
         <label for="filtro-periodo">Periodo:</label>
         <select id="filtro-periodo" class="form-control" onchange="cargarActividades()"></select>
       </div>
-
-      <div class="form-group" style="flex: 2; min-width: 200px;">
+      <div class="form-group" style="margin:0;">
         <label for="filtro-materia">Materia:</label>
         <select id="filtro-materia" class="form-control" onchange="cargarActividades()">
           <option value="">Todas las materias</option>
         </select>
       </div>
-
     </div>
   </section>
 
@@ -82,9 +79,9 @@
 <div class="toast" id="toast"></div>
 
 <!-- MODAL DE EDICIÓN DE ACTIVIDAD -->
-<div id="modal-editar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-  <div class="card" style="width:90%; max-width:400px; padding:20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-    <h3 style="margin-top:0;">Editar Actividad</h3>
+<div id="modal-editar" class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-top:0; font-size:18px;">Editar Actividad</h3>
     
     <div class="form-group">
       <label>Título:</label>
@@ -109,9 +106,9 @@
     
     <input type="hidden" id="edit-id">
     
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-      <button class="secondary-btn" onclick="cerrarModalEditar()">Cancelar</button>
-      <button class="primary-btn" onclick="guardarEdicionActividad()">Guardar Cambios</button>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; flex-wrap:wrap;">
+      <button class="secondary-btn" onclick="cerrarModalEditar()" style="flex:1; min-width:100px;">Cancelar</button>
+      <button class="primary-btn" onclick="guardarEdicionActividad()" style="flex:2; min-width:160px;">Guardar Cambios</button>
     </div>
   </div>
 </div>
@@ -178,10 +175,8 @@ async function cargarActividades() {
 
   contenedor.innerHTML = '<div class="loading">Buscando actividades...</div>';
 
-  // Construir la consulta paso a paso
   let consulta = clienteSupabase.from('tareas').select('*, materias(nombre_materia), categorias_actividades(nombre, porcentaje)').order('fecha_vencimiento', { ascending: false });
 
-  // Aplicar filtros solo si el usuario seleccionó algo
   if (periodoFiltro !== "") {
     consulta = consulta.eq('periodo', periodoFiltro);
   }
@@ -204,28 +199,29 @@ async function cargarActividades() {
     return;
   }
 
-  // Dibujar cada actividad en la pantalla
   contenedor.innerHTML = '';
   data.forEach(tarea => {
     const nombreMateria = tarea.materias ? tarea.materias.nombre_materia : 'General';
     const nombreCat = tarea.categorias_actividades ? `${tarea.categorias_actividades.nombre} (${tarea.categorias_actividades.porcentaje}%)` : 'Sin categoría';
-    const html = `
-      <div class="task" style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="datos-tarea">
-          <span style="display: inline-block; background-color: var(--warning); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
-          <span style="display: inline-block; background-color: var(--primary); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
-          <div style="font-weight: 750;">${tarea.titulo}</div>
-          <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
-          <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 4px;">Vence: ${formatearFechaCorta(tarea.fecha_vencimiento)}</div>
-        </div>
-        <div>
-          <button class="secondary-btn" onclick="editarActividad(${tarea.id})"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Editar</button>
-          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5;" onclick="eliminarActividad(${tarea.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Eliminar</button>
-        </div>
+    const div = document.createElement('div');
+    div.className = 'task';
+    div.style.cssText = 'display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;';
+    div.innerHTML = `
+      <div class="datos-tarea" style="flex:1; min-width:0;">
+        <span style="display: inline-block; background-color: var(--warning); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
+        <span style="display: inline-block; background-color: var(--primary); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
+        <div style="font-weight: 700;">${tarea.titulo}</div>
+        <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
+        <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 4px;">Vence: ${formatearFechaCorta(tarea.fecha_vencimiento)}</div>
+      </div>
+      <div style="display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap;">
+        <button class="secondary-btn" onclick="editarActividad(${tarea.id})" style="min-width:80px;"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Editar</button>
+        <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5; min-width:90px;" onclick="eliminarActividad(${tarea.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Eliminar</button>
       </div>
     `;
-    contenedor.innerHTML += html;
+    contenedor.appendChild(div);
   });
+  lucide.createIcons();
 }
 
 // 3. ELIMINAR ACTIVIDAD
@@ -255,7 +251,7 @@ async function eliminarActividad(id) {
 }
 
 function cerrarModalEditar() {
-  document.getElementById('modal-editar').style.display = 'none';
+  document.getElementById('modal-editar').classList.remove('open');
 }
 
 function editarActividad(id) {
@@ -284,7 +280,7 @@ function editarActividad(id) {
   });
   selectCat.value = actividad.categoria_id || '';
 
-  document.getElementById('modal-editar').style.display = 'flex';
+  document.getElementById('modal-editar').classList.add('open');
 }
 
 async function guardarEdicionActividad() {

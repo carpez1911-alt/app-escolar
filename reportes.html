@@ -12,8 +12,14 @@
 <body>
 <div class="app-shell">
 <nav class="navbar">
-  <div class="brand"><i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i><div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Reportes docentes</div></div></div>
-  <div class="nav-actions"><div class="menu-wrap" id="menuWrap"><button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>      <div class="menu-panel">
+  <div class="brand">
+    <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Reportes docentes</div></div>
+  </div>
+  <div class="nav-actions">
+    <div class="menu-wrap" id="menuWrap">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
+      <div class="menu-panel">
         <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
         <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
         <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
@@ -24,23 +30,82 @@
         <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
         <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
         <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
-      </div></div></div>
+      </div>
+    </div>
+  </div>
 </nav>
+
 <main class="page">
-  <section class="hero"><div><div class="eyebrow">● Consulta académica</div><h1>Reportes y filtros</h1><p>Consulta el historial de calificaciones y asistencia de tu grupo.</p></div><div class="date-pill"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> <span id="fecha-reporte"></span></div></section>
-  <section class="card report-panel">
-    <div class="report-tabs"><button class="report-tab active" data-reporte="calificaciones"><i data-lucide="edit" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Calificaciones</button><button class="report-tab" data-reporte="asistencia"><i data-lucide="clipboard-list" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Asistencia</button></div>
-    <div class="filter-grid">
-      <div class="form-group"><label for="filtro-periodo">Periodo académico</label><select class="form-control" id="filtro-periodo"></select></div>
-      <div class="form-group"><label for="filtro-materia">Materia</label><select class="form-control" id="filtro-materia"><option value="">Todas las materias</option></select></div>
-      <div class="form-group"><label for="filtro-alumno">Alumno</label><select class="form-control" id="filtro-alumno"><option value="">Todos los alumnos</option></select></div>
-      <div class="form-group attendance-only"><label for="filtro-estado">Estado</label><select class="form-control" id="filtro-estado"><option value="">Todos</option><option value="PRESENTE">Presente</option><option value="EXCUSA">Excusa</option><option value="TARDANZA">Tardanza</option><option value="AUSENTE">Ausente</option></select></div>
-      <div class="filter-actions"><button class="primary-btn" id="btn-aplicar"><i data-lucide="search" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Aplicar filtros</button><button class="secondary-btn" id="btn-limpiar">Limpiar</button></div>
+  <section class="hero">
+    <div>
+      <div class="eyebrow">● Consulta académica</div>
+      <h1>Reportes y filtros</h1>
+      <p>Consulta el historial de calificaciones y asistencia de tu grupo.</p>
+    </div>
+    <div class="date-pill">
+      <i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>
+      <span id="fecha-reporte"></span>
     </div>
   </section>
-  <section class="card" style="padding:0"><div class="toolbar"><div><div class="toolbar-title" id="titulo-tabla">Calificaciones encontradas</div><div class="toolbar-meta" id="meta-tabla">Cargando...</div></div><button class="secondary-btn" id="btn-exportar">⬇ Exportar CSV</button></div><div class="table-container"><table><thead id="reporte-head"></thead><tbody id="reporte-body"><tr><td class="loading">Cargando información...</td></tr></tbody></table></div></section>
-</main><div class="toast" id="toast"></div>
+
+  <section class="card report-panel">
+    <div class="report-tabs">
+      <button class="report-tab active" data-reporte="calificaciones"><i data-lucide="edit" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Calificaciones</button>
+      <button class="report-tab" data-reporte="asistencia"><i data-lucide="clipboard-list" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Asistencia</button>
+    </div>
+    <div class="filter-grid">
+      <div class="form-group">
+        <label for="filtro-periodo">Periodo académico</label>
+        <select class="form-control" id="filtro-periodo"></select>
+      </div>
+      <div class="form-group">
+        <label for="filtro-materia">Materia</label>
+        <select class="form-control" id="filtro-materia">
+          <option value="">Todas las materias</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="filtro-alumno">Alumno</label>
+        <select class="form-control" id="filtro-alumno">
+          <option value="">Todos los alumnos</option>
+        </select>
+      </div>
+      <div class="form-group attendance-only">
+        <label for="filtro-estado">Estado</label>
+        <select class="form-control" id="filtro-estado">
+          <option value="">Todos</option>
+          <option value="PRESENTE">Presente</option>
+          <option value="EXCUSA">Excusa</option>
+          <option value="TARDANZA">Tardanza</option>
+          <option value="AUSENTE">Ausente</option>
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button class="primary-btn" id="btn-aplicar"><i data-lucide="search" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Aplicar filtros</button>
+        <button class="secondary-btn" id="btn-limpiar">Limpiar</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="padding:0">
+    <div class="toolbar">
+      <div>
+        <div class="toolbar-title" id="titulo-tabla">Calificaciones encontradas</div>
+        <div class="toolbar-meta" id="meta-tabla">Cargando...</div>
+      </div>
+      <button class="secondary-btn" id="btn-exportar" style="white-space:nowrap;">⬇ Exportar CSV</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead id="reporte-head"></thead>
+        <tbody id="reporte-body"><tr><td class="loading">Cargando información...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
 </div>
+
 <script>
 const supabaseReportes = window.clienteSupabaseCompartido;
 const estado = { tipo: 'calificaciones', calificaciones: [], asistencias: [], materias: [], estudiantes: [], marcos: [], periodoActual: 1, totalPeriodos: 3 };
@@ -109,6 +174,24 @@ document.querySelectorAll('.report-tab').forEach(tab => tab.addEventListener('cl
 document.getElementById('btn-aplicar').addEventListener('click', dibujarReporte);
 document.getElementById('filtro-periodo').addEventListener('change', dibujarReporte);
 document.getElementById('btn-limpiar').addEventListener('click', () => { ['filtro-materia','filtro-alumno','filtro-estado'].forEach(id => document.getElementById(id).value = ''); document.getElementById('filtro-periodo').value = String(estado.periodoActual); dibujarReporte(); });
+document.getElementById('btn-exportar').addEventListener('click', () => {
+  const filas = registrosFiltrados();
+  if (!filas.length) { mostrarToast('No hay registros para exportar.'); return; }
+  const esCalificaciones = estado.tipo === 'calificaciones';
+  const encabezado = esCalificaciones ? ['Fecha','Alumno','Materia','Periodo','Nota'] : ['Fecha','Alumno','Estado'];
+  const csvRows = [encabezado.join(',')];
+  filas.forEach(item => {
+    if (esCalificaciones) {
+      csvRows.push([fechaCalificacion(item), `"${item.estudiantes?.nombre_completo || nombreEstudiante(item.estudiante_id)}"`, `"${item.materias?.nombre_materia || nombreMateria(item.materia_id)}"`, item.periodo || '', item.nota].join(','));
+    } else {
+      csvRows.push([fechaAsistencia(item), `"${nombreEstudiante(item.estudiante_id)}"`, item.estado || ''].join(','));
+    }
+  });
+  const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `reporte_${estado.tipo}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
 cargarDatos();
 </script>
 <script>lucide.createIcons();</script>

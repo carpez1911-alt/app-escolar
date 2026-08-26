@@ -8,21 +8,26 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <style>
-  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; white-space: nowrap; }
-  th, td { padding: 12px 10px; border: 1px solid var(--border); }
-  th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2;}
-  td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
-  th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; }
+  /* Tabla de calificaciones */
+  #tabla-notas { font-size: 13px; text-align: center; white-space: nowrap; }
+  #tabla-notas th, #tabla-notas td { padding: 12px 10px; border: 1px solid var(--border); }
+  #tabla-notas th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2; }
+  #tabla-notas td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05); min-width: 140px; max-width: 200px; white-space: normal; }
+  #tabla-notas th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; background-color: var(--primary-soft); }
   .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
   
-  /* ESTILOS PARA CELDAS EDITABLES (TIPO EXCEL) */
-  .celda-nota { background-color: #f8fafc; transition: 0.2s; cursor: text; min-width: 50px; font-weight: bold;}
+  /* Celdas editables (tipo Excel) */
+  .celda-nota { background-color: #f8fafc; transition: 0.2s; cursor: text; min-width: 60px; font-weight: bold; }
   .celda-nota:focus { background-color: #e0f2fe; outline: 2px solid var(--primary); outline-offset: -2px; }
   .celda-nota:hover { background-color: #f1f5f9; }
 
-  .btn-wa { background-color: #25D366; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
-  .btn-wa:hover { background-color: #128C7E; transform: translateY(-1px); }
+  .btn-wa { background-color: #25D366; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; min-height: 36px; white-space: nowrap; }
+  .btn-wa:hover { background-color: #128C7E; }
+  @media (max-width: 768px) {
+    #tabla-notas td.text-left { min-width: 120px; max-width: 140px; font-size: 12px; }
+    .btn-wa { min-height: 48px; width: 100%; justify-content: center; }
+    .celda-nota { min-width: 48px; padding: 12px 8px; }
+  }
 </style>
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -59,21 +64,35 @@
       <h1>Calificar Actividades</h1>
       <p>Asigna notas a los estudiantes según la materia y actividad seleccionada.</p>
     </div>
-    
-    <div style="display: flex; gap: 10px; align-items: center;">
-        <label for="filtro-periodo" style="font-weight: bold; font-size: 14px;">Periodo:</label>
-        <select id="filtro-periodo" class="form-control" style="width: 120px;" onchange="cargarPlanilla()">
+  </section>
+
+  <!-- FILTROS EN CARD RESPONSIVE -->
+  <section class="card" style="padding: 0;">
+    <div class="toolbar">
+      <div><div class="toolbar-title">Filtros de selección</div></div>
+    </div>
+    <div class="filter-grid">
+      <div class="form-group" style="margin:0;">
+        <label for="filtro-periodo">Periodo</label>
+        <select id="filtro-periodo" class="form-control" onchange="cargarPlanilla()">
             <option value="">Cargando...</option>
         </select>
-        <label for="filtro-materia" id="label-materia" style="font-weight: bold; font-size: 14px;">Materia:</label>
-        <select id="filtro-materia" class="form-control" style="width: 200px;" onchange="cargarPlanilla()">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label for="filtro-materia" id="label-materia">Materia</label>
+        <select id="filtro-materia" class="form-control" onchange="cargarPlanilla()">
           <option value="">Selecciona una materia...</option>
         </select>
-        <label for="filtro-actividad" id="label-actividad" style="font-weight: bold; font-size: 14px;">Actividad:</label>
-        <select id="filtro-actividad" class="form-control" style="width: 200px;" onchange="renderizarPlanillaCalificar()">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label for="filtro-actividad" id="label-actividad">Actividad</label>
+        <select id="filtro-actividad" class="form-control" onchange="renderizarPlanillaCalificar()">
           <option value="">Cargando...</option>
         </select>
-        <button class="secondary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar notas</button>
+      </div>
+      <div class="filter-actions">
+        <button class="primary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar notas</button>
+      </div>
     </div>
   </section>
 
@@ -198,23 +217,21 @@ async function cargarPlanilla() {
     return; 
   }
 
-  const tareasPendientes = listaTareas.filter(tarea => {
-    const notasDeTarea = notasCargadas.filter(n => n.tarea_id === tarea.id && n.nota !== null && n.nota !== undefined);
-    return notasDeTarea.length < listaEstudiantes.length;
-  });
-
   const selectedTareaId = selectorActividad.value;
   selectorActividad.innerHTML = '<option value="">Selecciona una actividad...</option>';
   
-  if (tareasPendientes.length === 0 && listaTareas.length > 0) {
-    selectorActividad.innerHTML = '<option value="">Todas las actividades están calificadas <i data-lucide="party-popper" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></option>';
+  if (listaTareas.length === 0) {
+    selectorActividad.innerHTML = '<option value="">Sin actividades</option>';
   } else {
-    tareasPendientes.forEach(tarea => {
-      selectorActividad.innerHTML += `<option value="${tarea.id}">${tarea.titulo}</option>`;
+    listaTareas.forEach(tarea => {
+      const notasDeTarea = notasCargadas.filter(n => n.tarea_id === tarea.id && n.nota !== null && n.nota !== undefined);
+      const completada = (notasDeTarea.length >= listaEstudiantes.length) && (listaEstudiantes.length > 0);
+      const estado = completada ? ' ✅ (Calificada)' : '';
+      selectorActividad.innerHTML += `<option value="${tarea.id}">${tarea.titulo}${estado}</option>`;
     });
   }
   
-  if (tareasPendientes.some(t => String(t.id) === selectedTareaId)) {
+  if (listaTareas.some(t => String(t.id) === selectedTareaId)) {
     selectorActividad.value = selectedTareaId;
   } else {
     selectorActividad.value = "";

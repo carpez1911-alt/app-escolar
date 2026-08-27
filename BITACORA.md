@@ -73,3 +73,48 @@ Este documento sirve como registro continuo de los cambios, decisiones arquitect
 ### Restauración de Código
 - **Problema:** Un error de codificación y reemplazo de cadenas dañó 'dashboard.html', ocultando el horario y corrompiendo caracteres.
 - **Solución:** Se aplicó 'git checkout' para restaurar 'dashboard.html' y 'configuracion.html' al último commit estable (24 de Agosto), revirtiendo temporalmente el componente visual del horario para evitar mayores daños y asegurar un punto de recuperación limpio.
+
+## Fecha: 26 de Agosto de 2026 - 18:00 (Mejoras en Reportes)
+### Implementación de Reportes Consolidados y Corrección de Interfaz
+- **Problema 1:** Los botones de "Enviar WhatsApp" en la tabla de calificaciones mostraban el código HTML puro de Lucide Icons debido a que se estaban insertando como 	extContent en lugar de innerHTML, provocando una visualización defectuosa y que el botón fuera inusualmente largo.
+- **Problema 2:** En la vista de asistencia, el botón individual decía "Individual" ocupando mucho espacio.
+- **Mejora solicitada:** Se requería un botón de "Reporte General" en calificaciones, similar al de asistencia, para poder notificar a coordinación o a los padres de familia sobre las notas definitivas de todo el grupo de forma masiva.
+- **Solución implementada:**
+  - Se corrigió el error de renderizado en calificaciones.html para el botón individual.
+  - Se cambió el texto a "Enviar" en los botones individuales de calificaciones.html e index.html.
+  - Se implementó la lógica enviarReporteGeneralCalificaciones() en calificaciones.html y se agregó un botón prominente junto a "Guardar notas".
+
+### Regla Estricta de Diseño
+> **Prohibido cambiar los iconos.** Teníamos todos los iconos estandarizados, eran minimalistas y se han modificado sin instrucción. Bajo ninguna circunstancia se debe volver a alterar la librería de Lucide Icons sin autorización explícita.
+
+## Fecha: 26 de Agosto de 2026 - 19:00 (Fase 2: Dashboard y Descargas)
+### Implementación del Nuevo Dashboard y Mejoras de Asistencia
+- **Mejora en Asistencia (index.html):** Se modificó la lógica de conteo en la interfaz para mostrar dinámicamente los "Presentes" y "Ausentes" de la lista después de que se cargan los registros del día actual, brindando mejor visibilidad en tiempo real.
+- **Mejora en Filtros de Asistencia (eportes.html):** Se integró un input type="date" (id="filtro-fecha") que funciona exclusivamente en la vista de reportes de asistencia, permitiendo filtrar inasistencias por días exactos (ideal para coincidir con horarios de materias).
+- **Descargas en Consolidado (consolidado.html):** Se añadieron dos botones "Plantilla General" y "Plantilla Individual". Ambos generan y decargan un archivo .csv utilizando una función iteradora de la tabla DOM. 
+- **Nuevo Dashboard (dashboard.html):** 
+  - Se dividió la pantalla principal en dos columnas (main y side) con grid CSS.
+  - Se añadió la lista resumen de materias contando actividades para los próximos 7 días, facilitando al docente saber qué clases tienen carga académica urgente.
+  - Se implementó un "Mini Calendario" visual generado íntegramente con HTML/CSS/JS (sin librerías). Este calendario detecta el mes actual, marca el día actual, e inyecta la clase has-task a los días que tengan un echa_vencimiento registrado, mostrando un indicador visual amarillo.
+
+## Fecha: 26 de Agosto de 2026 - 19:40 (Auditoría de Iconos y Refinamiento del Dashboard)
+### Cambios Realizados
+- **Auditoría de Iconos:** Se erradicaron todos los emojis estáticos (🏠, 📋, 📚, 📝, 📈, 📊, 👥, ⚙️, 📅, ⚡, 💾, 📌, 🎉) presentes en dashboard.html y se sustituyeron por <i data-lucide="..."></i> de la librería Lucide, logrando completa homogeneidad con el diseño del resto de las vistas. Se añadió lucide.createIcons() al final del archivo.
+- **Actividades de la Semana (Dashboard):** Se modificó la lista de "Actividades Registradas" para llamarla "Actividades de la Semana". Ahora su comportamiento filtra estrictamente las actividades cuya fecha de vencimiento esté dentro de los próximos 7 días, y las **agrupa visualmente por materia** para mayor legibilidad.
+- **Mini-Calendario Interactivo:** Se añadió interactividad a los días del calendario marcados con punto amarillo. Al hacer clic, se abre una alerta mostrando el detalle exacto (materia y título) de las actividades correspondientes a esa fecha.
+
+### Auditoría Global de Iconos (26 de Agosto de 2026 - 19:45)
+- Se ejecutó un script global que analizó cada archivo HTML (index.html, dashboard.html, calificaciones.html, consolidado.html, ctividades.html, eportes.html, configuracion.html, directorio.html) en busca de caracteres correspondientes a emojis.
+- Se reemplazaron más de 80 instancias de emojis esparcidas por el sistema (incluyendo menús, botones, estados vacíos y notificaciones toast) asegurando que el 100% de la interfaz gráfica dependa exclusivamente de los vectores escalables de **Lucide Icons**.
+- Las notificaciones de WhatsApp fueron saneadas para usar caracteres de texto ASCII y asteriscos, eliminando los emojis que rompían la URL paramétrica y previniendo el envío de etiquetas HTML en los mensajes de texto.
+
+## Fecha: 26 de Agosto de 2026 - 20:50 (Modularización del Menú)
+### Patrón DRY (Don't Repeat Yourself) Aplicado
+- **Abstracción a pp.js:** Se eliminó el código duro del menú (<div class="nav-actions">...</div>) de los 8 archivos HTML principales.
+- **Inyección Dinámica:** Se creó la función inyectarMenuGlobal() en pp.js que construye e inyecta el HTML del menú automáticamente en un contenedor vacío con el id contenedor-menu-global durante el evento DOMContentLoaded.
+- **Beneficio:** A partir de ahora, el menú de navegación existe en un solo lugar (dentro de pp.js). Cualquier modificación futura en enlaces o iconos aplicará instantáneamente a todas las pantallas sin necesidad de editar HTML repetitivamente.
+
+## Fecha: 26 de Agosto de 2026 - 20:55 (Auditoría de Menús)
+- **Problema detectado:** Al navegar, en algunas pestañas el menú cargaba sin iconos y en otras con iconos, dando la impresión visual de que existían dos menús distintos.
+- **Causa Raíz:** Una condición de carrera (*race condition*). La inyección del menú en el DOM (via pp.js) ocurría un milisegundo después de que el motor de iconos (lucide.createIcons()) ya había escaneado la página. Por ende, los iconos del menú inyectado quedaban en blanco a menos que la página tuviera elementos dinámicos que forzaran una re-renderización posterior.
+- **Solución:** Se forzó explícitamente el llamado a window.lucide.createIcons() directamente dentro de la función inyectarMenuGlobal() de pp.js. De esta manera, tan pronto como el menú es creado en memoria, sus iconos son renderizados, garantizando estabilidad visual en el 100% de las páginas.

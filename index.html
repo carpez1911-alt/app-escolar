@@ -7,34 +7,16 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
+    <div class="brand-mark"><i data-lucide="graduation-cap" style="width: 32px; height: 32px;"></i></div>
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Gestión docente</div></div>
   </div>
-  <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html"><i data-lucide="home" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Panel</a>
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
-        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
-        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
-        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Calificaciones</a>
-        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Consolidado de Notas</a>
-        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Reportes y filtros</a>
-        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Estudiantes y Materias</a>
-        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
-        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
-        <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero">
@@ -48,7 +30,7 @@
 
   <section class="card report-panel">
     <div class="report-tabs">
-      <button class="report-tab active" data-tab="registro"><i data-lucide="clipboard-list" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Registro Diario</button>
+      <button class="report-tab active" data-tab="registro"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Registro Diario</button>
       <button class="report-tab" data-tab="whatsapp"><i data-lucide="message-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Reporte WhatsApp</button>
     </div>
     
@@ -85,7 +67,7 @@
           <input class="form-control" type="date" id="wa-fecha-semana">
         </div>
         <div class="filter-actions">
-          <button class="secondary-btn" onclick="generarPrevisualizacion()"><i data-lucide="refresh-cw" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Generar</button>
+          <button class="secondary-btn" onclick="generarPrevisualizacion()"> Generar</button>
         </div>
       </div>
       <div class="form-content" style="padding-top:0;">
@@ -106,7 +88,7 @@
           <label for="wa-preview">Reporte General para Coordinación</label>
           <textarea class="form-control" id="wa-preview" rows="8" placeholder="Haz clic en Generar para cargar el listado completo y la previsualización del reporte general..."></textarea>
         </div>
-        <button class="primary-btn" style="background:#25D366; border-color:#25D366; color: white;" onclick="enviarWhatsApp()"><i data-lucide="smartphone" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar Reporte General</button>
+        <button class="primary-btn" style="background:#25D366; border-color:#25D366; color: white;" onclick="enviarWhatsApp()"><i data-lucide="message-square" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar Reporte General</button>
       </div>
     </div>
   </section>
@@ -240,7 +222,7 @@ async function generarPrevisualizacion() {
     const btnIndiv = document.createElement('button');
     btnIndiv.className = 'secondary-btn';
     btnIndiv.style.fontSize = '12px'; btnIndiv.style.padding = '4px 8px';
-    btnIndiv.innerHTML = '<i data-lucide="smartphone" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Individual';
+    btnIndiv.innerHTML = '<i data-lucide="smartphone" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar';
     btnIndiv.onclick = () => enviarWhatsAppIndividual(est, tituloReporte);
     
     tdAcciones.appendChild(btnIndiv);
@@ -249,29 +231,29 @@ async function generarPrevisualizacion() {
   });
 
   // 3. Renderizar mensaje general
-  let msj = `🏫 *Reporte de Asistencia - Mi Clase 502*\n📅 ${tituloReporte}\n\n`;
-  if (ausentes.length) msj += `🔴 *Ausentes:*\n${ausentes.join('\n')}\n\n`;
+  let msj = ` *Reporte de Asistencia - Mi Clase 502*\n<i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> ${tituloReporte}\n\n`;
+  if (ausentes.length) msj += `*Ausentes:*\n${ausentes.join('\n')}\n\n`;
   if (tardanzas.length) msj += `🟠 *Tardanzas:*\n${tardanzas.join('\n')}\n\n`;
   if (excusas.length) msj += `🟡 *Excusas:*\n${excusas.join('\n')}\n\n`;
   
   if (!ausentes.length && !tardanzas.length && !excusas.length) {
-    msj += `✅ *Excelente asistencia.* No hay inasistencias reportadas.\n`;
+    msj += `*Excelente asistencia.* No hay inasistencias reportadas.\n`;
   }
   
   document.getElementById('wa-preview').value = msj;
-  toast('✓ Listado y reporte cargados');
+  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Listado y reporte cargados');
 }
 
 function enviarWhatsAppIndividual(est, tituloReporte) {
   if (!est.telefono) {
-    toast('⚠️ Este estudiante no tiene un teléfono de acudiente registrado.');
+    toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Este estudiante no tiene un teléfono de acudiente registrado.');
     return;
   }
-  let msj = `🏫 *Reporte de Asistencia - Mi Clase 502*\n👤 Alumno: ${est.nombre}\n📅 ${tituloReporte}\n\n`;
+  let msj = ` *Reporte de Asistencia - Mi Clase 502*\n Alumno: ${est.nombre}\n<i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> ${tituloReporte}\n\n`;
   if (est.faltas.length === 0) {
-    msj += `✅ Excelente asistencia. No se reportan faltas ni tardanzas en este periodo.`;
+    msj += `Excelente asistencia. No se reportan faltas ni tardanzas en este periodo.`;
   } else {
-    msj += `⚠️ Se han registrado las siguientes inasistencias:\n- ${est.faltas.join('\n- ')}`;
+    msj += `Se han registrado las siguientes inasistencias:\n- ${est.faltas.join('\n- ')}`;
   }
   
   const phone = est.telefono.replace(/\D/g, ''); // Deja solo números
@@ -280,7 +262,7 @@ function enviarWhatsAppIndividual(est, tituloReporte) {
 
 function enviarWhatsApp() {
   const msj = document.getElementById('wa-preview').value;
-  if (!msj.trim()) { toast('⚠️ Genera el reporte primero'); return; }
+  if (!msj.trim()) { toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Genera el reporte primero'); return; }
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msj)}`, '_blank');
 }
 
@@ -290,7 +272,7 @@ async function cargarEstudiantes(){
   if (!fecha) { toast('Selecciona una fecha válida.'); return; }
   const { data: config, error: configError } = await clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single();
   if (configError || !config?.año_actual) {
-    cont.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No fue posible cargar el año académico activo.</div>';
+    cont.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️</div>No fue posible cargar el año académico activo.</div>';
     toast('No se pudo leer la configuración institucional.');
     return;
   }
@@ -299,11 +281,22 @@ async function cargarEstudiantes(){
     clienteSupabase.from('estudiantes').select('id, nombre_completo, estado, año_lectivo').eq('estado','Activo').eq('año_lectivo', añoActivo).order('id'),
     clienteSupabase.from('asistencia').select('id, estudiante_id, estado, fecha').eq('fecha', fecha)
   ]);
-  if(error || errorAsistencia){cont.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div>No fue posible cargar los estudiantes o la asistencia.</div>'; toast('Error al conectar con Supabase'); return;}
+  if(error || errorAsistencia){cont.innerHTML='<div class="empty"><div class="empty-icon"><i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️</div>No fue posible cargar los estudiantes o la asistencia.</div>'; toast('Error al conectar con Supabase'); return;}
   asistenciasTemporales = {};
   asistenciasExistentes = Object.fromEntries((registros || []).map(registro => [String(registro.estudiante_id), registro]));
   
-  document.getElementById('contador').textContent=`${data.length} estudiante${data.length===1?'':'s'} activos`;
+  if (registros && registros.length > 0) {
+    let presentes = 0;
+    let ausentes = 0;
+    registros.forEach(r => {
+      if (r.estado === 'P') presentes++;
+      else if (['A', 'E', 'T'].includes(r.estado)) ausentes++;
+    });
+    document.getElementById('contador').textContent = `Presentes: ${presentes} | Ausentes: ${ausentes} | Total: ${data.length}`;
+  } else {
+    document.getElementById('contador').textContent = `Total: ${data.length} alumnos`;
+  }
+  
   cont.innerHTML='';
   
   data.forEach(e=>{
@@ -340,14 +333,14 @@ function marcarTodosPresentes(){
     const btn=row.querySelector('.status-btn'); // Selecciona el primero que es P
     seleccionarEstado(btn,'p',id);
   });
-  toast('⚡ Todos marcados como presentes');
+  toast('<i data-lucide="zap" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Todos marcados como presentes');
 }
 
 async function guardarAsistencia(){
   const fecha = fechaAsistencia.value;
   const datos = Object.entries(asistenciasTemporales).map(([id,estado])=>({estudiante_id:Number(id), estado:estado}));
   
-  if(!fecha || !datos.length){toast('⚠️ Selecciona una fecha y al menos un estado'); return;}
+  if(!fecha || !datos.length){toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Selecciona una fecha y al menos un estado'); return;}
   const operaciones = datos.map(dato => {
     const existente = asistenciasExistentes[String(dato.estudiante_id)];
     return existente
@@ -357,12 +350,12 @@ async function guardarAsistencia(){
   const respuestas = await Promise.all(operaciones);
   const error = respuestas.find(respuesta => respuesta.error)?.error;
   if(error){ toast('Error: No se pudo guardar la asistencia'); console.error(error); return; }
-  toast('✓ Asistencia guardada correctamente');
+  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Asistencia guardada correctamente');
   await cargarEstudiantes();
 }
 
 cargarEstudiantes();
 </script>
-<script>lucide.createIcons();</script>
+<script>if(window.lucide){lucide.createIcons();}</script>
 </body>
 </html>

@@ -8,44 +8,24 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <style>
-  /* Tabla consolidado */
-  #tabla-notas { font-size: 13px; text-align: center; white-space: nowrap; }
-  #tabla-notas th, #tabla-notas td { padding: 12px 10px; border: 1px solid var(--border); }
-  #tabla-notas th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2; }
-  #tabla-notas td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05); min-width: 140px; white-space: normal; }
-  #tabla-notas th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; background-color: var(--primary-soft); }
+  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; white-space: nowrap; }
+  th, td { padding: 12px 10px; border: 1px solid var(--border); }
+  th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2;}
+  td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
+  th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; }
   .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
-  @media (max-width: 768px) {
-    #tabla-notas td.text-left { min-width: 120px; max-width: 140px; font-size: 12px; }
-  }
 </style>
-<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
+    <div class="brand-mark"><i data-lucide="graduation-cap" style="width: 32px; height: 32px;"></i></div>
     <div><div class="brand-title">Mi Clase</div><div class="brand-subtitle">Consolidado General</div></div>
   </div>
-  <div class="nav-actions">
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
-        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
-        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
-        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Calificaciones</a>
-        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Consolidado de Notas</a>
-        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Reportes y filtros</a>
-        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Estudiantes y Materias</a>
-        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
-        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
-        <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero" style="margin-bottom: 15px;">
@@ -57,13 +37,19 @@
   </section>
 
   <!-- FILTRO PERIODO EN CARD RESPONSIVE -->
-  <section class="card" style="padding: 0;">
-    <div class="filter-grid" style="grid-template-columns: 1fr auto; align-items: end;">
+  <section class="card" style="padding: 15px;">
+    <div class="filter-grid" style="grid-template-columns: 1fr auto auto; align-items: end; gap: 10px;">
       <div class="form-group" style="margin:0;">
         <label for="filtro-periodo">Periodo académico</label>
         <select id="filtro-periodo" class="form-control" onchange="cargarConsolidado()">
             <option value="">Cargando...</option>
         </select>
+      </div>
+      <div>
+        <button class="secondary-btn" id="btn-descarga-general" onclick="descargarPlantillaGeneral()"><i data-lucide="download" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Plantilla General</button>
+      </div>
+      <div>
+        <button class="secondary-btn" id="btn-descarga-individual" onclick="descargarPlantillaIndividual()"><i data-lucide="file-down" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Plantilla Individual</button>
       </div>
     </div>
   </section>
@@ -96,6 +82,40 @@ function crearCelda(tag, texto, clase = '') {
   celda.textContent = texto;
   if (clase) celda.className = clase;
   return celda;
+}
+
+function descargarCSV(nombreArchivo, filas) {
+  const csvRows = filas.map(f => f.join(','));
+  const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = nombreArchivo;
+  a.click();
+}
+
+function descargarPlantillaGeneral() {
+  const periodo = document.getElementById('filtro-periodo').value;
+  const thead = document.querySelectorAll('#cabecera-materias th');
+  const tbody = document.querySelectorAll('#cuerpo-planilla tr');
+  
+  if (!periodo || (tbody.length > 0 && (tbody[0].querySelector('.loading') || tbody[0].querySelector('.empty')))) {
+    toast('No hay datos para exportar.');
+    return;
+  }
+  
+  const cabeceras = Array.from(thead).map(th => `"${th.textContent}"`);
+  const filas = [cabeceras];
+  
+  tbody.forEach(tr => {
+    const celdas = Array.from(tr.querySelectorAll('td')).map(td => `"${td.textContent}"`);
+    filas.push(celdas);
+  });
+  
+  descargarCSV(`Consolidado_General_P${periodo}.csv`, filas);
+}
+
+function descargarPlantillaIndividual() {
+  toast('Adaptando a formato base... (Se integrará plantilla de fondo luego)');
+  descargarPlantillaGeneral();
 }
 
 function configurarPeriodos(cantidadPeriodos) {
@@ -182,7 +202,7 @@ async function cargarConsolidado() {
     tbody.appendChild(fila);
   });
   
-  if (!materiasConNotas.length) tbody.innerHTML = '<tr><td colspan="15" class="empty"><div class="empty-icon"><i data-lucide="book" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No hay calificaciones registradas para este periodo.</td></tr>';
+  if (!materiasConNotas.length) tbody.innerHTML = '<tr><td colspan="15" class="empty"><div class="empty-icon"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No hay calificaciones registradas para este periodo.</td></tr>';
 }
 
 async function inicializarPlanilla() {
@@ -199,6 +219,6 @@ async function inicializarPlanilla() {
 
 inicializarPlanilla();
 </script>
-<script>lucide.createIcons();</script>
+<script>if(window.lucide){lucide.createIcons();}</script>
 </body>
 </html>

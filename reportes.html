@@ -16,24 +16,8 @@
     <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Reportes docentes</div></div>
   </div>
-  <div class="nav-actions">
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-      <div class="menu-panel">
-        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
-        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
-        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
-        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Calificaciones</a>
-        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Consolidado de Notas</a>
-        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Reportes y filtros</a>
-        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Estudiantes y Materias</a>
-        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
-        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
-        <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero">
@@ -71,6 +55,10 @@
         </select>
       </div>
       <div class="form-group attendance-only">
+        <label for="filtro-fecha">Fecha exacta</label>
+        <input type="date" class="form-control" id="filtro-fecha">
+      </div>
+      <div class="form-group attendance-only">
         <label for="filtro-estado">Estado</label>
         <select class="form-control" id="filtro-estado">
           <option value="">Todos</option>
@@ -93,7 +81,7 @@
         <div class="toolbar-title" id="titulo-tabla">Calificaciones encontradas</div>
         <div class="toolbar-meta" id="meta-tabla">Cargando...</div>
       </div>
-      <button class="secondary-btn" id="btn-exportar" style="white-space:nowrap;">⬇ Exportar CSV</button>
+      <button class="secondary-btn" id="btn-exportar" style="white-space:nowrap;"><i data-lucide="download" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Exportar CSV</button>
     </div>
     <div class="table-container">
       <table>
@@ -126,12 +114,14 @@ function registrosFiltrados() {
   const materia = document.getElementById('filtro-materia').value;
   const alumno = document.getElementById('filtro-alumno').value;
   const estadoAsistencia = document.getElementById('filtro-estado').value;
+  const fechaExacta = document.getElementById('filtro-fecha').value;
   const origen = estado.tipo === 'calificaciones' ? estado.calificaciones : estado.asistencias;
   const marco = estado.marcos.find(item => String(item.periodo) === periodo);
   return origen.filter(item => {
     const fecha = estado.tipo === 'calificaciones' ? fechaCalificacion(item) : fechaAsistencia(item);
     const coincidePeriodo = estado.tipo === 'calificaciones' ? String(item.periodo) === periodo : (!marco || (fecha >= marco.fecha_inicio && fecha <= marco.fecha_fin));
-    return coincidePeriodo && (!materia || String(item.materia_id) === materia) && (!alumno || String(item.estudiante_id) === alumno) && (!estadoAsistencia || item.estado === estadoAsistencia);
+    const coincideFechaExacta = (estado.tipo === 'asistencia' && fechaExacta) ? (fecha === fechaExacta) : true;
+    return coincidePeriodo && (!materia || String(item.materia_id) === materia) && (!alumno || String(item.estudiante_id) === alumno) && (!estadoAsistencia || item.estado === estadoAsistencia) && coincideFechaExacta;
   });
 }
 function dibujarReporte() {
@@ -173,7 +163,8 @@ async function cargarDatos() {
 document.querySelectorAll('.report-tab').forEach(tab => tab.addEventListener('click', () => { document.querySelectorAll('.report-tab').forEach(item => item.classList.remove('active')); tab.classList.add('active'); estado.tipo = tab.dataset.reporte; document.querySelectorAll('.attendance-only').forEach(item => item.hidden = estado.tipo !== 'asistencia'); dibujarReporte(); }));
 document.getElementById('btn-aplicar').addEventListener('click', dibujarReporte);
 document.getElementById('filtro-periodo').addEventListener('change', dibujarReporte);
-document.getElementById('btn-limpiar').addEventListener('click', () => { ['filtro-materia','filtro-alumno','filtro-estado'].forEach(id => document.getElementById(id).value = ''); document.getElementById('filtro-periodo').value = String(estado.periodoActual); dibujarReporte(); });
+document.getElementById('filtro-fecha').addEventListener('change', dibujarReporte);
+document.getElementById('btn-limpiar').addEventListener('click', () => { ['filtro-materia','filtro-alumno','filtro-estado', 'filtro-fecha'].forEach(id => document.getElementById(id).value = ''); document.getElementById('filtro-periodo').value = String(estado.periodoActual); dibujarReporte(); });
 document.getElementById('btn-exportar').addEventListener('click', () => {
   const filas = registrosFiltrados();
   if (!filas.length) { mostrarToast('No hay registros para exportar.'); return; }

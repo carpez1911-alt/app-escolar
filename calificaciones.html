@@ -38,24 +38,8 @@
     <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
     <div><div class="brand-title">Mi Clase</div><div class="brand-subtitle">Consolidado de Notas</div></div>
   </div>
-  <div class="nav-actions">
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
-        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
-        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
-        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Calificaciones</a>
-        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Consolidado de Notas</a>
-        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Reportes y filtros</a>
-        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Estudiantes y Materias</a>
-        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
-        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
-        <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero" style="margin-bottom: 15px;">
@@ -90,8 +74,9 @@
           <option value="">Cargando...</option>
         </select>
       </div>
-      <div class="filter-actions">
+      <div class="filter-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button class="primary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar notas</button>
+        <button class="primary-btn" id="btn-reporte-general" type="button" style="background-color: #25D366; border-color: #25D366; color: white;" onclick="enviarReporteGeneralCalificaciones()"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Reporte general</button>
       </div>
     </div>
   </section>
@@ -160,8 +145,34 @@ function enviarWhatsApp(nombre, promedio, periodo) {
     mostrarToast('El estudiante todavía no tiene calificaciones.');
     return;
   }
-  const mensaje = `Hola, cordial saludo. Le comparto el reporte de calificaciones de *${nombre}* en el *Periodo ${periodo}*. Su promedio general es: *${promedio}*.`;
+  const materia = document.getElementById('filtro-materia').selectedOptions[0]?.textContent || '';
+  const mensaje = ` *Reporte de Calificaciones*\n Estudiante: ${nombre}\n<i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Materia: ${materia}\n<i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Periodo: ${periodo}\n\n<i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> *Promedio Definitivo:* ${promedio}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+}
+
+function enviarReporteGeneralCalificaciones() {
+  const materiaSelect = document.getElementById('filtro-materia');
+  const materia = materiaSelect.selectedOptions[0]?.textContent;
+  const periodo = document.getElementById('filtro-periodo').value;
+
+  if (!materiaSelect.value || !periodo) {
+    toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Selecciona una materia para generar el reporte general.');
+    return;
+  }
+  if (!listaEstudiantes || listaEstudiantes.length === 0) {
+    toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ No hay estudiantes cargados.');
+    return;
+  }
+
+  let msj = ` *Reporte Consolidado de Notas*\n<i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Materia: ${materia}\n<i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Periodo: ${periodo}\n\n`;
+  
+  listaEstudiantes.forEach(est => {
+    const pro = promediosCargados.find(p => String(p.estudiante_id) === String(est.id));
+    const promedio = (pro && pro.promedio_definitivo !== null) ? pro.promedio_definitivo : 'Sin notas';
+    msj += `* ${est.nombre_completo}: *${promedio}*\n`;
+  });
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`, '_blank');
 }
 
 function actualizarPromedios(fila) {
@@ -226,7 +237,7 @@ async function cargarPlanilla() {
     listaTareas.forEach(tarea => {
       const notasDeTarea = notasCargadas.filter(n => n.tarea_id === tarea.id && n.nota !== null && n.nota !== undefined);
       const completada = (notasDeTarea.length >= listaEstudiantes.length) && (listaEstudiantes.length > 0);
-      const estado = completada ? ' ✅ (Calificada)' : '';
+      const estado = completada ? ' <i data-lucide="check-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> (Calificada)' : '';
       selectorActividad.innerHTML += `<option value="${tarea.id}">${tarea.titulo}${estado}</option>`;
     });
   }
@@ -288,7 +299,9 @@ function renderizarPlanillaCalificar() {
     fila.appendChild(promedioMateria);
     fila.appendChild(crearCelda('td', pro ? pro.promedio_definitivo : '-', 'promedio-col promedio-general'));
     const acciones = crearCelda('td', '', 'acciones-celda');
-    const botonReporte = crearCelda('button', '<i data-lucide="message-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar', 'btn-wa');
+    const botonReporte = document.createElement('button');
+    botonReporte.className = 'btn-wa';
+    botonReporte.innerHTML = '<i data-lucide="smartphone" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar';
     botonReporte.type = 'button';
     const nombreMateria = document.getElementById('filtro-materia').selectedOptions[0]?.textContent || 'la materia';
     botonReporte.addEventListener('click', () => enviarWhatsApp(estudiante.nombre_completo, promedioDeFila(fila), periodo, nombreMateria));
@@ -336,7 +349,7 @@ async function guardarNotas() {
     });
 
     if (datosAGuardar.length === 0) {
-      toast('⚠️ Escribe notas válidas entre 0 y 10.');
+      toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Escribe notas válidas entre 0 y 10.');
         botonGuardar.disabled = false;
         return;
     }
@@ -350,7 +363,7 @@ async function guardarNotas() {
         console.error('Error al guardar calificaciones:', error);
         toast('Error DB: ' + (error.message || 'No fue posible guardar las calificaciones.'));
     } else {
-        toast('✓ Calificaciones guardadas correctamente.');
+        toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Calificaciones guardadas correctamente.');
         await cargarPlanilla();
     }
       botonGuardar.disabled = false;

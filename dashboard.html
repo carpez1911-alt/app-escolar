@@ -7,92 +7,110 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
+<style>
+  .dashboard-columns { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+  @media (max-width: 900px) { .dashboard-columns { grid-template-columns: 1fr; } }
+  .mini-calendar { width: 100%; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 15px; }
+  .cal-header { background: var(--primary); color: white; text-align: center; padding: 10px; font-weight: bold; font-size: 14px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); }
+  .cal-day-name { background: var(--surface); text-align: center; font-size: 11px; padding: 5px 0; font-weight: 600; color: var(--muted); }
+  .cal-day { background: white; height: 50px; padding: 5px; font-size: 12px; position: relative; cursor: pointer; transition: background 0.2s; }
+  .cal-day:hover { background: #f8fafc; }
+  .cal-day.today { font-weight: bold; color: var(--primary-dark); background: #eff6ff; }
+  .cal-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; background: #eab308; border-radius: 50%; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); }
+  .cal-day.muted { color: #cbd5e1; }
+  .subject-summary { margin-bottom: 10px; }
+  .subject-tag { display: inline-block; padding: 4px 8px; background: var(--primary-soft); color: var(--primary-dark); border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; font-weight: 500; }
+</style>
 </head>
 <body>
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <div class="brand-mark">🎓</div>
+    <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Panel del docente</div></div>
   </div>
-  <div class="nav-actions">
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
 <section class="hero">
   <div>
     <div class="eyebrow">● Resumen docente</div>
-    <h1>Buenos días, docente 👋</h1>
+    <h1>Buenos días, docente</h1>
     <p>Aquí tienes una vista rápida de lo que requiere atención.</p>
   </div>
-  <div class="date-pill">📅 <span id="fecha">Cargando...</span></div>
+  <div class="date-pill"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> <span id="fecha">Cargando...</span></div>
 </section>
 
 <section class="dashboard-grid">
-  <div class="card stat"><div class="stat-label">👥 Estudiantes activos</div><div class="stat-value" id="total-estudiantes">—</div><div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div></div>
-  <div class="card stat"><div class="stat-label">📝 Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Periodo actual: <span id="lbl-periodo">...</span></div></div>
-  <div class="card stat"><div class="stat-label">⚡ Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
+  <div class="card stat"><div class="stat-label"><i data-lucide="users" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiantes activos</div><div class="stat-value" id="total-estudiantes">—</div><div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div></div>
+  <div class="card stat"><div class="stat-label"><i data-lucide="edit-3" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Periodo actual: <span id="lbl-periodo">...</span></div></div>
+  <div class="card stat"><div class="stat-label"><i data-lucide="zap" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
 </section>
 
-<!-- ASIGNAR TAREA CON FECHA INTELIGENTE -->
-<section class="card">
-  <div class="toolbar">
-    <div><div class="toolbar-title">📝 Asignar Nueva Actividad / Tarea</div></div>
-  </div>
-  <div class="form-content">
-      <div class="form-group">
-          <label for="materia-tarea">Materia:</label>
-          <select id="materia-tarea" class="form-control" onchange="sugerirFechaClase()">
-              <option value="">Seleccione una materia...</option>
-          </select>
+<div class="dashboard-columns">
+  <div class="col-main">
+    <!-- ASIGNAR TAREA CON FECHA INTELIGENTE -->
+    <section class="card">
+      <div class="toolbar">
+        <div><div class="toolbar-title"><i data-lucide="edit" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Asignar Nueva Actividad</div></div>
       </div>
+      <div class="form-content">
           <div class="form-group">
-            <label for="periodo-tarea">Periodo académico:</label>
-            <select id="periodo-tarea" class="form-control" onchange="cambiarPeriodoTarea()"></select>
+              <label for="materia-tarea">Materia:</label>
+              <select id="materia-tarea" class="form-control" onchange="sugerirFechaClase()">
+                  <option value="">Seleccione una materia...</option>
+              </select>
           </div>
-      <div class="form-group">
-          <label for="categoria-tarea">Categoría de Actividad:</label>
-          <select id="categoria-tarea" class="form-control">
-              <option value="">Seleccione una categoría...</option>
-          </select>
-      </div>
-      <div class="form-group">
-          <label for="titulo-tarea">Título de la Actividad:</label>
-          <input type="text" id="titulo-tarea" class="form-control" placeholder="Ej. Taller de Fracciones">
-      </div>
-      <div class="form-group">
-          <label for="desc-tarea">Descripción:</label>
-          <textarea id="desc-tarea" rows="2" class="form-control" placeholder="Instrucciones de la actividad"></textarea>
-      </div>
-      <div class="form-group">
-          <label for="fecha-tarea">Fecha de Entrega / Clase:</label>
-          <input type="date" id="fecha-tarea" class="form-control">
-          <small id="sugerencia-nota" style="color: var(--muted); margin-top: 4px; display: block;"></small>
-      </div>
-      <button class="primary-btn" onclick="crearTarea()">💾 Guardar y Publicar Actividad</button>
-  </div>
-</section>
+              <div class="form-group">
+                <label for="periodo-tarea">Periodo académico:</label>
+                <select id="periodo-tarea" class="form-control" onchange="cambiarPeriodoTarea()"></select>
+              </div>
+          <div class="form-group">
+              <label for="categoria-tarea">Categoría de Actividad:</label>
+              <select id="categoria-tarea" class="form-control">
+                  <option value="">Seleccione una categoría...</option>
+              </select>
+          </div>
+          <div class="form-group">
+              <label for="titulo-tarea">Título de la Actividad:</label>
+              <input type="text" id="titulo-tarea" class="form-control" placeholder="Ej. Taller de Fracciones">
+          </div>
+          <div class="form-group">
+              <label for="desc-tarea">Descripción:</label>
+              <textarea id="desc-tarea" rows="2" class="form-control" placeholder="Instrucciones de la actividad"></textarea>
+          </div>
+          <div class="form-group">
+              <label for="fecha-tarea">Fecha de Entrega / Clase:</label>
+              <input type="date" id="fecha-tarea" class="form-control">
+              <small id="sugerencia-nota" style="color: var(--muted); margin-top: 4px; display: block;"></small>
+          </div>
+          <button class="primary-btn" onclick="crearTarea()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar y Publicar</button>
 
-<section class="card task-card">
-  <div class="toolbar">
-    <div><div class="toolbar-title">📌 Actividades Registradas</div><div class="toolbar-meta">Ordenadas por fecha de vencimiento</div></div>
+      </div>
+    </section>
+
+    <section class="card task-card">
+      <div class="toolbar">
+        <div><div class="toolbar-title"><i data-lucide="pin" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Actividades de la Semana</div><div class="toolbar-meta">Agrupadas por materia</div></div>
+      </div>
+      <div class="task-list" id="contenedor-tareas"><div class="loading">Cargando actividades…</div></div>
+    </section>
   </div>
-  <div class="task-list" id="contenedor-tareas"><div class="loading">Cargando actividades…</div></div>
-</section>
+
+  <div class="col-side">
+    <section class="card">
+      <div class="toolbar" style="margin-bottom: 10px;">
+        <div><div class="toolbar-title">Próximos 7 Días</div></div>
+      </div>
+      <div id="resumen-materias" class="subject-summary">
+        <div class="loading">Cargando resumen...</div>
+      </div>
+      <div id="mini-calendario" class="mini-calendar"></div>
+    </section>
+  </div>
+</div>
 </main>
 <div class="toast" id="toast"></div>
 </div>
@@ -107,6 +125,7 @@ let materias = [];
 let horarios = [];
 let marcoPeriodoActual = null;
 let marcosPeriodos = [];
+let tareasGlobal = [];
 
 function esFinDeSemana(fecha) {
   const diaSemana = fecha.getDay(); // 0 = Domingo, 6 = Sábado
@@ -194,7 +213,7 @@ function sugerirFechaClase() {
   if (encontrada) {
     const fechaISO = fechaLocalISO(fechaBusqueda);
     inputFecha.value = fechaISO;
-    infoSpan.textContent = `💡 Sugerencia automática: Próxima clase según horario (${formatearFechaCorta(fechaISO)}).`;
+    infoSpan.textContent = `<i data-lucide="lightbulb" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Sugerencia automática: Próxima clase según horario (${formatearFechaCorta(fechaISO)}).`;
   }
 }
 
@@ -206,7 +225,7 @@ async function crearTarea() {
   const fechaVencimiento = document.getElementById('fecha-tarea').value;
 
   if (!materiaId || !categoriaId || !titulo || !fechaVencimiento) {
-    mostrarToast('⚠️ Completa los campos obligatorios, incluyendo la categoría');
+    mostrarToast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Completa los campos obligatorios, incluyendo la categoría');
     return;
   }
 
@@ -222,7 +241,7 @@ async function crearTarea() {
   const diaSeleccionado = new Date(`${fechaVencimiento}T00:00:00`).getDay();
   const diasMateria = horarios.filter(h => h.materia_id === parseInt(materiaId)).map(h => h.dia_semana);
   if (diasMateria.length && !diasMateria.includes(diaSeleccionado)) {
-    if (!confirm('⚠️ Atención: La fecha seleccionada no coincide con los días de clase configurados en el horario para esta materia.\n\n¿Deseas registrar la actividad de todos modos (crear una novedad)?')) {
+    if (!confirm('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Atención: La fecha seleccionada no coincide con los días de clase configurados en el horario para esta materia.\n\n¿Deseas registrar la actividad de todos modos (crear una novedad)?')) {
       return;
     }
   }
@@ -241,7 +260,7 @@ async function crearTarea() {
   if (error) {
     mostrarToast('Error al guardar la actividad');
   } else {
-    mostrarToast('✓ Actividad registrada correctamente');
+    mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividad registrada correctamente');
     document.getElementById('materia-tarea').value = '';
     document.getElementById('titulo-tarea').value = '';
     document.getElementById('desc-tarea').value = '';
@@ -260,28 +279,127 @@ async function cargarDashboard() {
   document.getElementById('total-estudiantes').textContent = estudiantes ? estudiantes.length : 0;
   document.getElementById('total-tareas').textContent = tareas ? tareas.length : 0;
 
+  tareasGlobal = tareas || [];
+
+  renderizarActividadesSemana(tareasGlobal);
+  generarResumenMaterias(tareasGlobal);
+  generarCalendario(tareasGlobal);
+  
+  setTimeout(() => { if (window.lucide) lucide.createIcons(); }, 100);
+}
+
+function renderizarActividadesSemana(tareas) {
   const cont = document.getElementById('contenedor-tareas');
-  if (!tareas || tareas.length === 0) {
-    cont.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div>No hay actividades pendientes.</div>';
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const enUnaSemana = new Date(hoy); enUnaSemana.setDate(hoy.getDate() + 7);
+  
+  const tareasSemana = tareas.filter(t => {
+    const d = new Date(t.fecha_vencimiento + "T00:00:00");
+    return d >= hoy && d <= enUnaSemana;
+  });
+
+  if (tareasSemana.length === 0) {
+    cont.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="check-circle" style="width: 32px; height: 32px; color: var(--muted);"></i></div>No hay actividades para esta semana.</div>';
     return;
   }
 
-  cont.innerHTML = '';
-  tareas.forEach(t => {
-    const row = document.createElement('div'); row.className = 'task';
-    row.innerHTML = `
-      <div class="datos-tarea">
-        <span class="task-badge">${t.materias?.nombre_materia || 'General'}</span>
-        <div class="task-title">${t.titulo}</div>
-        <div class="task-desc">${t.descripcion || 'Sin descripción adicional'} · <em>Periodo ${t.periodo}</em></div>
-      </div>
-      <div class="deadline">Entrega:<br>${formatearFechaCorta(t.fecha_vencimiento)}</div>
-    `;
-    cont.appendChild(row);
+  const agrupadas = {};
+  tareasSemana.forEach(t => {
+    const mat = t.materias?.nombre_materia || 'General';
+    if (!agrupadas[mat]) agrupadas[mat] = [];
+    agrupadas[mat].push(t);
   });
+
+  cont.innerHTML = '';
+  for (const [materia, lista] of Object.entries(agrupadas)) {
+    const seccion = document.createElement('div');
+    seccion.innerHTML = `<h3 style="margin: 15px 0 10px; font-size: 14px; color: var(--primary-dark); border-bottom: 2px solid var(--primary-soft); padding-bottom: 5px;">${materia}</h3>`;
+    
+    lista.forEach(t => {
+      const row = document.createElement('div'); row.className = 'task';
+      row.innerHTML = `
+        <div class="datos-tarea">
+          <div class="task-title">${t.titulo}</div>
+          <div class="task-desc">${t.descripcion || 'Sin descripción adicional'} · <em>Periodo ${t.periodo}</em></div>
+        </div>
+        <div class="deadline">Entrega:<br>${formatearFechaCorta(t.fecha_vencimiento)}</div>
+      `;
+      seccion.appendChild(row);
+    });
+    cont.appendChild(seccion);
+  }
+}
+
+function mostrarDetalleDia(fechaISO) {
+  const tareasDelDia = tareasGlobal.filter(t => t.fecha_vencimiento === fechaISO);
+  if (tareasDelDia.length === 0) return;
+  
+  let msj = `Actividades para el ${formatearFechaCorta(fechaISO)}:\n\n`;
+  tareasDelDia.forEach(t => {
+    msj += `- [${t.materias?.nombre_materia || 'General'}] ${t.titulo}\n`;
+  });
+  
+  alert(msj);
+}
+
+function generarResumenMaterias(tareas) {
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const enUnaSemana = new Date(hoy); enUnaSemana.setDate(hoy.getDate() + 7);
+  
+  const tareasSemana = tareas.filter(t => {
+    const d = new Date(t.fecha_vencimiento + "T00:00:00");
+    return d >= hoy && d <= enUnaSemana;
+  });
+  
+  const resumen = document.getElementById('resumen-materias');
+  if(tareasSemana.length === 0) {
+    resumen.innerHTML = '<span style="color:var(--muted); font-size:13px;">Ninguna para esta semana.</span>';
+    return;
+  }
+  
+  const conteo = {};
+  tareasSemana.forEach(t => {
+    const mat = t.materias?.nombre_materia || 'General';
+    conteo[mat] = (conteo[mat] || 0) + 1;
+  });
+  
+  resumen.innerHTML = Object.entries(conteo).map(([mat, cant]) => `<span class="subject-tag">${mat}: ${cant}</span>`).join('');
+}
+
+function generarCalendario(tareas) {
+  const hoy = new Date();
+  const mes = hoy.getMonth();
+  const anio = hoy.getFullYear();
+  const diaActual = hoy.getDate();
+  
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+  
+  const fechasTareas = new Set(tareas.map(t => t.fecha_vencimiento));
+  
+  const nombresDias = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  const mesNombre = hoy.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  
+  let html = `<div class="cal-header">${mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1)}</div><div class="cal-grid">`;
+  nombresDias.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
+  
+  // Espacios vacíos antes del primer día
+  for(let i=0; i < primerDia; i++) html += `<div class="cal-day muted"></div>`;
+  
+  // Días del mes
+  for(let i=1; i <= diasEnMes; i++) {
+    const fechaISO = `${anio}-${String(mes+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    const esHoy = (i === diaActual) ? 'today' : '';
+    const tieneTarea = fechasTareas.has(fechaISO) ? 'has-task' : '';
+    html += `<div class="cal-day ${esHoy} ${tieneTarea}" title="${tieneTarea ? 'Ver actividades' : ''}" ${tieneTarea ? `onclick="mostrarDetalleDia('${fechaISO}')"` : ''}>${i}</div>`;
+  }
+  
+  html += `</div>`;
+  document.getElementById('mini-calendario').innerHTML = html;
 }
 
 cargarDatosIniciales();
 </script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

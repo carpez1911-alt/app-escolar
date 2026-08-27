@@ -15,25 +15,8 @@
   <div class="brand">
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Gestión de Actividades</div></div>
   </div>
-  <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html"><i data-lucide="home" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Panel</a>
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-      <div class="menu-panel">
-        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
-        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
-        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
-        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Calificaciones</a>
-        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Consolidado de Notas</a>
-        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Reportes y filtros</a>
-        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Estudiantes y Materias</a>
-        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
-        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
-        <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero">
@@ -187,7 +170,7 @@ async function cargarActividades() {
   const { data, error } = await consulta;
 
   if (error) {
-    contenedor.innerHTML = '<div class="empty"><div class="empty-icon">❌</div>Error al cargar las actividades.</div>';
+    contenedor.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="x-circle" style="width: 32px; height: 32px; display: inline-block; vertical-align: middle;"></i></div>Error al cargar las actividades.</div>';
     return;
   }
 
@@ -195,7 +178,7 @@ async function cargarActividades() {
   actividadesCargadas = data;
 
   if (data.length === 0) {
-    contenedor.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>No hay actividades registradas para estos filtros.</div>';
+    contenedor.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="inbox" style="width: 32px; height: 32px; display: inline-block; vertical-align: middle;"></i></div>No hay actividades registradas para estos filtros.</div>';
     return;
   }
 
@@ -244,7 +227,7 @@ async function eliminarActividad(id) {
     if(error) {
       toast(`Error al eliminar: ${error.message}`);
     } else {
-      toast('🗑️ Actividad eliminada correctamente.');
+      toast('<i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Actividad eliminada correctamente.');
       cargarActividades();
     }
   }
@@ -324,7 +307,7 @@ async function guardarEdicionActividad() {
   }
   
   cerrarModalEditar();
-  toast('✓ Actividad actualizada correctamente.');
+  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividad actualizada correctamente.');
   cargarActividades();
 }
 

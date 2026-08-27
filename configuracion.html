@@ -19,26 +19,11 @@
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <div class="brand-mark">⚙️</div>
+    <div class="brand-mark"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️</div>
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Configuración del Sistema</div></div>
   </div>
-  <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero">
@@ -51,7 +36,7 @@
 
   <!-- AJUSTES DE PERIODO Y AÑO -->
   <section class="card">
-    <div class="toolbar"><div class="toolbar-title">📅 Periodos y Año Lectivo</div></div>
+    <div class="toolbar"><div class="toolbar-title"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Periodos y Año Lectivo</div></div>
     <div class="form-content">
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
         <div class="form-group">
@@ -70,17 +55,17 @@
           <select id="cfg-periodo-actual" class="form-control"></select>
         </div>
       </div>
-      <button class="primary-btn" style="margin-top: 10px;" onclick="guardarConfiguracion()">💾 Guardar Ajustes Generales</button>
+      <button class="primary-btn" style="margin-top: 10px;" onclick="guardarConfiguracion()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Ajustes Generales</button>
     </div>
   </section>
 
   <section class="card">
     <div class="toolbar">
       <div>
-        <div class="toolbar-title">📆 Marcos de periodos académicos</div>
+        <div class="toolbar-title"><i data-lucide="calendar" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Marcos de periodos académicos</div>
         <div class="toolbar-meta">Edita las fechas oficiales de cada periodo.</div>
       </div>
-      <button class="secondary-btn" id="btn-guardar-periodos" type="button">💾 Guardar periodos</button>
+      <button class="secondary-btn" id="btn-guardar-periodos" type="button"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar periodos</button>
     </div>
     <div class="table-container">
       <table>
@@ -93,10 +78,10 @@
   <section class="card">
     <div class="toolbar">
       <div>
-        <div class="toolbar-title">📊 Categorías de Calificación</div>
+        <div class="toolbar-title"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Categorías de Calificación</div>
         <div class="toolbar-meta">Define las categorías globales y sus porcentajes (ej. Tareas 30%). La suma debe dar 100%.</div>
       </div>
-      <button class="secondary-btn" id="btn-guardar-categorias" type="button" onclick="guardarCategorias()">💾 Guardar %</button>
+      <button class="secondary-btn" id="btn-guardar-categorias" type="button" onclick="guardarCategorias()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar %</button>
     </div>
     <div class="table-container">
       <table>
@@ -113,7 +98,7 @@
         <div class="toolbar-title">⏰ Horario Semanal de Clases (Lunes a Viernes)</div>
         <div class="toolbar-meta">Marca los días en que se dicta cada asignatura</div>
       </div>
-      <button class="secondary-btn" onclick="guardarHorario()">💾 Guardar Horario</button>
+      <button class="secondary-btn" onclick="guardarHorario()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Horario</button>
     </div>
     <div class="form-content" id="lista-horarios">
       <div class="loading">Cargando materias y horario...</div>
@@ -213,7 +198,7 @@ async function guardarCategorias() {
     const respuestas = await Promise.all(cambios.map(cambio => clienteSupabase.from('categorias_actividades').update({ nombre: cambio.nombre, porcentaje: cambio.porcentaje }).eq('id', cambio.id)));
     const error = respuestas.find(respuesta => respuesta.error)?.error;
     if (error) throw error;
-    mostrarAviso('✓ Categorías y porcentajes actualizados.');
+    mostrarAviso('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Categorías y porcentajes actualizados.');
   } catch (error) {
     console.error(error);
     mostrarAviso('Error al guardar las categorías.');
@@ -262,7 +247,7 @@ async function guardarPeriodos() {
       const cambio = cambios.find(item => item.id === marco.id);
       return cambio ? { ...marco, ...cambio } : marco;
     });
-    mostrarAviso('✓ Fechas de periodos actualizadas correctamente.');
+    mostrarAviso('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Fechas de periodos actualizadas correctamente.');
   } catch (error) {
     console.error('Error al guardar periodos:', error);
     mostrarAviso('No fue posible guardar las fechas de los periodos.');
@@ -323,7 +308,7 @@ async function guardarConfiguracion() {
     .eq('id', 1);
 
   if (error) { console.error(error); mostrarToast(`Error al guardar configuración: ${error.message}`); }
-  else { mostrarToast('✓ Configuración general actualizada'); }
+  else { mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Configuración general actualizada'); }
 }
 
 async function guardarHorario() {
@@ -345,11 +330,12 @@ async function guardarHorario() {
     const { error } = await clienteSupabase.from('horario_semanal').insert(nuevosHorarios);
     if (error) { console.error(error); mostrarToast(`Error al guardar horario: ${error.message}`); return; }
   }
-  mostrarToast('✓ Horario semanal actualizado');
+  mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Horario semanal actualizado');
 }
 
 document.getElementById('btn-guardar-periodos').addEventListener('click', guardarPeriodos);
 inicializar();
 </script>
+<script>if(window.lucide){lucide.createIcons();}</script>
 </body>
 </html>

@@ -22,6 +22,8 @@
   .subject-summary { margin-bottom: 10px; }
   .subject-tag { display: inline-block; padding: 4px 8px; background: var(--primary-soft); color: var(--primary-dark); border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; font-weight: 500; }
 </style>
+
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
@@ -44,8 +46,26 @@
 </section>
 
 <section class="dashboard-grid">
-  <div class="card stat"><div class="stat-label"><i data-lucide="users" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiantes activos</div><div class="stat-value" id="total-estudiantes">—</div><div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div></div>
-  <div class="card stat"><div class="stat-label"><i data-lucide="edit-3" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Periodo actual: <span id="lbl-periodo">...</span></div></div>
+  <div class="card stat">
+    <div class="stat-label"><i data-lucide="users" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiantes activos</div>
+    <div class="stat-value" id="total-estudiantes">—</div>
+    <div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div>
+    
+    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);">
+      <div class="stat-label" style="font-size: 12px;"><i data-lucide="user-check" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> En clase hoy</div>
+      <div class="stat-value" id="asistencia-hoy" style="font-size: 22px; color: var(--primary-dark);">—</div>
+      <div class="stat-note" id="asistencia-detalle" style="margin-top: 4px; font-size: 11px;">Pendiente de tomar asistencia</div>
+    </div>
+  </div>
+  <div class="card stat" style="justify-content: flex-start;">
+    <div class="stat-label"><i data-lucide="edit-3" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Tareas registradas</div>
+    <div class="stat-value" id="total-tareas" style="margin-bottom: 10px;">—</div>
+    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto;">
+      <button onclick="abrirModalTareasClasificadas('pendientes')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--primary-soft); color:var(--primary-dark); cursor:pointer;">Pendientes (<span id="count-pendientes">0</span>)</button>
+      <button onclick="abrirModalTareasClasificadas('vencidas')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--danger-soft); color:var(--danger); cursor:pointer;">Vencidas (<span id="count-vencidas">0</span>)</button>
+      <button onclick="abrirModalTareasClasificadas('cumplidas')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--success-soft); color:var(--success); cursor:pointer;">Cumplidas (<span id="count-cumplidas">0</span>)</button>
+    </div>
+  </div>
   <div class="card stat"><div class="stat-label"><i data-lucide="zap" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
 </section>
 
@@ -113,6 +133,20 @@
 </div>
 </main>
 <div class="toast" id="toast"></div>
+
+<!-- MODAL DE TAREAS CLASIFICADAS -->
+<div id="modal-tareas-clasificadas" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="margin: 0; font-size: 18px;" id="mtc-titulo">Tareas</h3>
+      <button onclick="document.getElementById('modal-tareas-clasificadas').classList.remove('open')" style="color: var(--text-secondary);"><i data-lucide="x" style="width: 24px; height: 24px;"></i></button>
+    </div>
+    <div id="mtc-lista" class="task-list" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+      <!-- Las tareas se inyectan aquí -->
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -126,6 +160,7 @@ let horarios = [];
 let marcoPeriodoActual = null;
 let marcosPeriodos = [];
 let tareasGlobal = [];
+let fechaCalendarioActivo = new Date();
 
 function esFinDeSemana(fecha) {
   const diaSemana = fecha.getDay(); // 0 = Domingo, 6 = Sábado
@@ -162,7 +197,6 @@ async function cargarDatosIniciales() {
 
   if (resCfg.data) {
     document.getElementById('lbl-anio').textContent = resCfg.data.año_actual;
-    document.getElementById('lbl-periodo').textContent = `Periodo ${resCfg.data.periodo_actual}`;
     const selectorPeriodo = document.getElementById('periodo-tarea');
     const cantidadPeriodos = Number(resCfg.data.cantidad_periodos) || 3;
     selectorPeriodo.innerHTML = Array.from({ length: cantidadPeriodos }, (_, index) => `<option value="${index + 1}">Periodo ${index + 1}</option>`).join('');
@@ -195,13 +229,12 @@ function sugerirFechaClase() {
     return;
   }
 
-  // Buscar el próximo día válido de clase a partir de mañana
   let fechaBusqueda = new Date();
   let encontrada = false;
 
   for (let i = 1; i <= 14; i++) {
     fechaBusqueda.setDate(fechaBusqueda.getDate() + 1);
-    let diaSem = fechaBusqueda.getDay(); // 1 = Lunes, 5 = Viernes
+    let diaSem = fechaBusqueda.getDay(); 
     const fechaISO = fechaLocalISO(fechaBusqueda);
     const dentroPeriodo = !marcoPeriodoActual || (fechaISO >= marcoPeriodoActual.fecha_inicio && fechaISO <= marcoPeriodoActual.fecha_fin);
     if (diasClase.includes(diaSem) && !esFinDeSemana(fechaBusqueda) && dentroPeriodo) {
@@ -213,7 +246,7 @@ function sugerirFechaClase() {
   if (encontrada) {
     const fechaISO = fechaLocalISO(fechaBusqueda);
     inputFecha.value = fechaISO;
-    infoSpan.textContent = `<i data-lucide="lightbulb" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Sugerencia automática: Próxima clase según horario (${formatearFechaCorta(fechaISO)}).`;
+    infoSpan.textContent = 'Sugerencia automática: Próxima clase según horario.';
   }
 }
 
@@ -225,28 +258,9 @@ async function crearTarea() {
   const fechaVencimiento = document.getElementById('fecha-tarea').value;
 
   if (!materiaId || !categoriaId || !titulo || !fechaVencimiento) {
-    mostrarToast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Completa los campos obligatorios, incluyendo la categoría');
+    mostrarToast('Completa los campos obligatorios');
     return;
   }
-
-  if (marcoPeriodoActual && (fechaVencimiento < marcoPeriodoActual.fecha_inicio || fechaVencimiento > marcoPeriodoActual.fecha_fin)) {
-    mostrarToast('La fecha debe estar dentro del periodo académico actual.');
-    return;
-  }
-  if (!marcoPeriodoActual) {
-    mostrarToast('No existe un marco académico para el periodo seleccionado.');
-    return;
-  }
-
-  const diaSeleccionado = new Date(`${fechaVencimiento}T00:00:00`).getDay();
-  const diasMateria = horarios.filter(h => h.materia_id === parseInt(materiaId)).map(h => h.dia_semana);
-  if (diasMateria.length && !diasMateria.includes(diaSeleccionado)) {
-    if (!confirm('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Atención: La fecha seleccionada no coincide con los días de clase configurados en el horario para esta materia.\n\n¿Deseas registrar la actividad de todos modos (crear una novedad)?')) {
-      return;
-    }
-  }
-
-  const periodoActual = Number.parseInt(document.getElementById('periodo-tarea').value, 10) || 1;
 
   const { error } = await clienteSupabase.from('tareas').insert([{
     materia_id: parseInt(materiaId),
@@ -254,33 +268,67 @@ async function crearTarea() {
     titulo: titulo,
     descripcion: descripcion,
     fecha_vencimiento: fechaVencimiento,
-    periodo: periodoActual
+    periodo: parseInt(document.getElementById('periodo-tarea').value)
   }]);
 
   if (error) {
     mostrarToast('Error al guardar la actividad');
   } else {
-    mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividad registrada correctamente');
-    document.getElementById('materia-tarea').value = '';
-    document.getElementById('titulo-tarea').value = '';
-    document.getElementById('desc-tarea').value = '';
-    document.getElementById('fecha-tarea').value = '';
-    document.getElementById('sugerencia-nota').textContent = '';
+    mostrarToast('Actividad registrada correctamente');
     cargarDashboard();
   }
 }
 
 async function cargarDashboard() {
-  const [{ data: estudiantes }, { data: tareas }] = await Promise.all([
+  const fechaHoy = fechaLocalISO();
+  const [{ data: estudiantes }, { data: tareas }, { data: asistenciaHoy }, { data: calificaciones }] = await Promise.all([
     clienteSupabase.from('estudiantes').select('id').eq('estado', 'Activo'),
-    clienteSupabase.from('tareas').select('*, materias(nombre_materia)').order('fecha_vencimiento', { ascending: true })
+    clienteSupabase.from('tareas').select('*, materias(nombre_materia)').order('fecha_vencimiento', { ascending: true }),
+    clienteSupabase.from('asistencia').select('estado').eq('fecha', fechaHoy),
+    clienteSupabase.from('calificaciones').select('tarea_id').not('nota', 'is', null)
   ]);
 
-  document.getElementById('total-estudiantes').textContent = estudiantes ? estudiantes.length : 0;
+  const totalActivos = estudiantes ? estudiantes.length : 0;
+  document.getElementById('total-estudiantes').textContent = totalActivos;
   document.getElementById('total-tareas').textContent = tareas ? tareas.length : 0;
 
-  tareasGlobal = tareas || [];
+  if (asistenciaHoy && asistenciaHoy.length > 0) {
+    const presentes = asistenciaHoy.filter(a => a.estado === 'Presente' || a.estado === 'Tarde').length;
+    document.getElementById('asistencia-hoy').textContent = presentes;
+  } else {
+    document.getElementById('asistencia-hoy').textContent = "—";
+    document.getElementById('asistencia-detalle').textContent = "No se ha tomado asistencia hoy";
+  }
 
+  const notasPorTarea = {};
+  if (calificaciones && calificaciones.length > 0) {
+    calificaciones.forEach(c => {
+      notasPorTarea[c.tarea_id] = (notasPorTarea[c.tarea_id] || 0) + 1;
+    });
+  }
+
+  let pend = 0, venc = 0, cump = 0;
+  window.tareasClasificadas = { pendientes: [], vencidas: [], cumplidas: [] };
+
+  (tareas || []).forEach(t => {
+    const calificados = notasPorTarea[t.id] || 0;
+    if (totalActivos > 0 && calificados >= totalActivos) {
+      cump++;
+      window.tareasClasificadas.cumplidas.push(t);
+    } else if (t.fecha_vencimiento < fechaHoy) {
+      venc++;
+      window.tareasClasificadas.vencidas.push(t);
+    } else {
+      pend++;
+      window.tareasClasificadas.pendientes.push(t);
+    }
+  });
+
+  document.getElementById('count-pendientes').textContent = pend;
+  document.getElementById('count-vencidas').textContent = venc;
+  document.getElementById('count-cumplidas').textContent = cump;
+
+  tareasGlobal = tareas || [];
   renderizarActividadesSemana(tareasGlobal);
   generarResumenMaterias(tareasGlobal);
   generarCalendario(tareasGlobal);
@@ -334,12 +382,32 @@ function mostrarDetalleDia(fechaISO) {
   const tareasDelDia = tareasGlobal.filter(t => t.fecha_vencimiento === fechaISO);
   if (tareasDelDia.length === 0) return;
   
-  let msj = `Actividades para el ${formatearFechaCorta(fechaISO)}:\n\n`;
+  document.getElementById('mtc-titulo').textContent = "Actividades del " + formatearFechaCorta(fechaISO);
+  const contenedor = document.getElementById('mtc-lista');
+  contenedor.innerHTML = '';
+  
   tareasDelDia.forEach(t => {
-    msj += `- [${t.materias?.nombre_materia || 'General'}] ${t.titulo}\n`;
+      const mat = t.materias?.nombre_materia || 'General';
+      const div = document.createElement('div');
+      div.className = 'task-item-clickable';
+      div.style.cssText = 'padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;';
+      div.innerHTML = `
+        <div style="flex:1; min-width: 150px;">
+          <div style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:4px;"><i data-lucide="book-open" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>${mat} · Per. ${t.periodo}</div>
+          <div style="font-weight:600; font-size:14px; color:var(--text);">${t.titulo}</div>
+        </div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-align:right;">
+          <i data-lucide="calendar-days" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i>${formatearFechaCorta(t.fecha_vencimiento)}
+        </div>
+      `;
+      div.onclick = () => {
+        window.location.href = `calificaciones.html?materia_id=${t.materia_id}&periodo=${t.periodo}&tarea_id=${t.id}`;
+      };
+      contenedor.appendChild(div);
   });
   
-  alert(msj);
+  document.getElementById('modal-tareas-clasificadas').classList.add('open');
+  if(window.lucide) window.lucide.createIcons();
 }
 
 function generarResumenMaterias(tareas) {
@@ -366,11 +434,15 @@ function generarResumenMaterias(tareas) {
   resumen.innerHTML = Object.entries(conteo).map(([mat, cant]) => `<span class="subject-tag">${mat}: ${cant}</span>`).join('');
 }
 
+function cambiarMesCalendario(delta) {
+  fechaCalendarioActivo.setMonth(fechaCalendarioActivo.getMonth() + delta);
+  generarCalendario(tareasGlobal);
+}
+
 function generarCalendario(tareas) {
-  const hoy = new Date();
-  const mes = hoy.getMonth();
-  const anio = hoy.getFullYear();
-  const diaActual = hoy.getDate();
+  const hoyReal = new Date();
+  const mes = fechaCalendarioActivo.getMonth();
+  const anio = fechaCalendarioActivo.getFullYear();
   
   const primerDia = new Date(anio, mes, 1).getDay();
   const diasEnMes = new Date(anio, mes + 1, 0).getDate();
@@ -378,9 +450,13 @@ function generarCalendario(tareas) {
   const fechasTareas = new Set(tareas.map(t => t.fecha_vencimiento));
   
   const nombresDias = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-  const mesNombre = hoy.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  const mesNombre = fechaCalendarioActivo.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
   
-  let html = `<div class="cal-header">${mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1)}</div><div class="cal-grid">`;
+  let html = `<div class="cal-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <button onclick="cambiarMesCalendario(-1)" style="background: none; border: none; color: white; cursor: pointer; padding: 0 5px;" title="Mes anterior"><i data-lucide="chevron-left" style="width:18px;height:18px;"></i></button>
+      <span>${mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1)}</span>
+      <button onclick="cambiarMesCalendario(1)" style="background: none; border: none; color: white; cursor: pointer; padding: 0 5px;" title="Mes siguiente"><i data-lucide="chevron-right" style="width:18px;height:18px;"></i></button>
+    </div><div class="cal-grid">`;
   nombresDias.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
   
   // Espacios vacíos antes del primer día
@@ -389,13 +465,50 @@ function generarCalendario(tareas) {
   // Días del mes
   for(let i=1; i <= diasEnMes; i++) {
     const fechaISO = `${anio}-${String(mes+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-    const esHoy = (i === diaActual) ? 'today' : '';
+    const esHoy = (anio === hoyReal.getFullYear() && mes === hoyReal.getMonth() && i === hoyReal.getDate()) ? 'today' : '';
     const tieneTarea = fechasTareas.has(fechaISO) ? 'has-task' : '';
     html += `<div class="cal-day ${esHoy} ${tieneTarea}" title="${tieneTarea ? 'Ver actividades' : ''}" ${tieneTarea ? `onclick="mostrarDetalleDia('${fechaISO}')"` : ''}>${i}</div>`;
   }
   
   html += `</div>`;
   document.getElementById('mini-calendario').innerHTML = html;
+  if(window.lucide) window.lucide.createIcons();
+}
+
+function abrirModalTareasClasificadas(tipo) {
+  const lista = window.tareasClasificadas[tipo] || [];
+  const titulos = { pendientes: "Tareas Pendientes (Futuras/Hoy)", vencidas: "Tareas Vencidas (Falta calificar)", cumplidas: "Tareas Completadas (100% Calificadas)" };
+  document.getElementById('mtc-titulo').textContent = titulos[tipo];
+  
+  const contenedor = document.getElementById('mtc-lista');
+  contenedor.innerHTML = '';
+  
+  if(lista.length === 0) {
+    contenedor.innerHTML = '<div class="empty">No hay tareas en esta categoría.</div>';
+  } else {
+    lista.forEach(t => {
+      const mat = t.materias?.nombre_materia || 'General';
+      const div = document.createElement('div');
+      div.className = 'task-item-clickable';
+      div.style.cssText = 'padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;';
+      div.innerHTML = `
+        <div style="flex:1; min-width: 150px;">
+          <div style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:4px;"><i data-lucide="book-open" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>${mat} · Per. ${t.periodo}</div>
+          <div style="font-weight:600; font-size:14px; color:var(--text);">${t.titulo}</div>
+        </div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-align:right;">
+          <i data-lucide="calendar-days" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i>${formatearFechaCorta(t.fecha_vencimiento)}
+        </div>
+      `;
+      div.onclick = () => {
+        window.location.href = `calificaciones.html?materia_id=${t.materia_id}&periodo=${t.periodo}&tarea_id=${t.id}`;
+      };
+      contenedor.appendChild(div);
+    });
+  }
+  
+  document.getElementById('modal-tareas-clasificadas').classList.add('open');
+  if(window.lucide) window.lucide.createIcons();
 }
 
 cargarDatosIniciales();

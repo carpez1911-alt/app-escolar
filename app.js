@@ -16,24 +16,45 @@ function inyectarMenuGlobal() {
   // Evitar inyectar en la vista de login o si el contenedor no existe
   if (!contenedor) return;
 
+  // Inyectar únicamente el botón de abrir menú en la barra superior
   contenedor.innerHTML = `
-    <a class="nav-btn" href="dashboard.html"><i data-lucide="home" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Panel</a>
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú"><i data-lucide="menu" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
-      <div class="menu-panel">
-        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Panel principal</a>
-        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Control de asistencia</a>
-        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Gestionar actividades</a>
-        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Calificaciones</a>
-        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Consolidado de Notas</a>
-        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Reportes y filtros</a>
-        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Estudiantes y Materias</a>
-        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Configuración</a>
-        <hr style="margin: 10px 0; border: 0; border-top: 1px solid var(--border);">
-        <a href="#" onclick="cerrarSesion(); return false;" style="color: #ef4444;"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Cerrar Sesión</a>
-      </div>
-    </div>
+    <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú"><i data-lucide="menu" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
   `;
+
+  // Crear e inyectar el menú lateral en el body si no existe aún
+  if (!document.getElementById('sidebar-menu')) {
+    const overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    overlay.id = 'sidebar-overlay';
+    
+    const sidebar = document.createElement('aside');
+    sidebar.className = 'sidebar';
+    sidebar.id = 'sidebar-menu';
+    sidebar.innerHTML = `
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-mark"><i data-lucide="graduation-cap" style="width: 20px; height: 20px;"></i></div>
+          <div class="brand-title">Mi Clase 502</div>
+        </div>
+        <button class="menu-btn" id="closeMenuBtn" aria-label="Cerrar menú"><i data-lucide="x" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
+      </div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Panel principal</a>
+        <a href="index.html"><i data-lucide="clipboard-check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Control de asistencia</a>
+        <a href="actividades.html"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Gestionar actividades</a>
+        <a href="calificaciones.html"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Calificaciones</a>
+        <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Consolidado de Notas</a>
+        <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Reportes y filtros</a>
+        <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Estudiantes y Materias</a>
+        <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Configuración</a>
+      </div>
+      <div class="sidebar-footer">
+        <a href="#" onclick="cerrarSesion(); return false;" class="logout-link"><i data-lucide="log-out" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Cerrar Sesión</a>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.appendChild(sidebar);
+  }
   
   if (window.lucide) {
     window.lucide.createIcons();
@@ -41,15 +62,30 @@ function inyectarMenuGlobal() {
 }
 
 function configurarMenu() {
-  const boton = document.getElementById('menuBtn');
-  const envoltura = document.getElementById('menuWrap');
-  if (!boton || !envoltura) return;
-  if (boton.dataset.menuConfigurado === 'true') return;
-  boton.dataset.menuConfigurado = 'true';
-  boton.addEventListener('click', () => envoltura.classList.toggle('open'));
-  document.addEventListener('click', evento => {
-    if (!envoltura.contains(evento.target)) envoltura.classList.remove('open');
-  });
+  const openBtn = document.getElementById('menuBtn');
+  const closeBtn = document.getElementById('closeMenuBtn');
+  const sidebar = document.getElementById('sidebar-menu');
+  const overlay = document.getElementById('sidebar-overlay');
+  
+  if (!openBtn || !sidebar || !overlay) return;
+  if (openBtn.dataset.menuConfigurado === 'true') return;
+  openBtn.dataset.menuConfigurado = 'true';
+  
+  function openMenu() {
+    sidebar.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden'; // Prevenir scroll de fondo
+  }
+  
+  function closeMenu() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  
+  openBtn.addEventListener('click', openMenu);
+  if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', closeMenu);
 }
 
 function fechaLocalISO(fecha = new Date()) {

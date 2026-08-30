@@ -11,27 +11,33 @@
   /* Tabla de calificaciones */
   #tabla-notas { font-size: 13px; text-align: center; white-space: nowrap; }
   #tabla-notas th, #tabla-notas td { padding: 12px 10px; border: 1px solid var(--border); }
-  #tabla-notas th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2; }
+  #tabla-notas th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2; white-space: normal; min-width: 80px; max-width: 140px; line-height: 1.2; word-wrap: break-word; }
   #tabla-notas td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05); min-width: 140px; max-width: 200px; white-space: normal; }
   #tabla-notas th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; background-color: var(--primary-soft); }
   .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
   
   /* Celdas editables (tipo Excel) */
   .celda-nota { background-color: #f8fafc; transition: 0.2s; cursor: text; min-width: 60px; font-weight: bold; }
-  .celda-nota:focus { background-color: #e0f2fe; outline: 2px solid var(--primary); outline-offset: -2px; }
-  .celda-nota:hover { background-color: #f1f5f9; }
-
-  .btn-wa { background-color: #25D366; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; min-height: 36px; white-space: nowrap; }
-  .btn-wa:hover { background-color: #128C7E; }
+  .celda-nota:hover { background-color: #e2e8f0; outline: 2px solid var(--primary); }
+  .celda-nota:focus { background-color: #fff; outline: 2px solid var(--primary); outline-offset: -2px; }
+  
+  .btn-wa { background-color: #25D366; color: white; border-radius: 4px; padding: 6px 12px; font-weight: 600; font-size: 13px; box-shadow: 0 2px 4px rgba(37,211,102,0.3); transition: 0.2s; border: none; cursor: pointer; }
+  .btn-wa:hover { background-color: #128C7E; transform: translateY(-1px); }
+  
   @media (max-width: 768px) {
-    #tabla-notas td.text-left { min-width: 120px; max-width: 140px; font-size: 12px; }
-    .btn-wa { min-height: 48px; width: 100%; justify-content: center; }
-    .celda-nota { min-width: 48px; padding: 12px 8px; }
+    .btn-wa { font-size: 0; padding: 10px; border-radius: 50%; min-width: 44px; display: inline-flex; justify-content: center; align-items: center; }
+    .btn-wa i { margin-right: 0 !important; }
+    #tabla-notas td.text-left { min-width: 120px; max-width: 140px; }
   }
 </style>
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+<!-- Botón Flotante de Regreso -->
+<button onclick="window.location.href='dashboard.html'" class="fab-back" title="Regresar al Panel Principal">
+  <i data-lucide="arrow-left" style="width: 24px; height: 24px;"></i>
+</button>
+
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
@@ -74,8 +80,10 @@
           <option value="">Cargando...</option>
         </select>
       </div>
-      <div class="filter-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <button class="primary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar notas</button>
+      <div class="filter-actions" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <button class="primary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar</button>
+        <button class="secondary-btn" id="btn-copiar-columna" type="button" title="Copiar columna" onclick="copiarColumna()" style="padding: 10px; min-width: auto;"><i data-lucide="copy" style="width: 18px; height: 18px; display: block;"></i></button>
+        <button class="secondary-btn" id="btn-rellenar-uno" type="button" title="Rellenar vacíos con 1.0" onclick="rellenarConUno()" style="padding: 10px; min-width: auto;"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: block;"></i></button>
         <button class="primary-btn" id="btn-reporte-general" type="button" style="background-color: #25D366; border-color: #25D366; color: white;" onclick="enviarReporteGeneralCalificaciones()"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Reporte general</button>
       </div>
     </div>
@@ -137,7 +145,7 @@ function configurarMaterias(materias) {
 }
 
 function promedioDeFila(fila) {
-  return fila.querySelector('.promedio-general')?.textContent || '-';
+  return fila.querySelector('.promedio-materia')?.textContent || '-';
 }
 
 function enviarWhatsApp(nombre, promedio, periodo) {
@@ -146,7 +154,7 @@ function enviarWhatsApp(nombre, promedio, periodo) {
     return;
   }
   const materia = document.getElementById('filtro-materia').selectedOptions[0]?.textContent || '';
-  const mensaje = ` *Reporte de Calificaciones*\n Estudiante: ${nombre}\n<i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Materia: ${materia}\n<i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Periodo: ${periodo}\n\n<i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> *Promedio Definitivo:* ${promedio}`;
+  const mensaje = ` *Reporte de Calificaciones*\n Estudiante: ${nombre}\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n\n📊 *Promedio Definitivo:* ${promedio}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
 }
 
@@ -164,7 +172,7 @@ function enviarReporteGeneralCalificaciones() {
     return;
   }
 
-  let msj = ` *Reporte Consolidado de Notas*\n<i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Materia: ${materia}\n<i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Periodo: ${periodo}\n\n`;
+  let msj = ` *Reporte Consolidado de Notas*\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n\n`;
   
   listaEstudiantes.forEach(est => {
     const pro = promediosCargados.find(p => String(p.estudiante_id) === String(est.id));
@@ -234,6 +242,7 @@ async function cargarPlanilla() {
   if (listaTareas.length === 0) {
     selectorActividad.innerHTML = '<option value="">Sin actividades</option>';
   } else {
+    selectorActividad.innerHTML += '<option value="todas">Todas las actividades</option>';
     listaTareas.forEach(tarea => {
       const notasDeTarea = notasCargadas.filter(n => n.tarea_id === tarea.id && n.nota !== null && n.nota !== undefined);
       const completada = (notasDeTarea.length >= listaEstudiantes.length) && (listaEstudiantes.length > 0);
@@ -266,15 +275,23 @@ function renderizarPlanillaCalificar() {
     return;
   }
 
-  const tarea = listaTareas.find(t => String(t.id) === tareaSeleccionadaId);
+  let tareasARenderizar = [];
+  if (tareaSeleccionadaId === 'todas') {
+    tareasARenderizar = listaTareas;
+  } else {
+    const tarea = listaTareas.find(t => String(t.id) === tareaSeleccionadaId);
+    if(tarea) tareasARenderizar.push(tarea);
+  }
 
   thead.innerHTML = '<th class="text-left">Estudiante</th>';
   subthead.innerHTML = '';
   subthead.hidden = true;
   
-  const encabezado = crearCelda('th', tarea.titulo || 'Actividad');
-  encabezado.title = tarea.descripcion ? `${tarea.titulo}\n\n${tarea.descripcion}` : (tarea.titulo || 'Actividad');
-  thead.appendChild(encabezado);
+  tareasARenderizar.forEach(tarea => {
+     const encabezado = crearCelda('th', tarea.titulo || 'Actividad');
+     encabezado.title = tarea.descripcion ? `${tarea.titulo}\n\n${tarea.descripcion}` : (tarea.titulo || 'Actividad');
+     thead.appendChild(encabezado);
+  });
 
   thead.insertAdjacentHTML('beforeend', '<th class="promedio-col">Definitiva</th><th>Reporte</th>');
   tbody.innerHTML = '';
@@ -283,21 +300,63 @@ function renderizarPlanillaCalificar() {
     const fila = document.createElement('tr');
     fila.appendChild(crearCelda('td', estudiante.nombre_completo, 'text-left'));
     
-    // Celda de la actividad seleccionada
-    const nota = notasCargadas.find(item => item.estudiante_id === estudiante.id && item.tarea_id === tarea.id);
-    const celda = crearCelda('td', nota?.nota ?? '', 'celda-nota');
-    celda.contentEditable = 'true';
-    celda.dataset.estudiante = estudiante.id;
-    celda.dataset.materia = materiaId;
-    celda.dataset.tarea = tarea.id;
-    celda.addEventListener('input', () => actualizarPromedios(fila));
-    fila.appendChild(celda);
+    tareasARenderizar.forEach(tarea => {
+      const nota = notasCargadas.find(item => item.estudiante_id === estudiante.id && item.tarea_id === tarea.id);
+      const celda = crearCelda('td', nota?.nota ?? '', 'celda-nota');
+      celda.contentEditable = 'true';
+      celda.dataset.estudiante = estudiante.id;
+      celda.dataset.materia = materiaId;
+      celda.dataset.tarea = tarea.id;
+      
+      celda.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const nextRow = e.target.closest('tr').nextElementSibling;
+          if (nextRow) {
+            const cellIndex = Array.from(e.target.closest('tr').children).indexOf(e.target);
+            const nextCell = nextRow.children[cellIndex];
+            if (nextCell && nextCell.classList.contains('celda-nota')) {
+              nextCell.focus();
+              const selection = window.getSelection();
+              const range = document.createRange();
+              range.selectNodeContents(nextCell);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          }
+        }
+      });
+
+      celda.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+        const lines = pasteData.split(/\r?\n/).filter(l => l.trim() !== '');
+        const cellIndex = Array.from(e.target.closest('tr').children).indexOf(e.target);
+        if (lines.length > 1) {
+          let currentRow = e.target.closest('tr');
+          for (let i = 0; i < lines.length; i++) {
+            if (!currentRow) break;
+            const currentCell = currentRow.children[cellIndex];
+            if (currentCell && currentCell.classList.contains('celda-nota')) {
+               let val = lines[i].trim().replace(',', '.');
+               if(!isNaN(Number(val)) && val !== '') currentCell.textContent = val;
+            }
+            currentRow = currentRow.nextElementSibling;
+          }
+        } else if (lines.length === 1) {
+          let val = lines[0].trim().replace(',', '.');
+          if(!isNaN(Number(val)) && val !== '') e.target.textContent = val;
+        }
+      });
+
+      fila.appendChild(celda);
+    });
 
     const pro = promediosCargados.find(p => String(p.estudiante_id) === String(estudiante.id));
     const promedioMateria = crearCelda('td', pro ? pro.promedio_definitivo : '-', 'promedio-col promedio-materia');
     promedioMateria.dataset.materia = materiaId;
     fila.appendChild(promedioMateria);
-    fila.appendChild(crearCelda('td', pro ? pro.promedio_definitivo : '-', 'promedio-col promedio-general'));
+
     const acciones = crearCelda('td', '', 'acciones-celda');
     const botonReporte = document.createElement('button');
     botonReporte.className = 'btn-wa';
@@ -370,6 +429,11 @@ async function guardarNotas() {
 }
 
 async function inicializarPlanilla() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramMateria = urlParams.get('materia_id');
+  const paramPeriodo = urlParams.get('periodo');
+  const paramTarea = urlParams.get('tarea_id');
+
   const [resConfig, resMaterias] = await Promise.all([
     clienteSupabase.from('configuracion_global').select('cantidad_periodos, periodo_actual').limit(1).single(),
     clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
@@ -382,8 +446,65 @@ async function inicializarPlanilla() {
   listaMaterias = resMaterias.data || [];
   configurarPeriodos(resConfig.data?.cantidad_periodos);
   configurarMaterias(listaMaterias);
-  if (resConfig.data?.periodo_actual) document.getElementById('filtro-periodo').value = String(resConfig.data.periodo_actual);
+
+  if (paramPeriodo) document.getElementById('filtro-periodo').value = paramPeriodo;
+  else if (resConfig.data?.periodo_actual) document.getElementById('filtro-periodo').value = String(resConfig.data.periodo_actual);
+
+  if (paramMateria) document.getElementById('filtro-materia').value = paramMateria;
+
+  if (paramTarea) {
+    const selectorActividad = document.getElementById('filtro-actividad');
+    selectorActividad.innerHTML = `<option value="${paramTarea}">Cargando...</option>`;
+    selectorActividad.value = paramTarea;
+  }
+
   await cargarPlanilla();
+
+  if (paramMateria || paramPeriodo || paramTarea) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+function rellenarConUno() {
+  const tareaId = document.getElementById('filtro-actividad').value;
+  if (!tareaId) {
+    toast('Selecciona una actividad para rellenar.');
+    return;
+  }
+  if (!confirm('¿Seguro que deseas asignar un 1.0 a todos los estudiantes que no tengan nota en esta actividad?')) return;
+  const celdas = document.querySelectorAll('.celda-nota');
+  let cambiadas = 0;
+  celdas.forEach(celda => {
+    if (celda.dataset.tarea === String(tareaId)) {
+      if (celda.textContent.trim() === '') {
+        celda.textContent = '1.0';
+        cambiadas++;
+      }
+    }
+  });
+  if (cambiadas > 0) {
+    toast(`Se rellenaron ${cambiadas} notas con 1.0. No olvides guardar.`);
+  } else {
+    toast('No había celdas vacías para rellenar.');
+  }
+}
+
+function copiarColumna() {
+  const celdas = document.querySelectorAll('.celda-nota');
+  if (celdas.length === 0) {
+    toast('No hay notas para copiar.');
+    return;
+  }
+  let texto = '';
+  celdas.forEach(celda => {
+    texto += celda.textContent.trim() + '\n';
+  });
+  navigator.clipboard.writeText(texto).then(() => {
+    toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Columna copiada al portapapeles.');
+    lucide.createIcons();
+  }).catch(err => {
+    toast('Error al copiar al portapapeles.');
+  });
 }
 
 inicializarPlanilla();

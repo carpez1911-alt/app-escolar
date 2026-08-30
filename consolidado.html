@@ -16,8 +16,15 @@
   th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; }
   .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
 </style>
+
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+<!-- Botón Flotante de Regreso -->
+<button onclick="window.location.href='dashboard.html'" class="fab-back" title="Regresar al Panel Principal">
+  <i data-lucide="arrow-left" style="width: 24px; height: 24px;"></i>
+</button>
+
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
@@ -25,7 +32,7 @@
     <div><div class="brand-title">Mi Clase</div><div class="brand-subtitle">Consolidado General</div></div>
   </div>
   <div class="nav-actions" id="contenedor-menu-global"></div>
-  </nav>
+</nav>
 
 <main class="page">
   <section class="hero" style="margin-bottom: 15px;">
@@ -222,3 +229,4 @@ inicializarPlanilla();
 <script>if(window.lucide){lucide.createIcons();}</script>
 </body>
 </html>
+

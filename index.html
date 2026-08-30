@@ -7,8 +7,15 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
+
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+<!-- Botón Flotante de Regreso -->
+<button onclick="window.location.href='dashboard.html'" class="fab-back" title="Regresar al Panel Principal">
+  <i data-lucide="arrow-left" style="width: 24px; height: 24px;"></i>
+</button>
+
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
@@ -16,7 +23,7 @@
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Gestión docente</div></div>
   </div>
   <div class="nav-actions" id="contenedor-menu-global"></div>
-  </nav>
+</nav>
 
 <main class="page">
   <section class="hero">
@@ -231,7 +238,7 @@ async function generarPrevisualizacion() {
   });
 
   // 3. Renderizar mensaje general
-  let msj = ` *Reporte de Asistencia - Mi Clase 502*\n<i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> ${tituloReporte}\n\n`;
+  let msj = ` *Reporte de Asistencia - Mi Clase 502*\n📅 ${tituloReporte}\n\n`;
   if (ausentes.length) msj += `*Ausentes:*\n${ausentes.join('\n')}\n\n`;
   if (tardanzas.length) msj += `🟠 *Tardanzas:*\n${tardanzas.join('\n')}\n\n`;
   if (excusas.length) msj += `🟡 *Excusas:*\n${excusas.join('\n')}\n\n`;
@@ -249,7 +256,7 @@ function enviarWhatsAppIndividual(est, tituloReporte) {
     toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Este estudiante no tiene un teléfono de acudiente registrado.');
     return;
   }
-  let msj = ` *Reporte de Asistencia - Mi Clase 502*\n Alumno: ${est.nombre}\n<i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> ${tituloReporte}\n\n`;
+  let msj = ` *Reporte de Asistencia - Mi Clase 502*\n Alumno: ${est.nombre}\n📅 ${tituloReporte}\n\n`;
   if (est.faltas.length === 0) {
     msj += `Excelente asistencia. No se reportan faltas ni tardanzas en este periodo.`;
   } else {

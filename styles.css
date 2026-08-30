@@ -50,6 +50,7 @@ body {
 
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; border: none; background: none; }
+button i, button svg { pointer-events: none; }
 
 /* Prevent all images/media from overflowing */
 img, video, svg { max-width: 100%; height: auto; }
@@ -77,7 +78,7 @@ img, video, svg { max-width: 100%; height: auto; }
 .brand-subtitle { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
 
 .nav-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.nav-btn, .menu-btn { 
+.menu-btn { 
   border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); 
   border-radius: var(--radius-btn); padding: 8px 16px; font-weight: 500; font-size: 14px;
   transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
@@ -85,27 +86,47 @@ img, video, svg { max-width: 100%; height: auto; }
   /* Minimum touch target */
   min-height: 44px;
 }
-.nav-btn:hover, .menu-btn:hover { background: #f1f3f4; color: var(--text); }
+.menu-btn:hover { background: #f1f3f4; color: var(--text); }
 .menu-btn { padding: 8px 14px; font-size: 18px; }
 
-.menu-wrap { position: relative; }
-.menu-panel { 
-  display: none; position: absolute; right: 0; top: calc(var(--navbar-h) - 8px); width: 280px; 
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); 
-  box-shadow: var(--shadow-md); overflow: hidden; padding: 8px 0; z-index: 100;
+/* ===========================
+   SIDEBAR (MENÚ LATERAL)
+   =========================== */
+.sidebar-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.5); z-index: 999;
+  opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
 }
-.menu-wrap.open .menu-panel { display: block; animation: slideDown 0.2s ease-out; }
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+.sidebar-overlay.open { opacity: 1; visibility: visible; }
+
+.sidebar {
+  position: fixed; top: 0; right: -320px; left: auto; width: 280px; max-width: 85vw; height: 100vh;
+  background: var(--surface); z-index: 1000;
+  box-shadow: var(--shadow-lg); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex; flex-direction: column;
 }
-.menu-panel a { 
-  display: flex; gap: 12px; align-items: center; padding: 14px 20px; 
-  color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500;
-  /* Good touch targets */
-  min-height: 48px;
+.sidebar.open { right: 0; left: auto; }
+
+.sidebar-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
 }
-.menu-panel a:hover { background: var(--bg); color: var(--primary); }
+.sidebar-nav {
+  flex: 1; overflow-y: auto; padding: 12px 0;
+}
+.sidebar-nav a, .sidebar-footer a {
+  display: flex; align-items: center; padding: 14px 24px;
+  color: var(--text); text-decoration: none; font-size: 15px; font-weight: 500;
+  transition: background 0.2s; min-height: 48px;
+}
+.sidebar-nav a:hover {
+  background: var(--primary-soft); color: var(--primary-dark);
+}
+.sidebar-footer {
+  padding: 12px 0; border-top: 1px solid var(--border);
+}
+.sidebar-footer .logout-link { color: var(--danger); }
+.sidebar-footer .logout-link:hover { background: var(--danger-soft); color: var(--danger); }
 
 /* ===========================
    ESTRUCTURA GENERAL
@@ -360,16 +381,8 @@ td.text-left { text-align: left; }
   .navbar { padding: 0 var(--page-px); }
   .brand-subtitle { display: none; }
   .brand-title { font-size: 16px; }
-  .nav-btn { display: none; } /* Ocultar btn Panel cuando hay menú */
 
-  /* MENU PANEL */
-  .menu-panel { 
-    width: calc(100vw - 32px); 
-    top: calc(var(--navbar-h) + 4px); 
-    right: 0; 
-    max-height: calc(100vh - var(--navbar-h) - 20px);
-    overflow-y: auto;
-  }
+  /* MENU PANEL - Eliminado para dar paso al Sidebar */
 
   /* PAGE */
   .page { padding: 24px var(--page-px) 100px; }
@@ -498,8 +511,8 @@ td.text-left { text-align: left; }
   /* Tabla: padding reducido para caber más */
   th, td { padding: 10px 10px; font-size: 12px; }
   
-  /* Reducir el padding lateral del menú */
-  .menu-panel a { padding: 14px 16px; }
+  /* Reducir el padding lateral del menú sidebar */
+  .sidebar-nav a, .sidebar-footer a { padding: 14px 16px; }
 }
 
 /* ===========================
@@ -507,9 +520,6 @@ td.text-left { text-align: left; }
    Solo correcciones específicas de desktop que no funcionen bien por defecto
    =========================== */
 @media (min-width: 769px) {
-  /* En desktop, el nav-btn debe mostrarse siempre */
-  .nav-btn { display: inline-flex; }
-
   /* Primary btn en dashboard tiene ancho auto */
   .primary-btn { width: auto; }
 
@@ -531,4 +541,19 @@ td.text-left { text-align: left; }
   .horario-dia { padding: 8px; min-height: unset; }
   .horario-dia h4 { font-size: 12px; margin-bottom: 6px; }
   .horario-item { font-size: 12px; padding: 8px; }
+}
+
+/* ===========================
+   BOTÓN FLOTANTE REGRESAR (FAB)
+   =========================== */
+.fab-back {
+  position: fixed; bottom: 30px; left: 30px; z-index: 1000;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); cursor: pointer; transition: all 0.2s; text-decoration: none;
+}
+.fab-back:hover { background: var(--primary-soft); color: var(--primary); transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+@media (max-width: 768px) {
+  .fab-back { bottom: 20px; left: 20px; }
 }

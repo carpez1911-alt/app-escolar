@@ -39,38 +39,66 @@
 <section class="hero">
   <div>
     <div class="eyebrow">● Resumen docente</div>
-    <h1>Buenos días, docente</h1>
+    <h1>Buenos días, <span id="nombre-docente">docente</span></h1>
     <p>Aquí tienes una vista rápida de lo que requiere atención.</p>
   </div>
-  <div class="date-pill"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> <span id="fecha">Cargando...</span></div>
+  <div class="date-pill" style="display:flex; align-items:center; gap: 15px; padding: 5px 15px;">
+    <span><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> <span id="fecha">Cargando...</span></span>
+    <a href="index.html" style="text-decoration:none; background:var(--primary); color:white; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; display:flex; align-items:center;"><i data-lucide="check-square" style="width: 14px; height: 14px; margin-right: 4px;"></i> Pasar Asistencia</a>
+  </div>
 </section>
 
 <section class="dashboard-grid">
   <div class="card stat">
     <div class="stat-label"><i data-lucide="users" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiantes activos</div>
     <div class="stat-value" id="total-estudiantes">—</div>
-    <div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div>
+    <div class="stat-note"><span id="nombre-grupo">Grupo Principal</span> · Año <span id="lbl-anio">...</span></div>
     
-    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);">
-      <div class="stat-label" style="font-size: 12px;"><i data-lucide="user-check" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> En clase hoy</div>
-      <div class="stat-value" id="asistencia-hoy" style="font-size: 22px; color: var(--primary-dark);">—</div>
-      <div class="stat-note" id="asistencia-detalle" style="margin-top: 4px; font-size: 11px;">Pendiente de tomar asistencia</div>
+    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: flex; gap: 20px;">
+      <div>
+        <div class="stat-label" style="font-size: 12px; color: var(--success);"><i data-lucide="user-check" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Presentes</div>
+        <div class="stat-value" id="asistencia-presentes" style="font-size: 22px; color: var(--success);">—</div>
+      </div>
+      <div>
+        <div class="stat-label" style="font-size: 12px; color: var(--danger);"><i data-lucide="user-x" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Ausentes</div>
+        <div class="stat-value" id="asistencia-ausentes" style="font-size: 22px; color: var(--danger);">—</div>
+      </div>
     </div>
+    <div class="stat-note" id="asistencia-detalle" style="margin-top: 8px; font-size: 11px;">Calculando...</div>
   </div>
   <div class="card stat" style="justify-content: flex-start;">
-    <div class="stat-label"><i data-lucide="edit-3" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Tareas registradas</div>
-    <div class="stat-value" id="total-tareas" style="margin-bottom: 10px;">—</div>
+    <div class="stat-label"><i data-lucide="edit-3" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividades Pendientes</div>
+    <div class="stat-value" id="tareas-pendientes-semana" style="margin-bottom: 5px;">—</div>
+    <div class="stat-note" style="margin-bottom: 15px; margin-top: 0;">Para hoy y los próximos 7 días</div>
     <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto;">
       <button onclick="abrirModalTareasClasificadas('pendientes')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--primary-soft); color:var(--primary-dark); cursor:pointer;">Pendientes (<span id="count-pendientes">0</span>)</button>
       <button onclick="abrirModalTareasClasificadas('vencidas')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--danger-soft); color:var(--danger); cursor:pointer;">Vencidas (<span id="count-vencidas">0</span>)</button>
       <button onclick="abrirModalTareasClasificadas('cumplidas')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--success-soft); color:var(--success); cursor:pointer;">Cumplidas (<span id="count-cumplidas">0</span>)</button>
     </div>
   </div>
-  <div class="card stat"><div class="stat-label"><i data-lucide="zap" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
+
 </section>
 
 <div class="dashboard-columns">
   <div class="col-main">
+    <!-- HORARIO VISUAL -->
+    <section class="card">
+      <div class="toolbar">
+        <div>
+          <div class="toolbar-title"><i data-lucide="clock" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Horario de Clases</div>
+        </div>
+        <div style="display:flex; background:var(--surface); border-radius:8px; padding:4px;">
+          <button id="btn-vista-dia" onclick="setVistaHorario('dia')" style="border:none; background:white; padding:4px 12px; border-radius:6px; font-size:12px; font-weight:600; box-shadow:var(--shadow-sm); cursor:pointer; color:var(--text);">Hoy</button>
+          <button id="btn-vista-semana" onclick="setVistaHorario('semana')" style="border:none; background:transparent; padding:4px 12px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text-secondary); cursor:pointer;">Semana</button>
+        </div>
+      </div>
+      <div class="table-container" style="overflow-x:auto;">
+        <div id="horario-render-area" style="min-width: 600px; padding-bottom: 10px;">
+           <div class="loading">Cargando horario...</div>
+        </div>
+      </div>
+    </section>
+
     <!-- ASIGNAR TAREA CON FECHA INTELIGENTE -->
     <section class="card">
       <div class="toolbar">
@@ -112,10 +140,16 @@
     </section>
 
     <section class="card task-card">
-      <div class="toolbar">
-        <div><div class="toolbar-title"><i data-lucide="pin" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Actividades de la Semana</div><div class="toolbar-meta">Agrupadas por materia</div></div>
+      <div class="toolbar" style="cursor: pointer; user-select: none;" onclick="toggleAccordion('contenedor-tareas', 'icono-acordeon')">
+        <div>
+          <div class="toolbar-title">
+            <i data-lucide="chevron-down" id="icono-acordeon" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px; transition: transform 0.3s;"></i> 
+            Actividades de la Semana
+          </div>
+          <div class="toolbar-meta">Agrupadas por materia (clic para ocultar/mostrar)</div>
+        </div>
       </div>
-      <div class="task-list" id="contenedor-tareas"><div class="loading">Cargando actividades…</div></div>
+      <div class="task-list" id="contenedor-tareas" style="transition: max-height 0.3s ease; max-height: 2000px; overflow: hidden;"><div class="loading">Cargando actividades…</div></div>
     </section>
   </div>
 
@@ -157,6 +191,8 @@ document.getElementById('fecha').textContent = formatearFechaCorta(fechaLocalISO
 
 let materias = [];
 let horarios = [];
+let horarioBloques = [];
+let vistaHorario = 'dia';
 let marcoPeriodoActual = null;
 let marcosPeriodos = [];
 let tareasGlobal = [];
@@ -176,15 +212,18 @@ function getLeyendaCategoria(nombre) {
 }
 
 async function cargarDatosIniciales() {
-  const [resMat, resHor, resCfg, resCat] = await Promise.all([
+  const [resMat, resHor, resCfg, resCat, resBloq] = await Promise.all([
     clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia'),
-    clienteSupabase.from('horario_semanal').select('id, materia_id, dia_semana'),
-    clienteSupabase.from('configuracion_global').select('año_actual, cantidad_periodos, periodo_actual').limit(1).single(),
-    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre')
+    clienteSupabase.from('horario_semanal').select('id, materia_id, dia_semana, bloque_id'),
+    clienteSupabase.from('configuracion_global').select('año_actual, cantidad_periodos, periodo_actual, nombre_institucion').limit(1).single(),
+    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre'),
+    clienteSupabase.from('horario_bloques').select('*').order('orden')
   ]);
 
   materias = resMat.data || [];
   horarios = resHor.data || [];
+  horarioBloques = resBloq.data || [];
+  renderizarHorarioVisual();
 
   const selectCat = document.getElementById('categoria-tarea');
   if (resCat.data) {
@@ -195,8 +234,26 @@ async function cargarDatosIniciales() {
   select.innerHTML = '<option value="">Seleccione una materia...</option>';
   materias.forEach(m => select.innerHTML += `<option value="${m.id}">${m.nombre_materia}</option>`);
 
+  // Obtener datos del usuario logueado
+  const { data: { session } } = await clienteSupabase.auth.getSession();
+  if (session && session.user) {
+    // Si tienes el nombre guardado en los metadatos o usamos el correo
+    const nombreUsuario = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+    // Capitalizar la primera letra
+    const nombreCapitalizado = nombreUsuario.charAt(0).toUpperCase() + nombreUsuario.slice(1);
+    
+    // Usar el nombre de la institución (docente) configurado, o el nombre de usuario como fallback
+    const nombreFinal = (resCfg.data && resCfg.data.nombre_institucion) ? resCfg.data.nombre_institucion : nombreCapitalizado;
+    document.getElementById('nombre-docente').textContent = nombreFinal;
+  } else if (resCfg.data && resCfg.data.nombre_institucion) {
+    document.getElementById('nombre-docente').textContent = resCfg.data.nombre_institucion;
+  }
+
   if (resCfg.data) {
-    document.getElementById('lbl-anio').textContent = resCfg.data.año_actual;
+    document.getElementById('lbl-anio').textContent = resCfg.data.año_actual || new Date().getFullYear();
+    // Asignar el nombre del grupo dinámicamente si existe en tu BD, por ahora lo dejamos genérico o basado en la config
+    document.getElementById('nombre-grupo').textContent = resCfg.data.nombre_grupo || 'Tu Grupo';
+
     const selectorPeriodo = document.getElementById('periodo-tarea');
     const cantidadPeriodos = Number(resCfg.data.cantidad_periodos) || 3;
     selectorPeriodo.innerHTML = Array.from({ length: cantidadPeriodos }, (_, index) => `<option value="${index + 1}">Periodo ${index + 1}</option>`).join('');
@@ -207,6 +264,19 @@ async function cargarDatosIniciales() {
   }
 
   cargarDashboard();
+}
+
+function toggleAccordion(contentId, iconId) {
+  const content = document.getElementById(contentId);
+  const icon = document.getElementById(iconId);
+  if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+    content.style.maxHeight = '0px';
+    icon.style.transform = 'rotate(-90deg)';
+  } else {
+    content.style.maxHeight = content.scrollHeight + 50 + 'px';
+    icon.style.transform = 'rotate(0deg)';
+    setTimeout(() => { if (content.style.maxHeight !== '0px') content.style.maxHeight = 'none'; }, 300);
+  }
 }
 
 function cambiarPeriodoTarea() {
@@ -283,20 +353,24 @@ async function cargarDashboard() {
   const fechaHoy = fechaLocalISO();
   const [{ data: estudiantes }, { data: tareas }, { data: asistenciaHoy }, { data: calificaciones }] = await Promise.all([
     clienteSupabase.from('estudiantes').select('id').eq('estado', 'Activo'),
-    clienteSupabase.from('tareas').select('*, materias(nombre_materia)').order('fecha_vencimiento', { ascending: true }),
+    clienteSupabase.from('tareas').select('*, materias(nombre_materia), categorias_actividades(nombre)').order('fecha_vencimiento', { ascending: true }),
     clienteSupabase.from('asistencia').select('estado').eq('fecha', fechaHoy),
     clienteSupabase.from('calificaciones').select('tarea_id').not('nota', 'is', null)
   ]);
 
   const totalActivos = estudiantes ? estudiantes.length : 0;
   document.getElementById('total-estudiantes').textContent = totalActivos;
-  document.getElementById('total-tareas').textContent = tareas ? tareas.length : 0;
 
   if (asistenciaHoy && asistenciaHoy.length > 0) {
-    const presentes = asistenciaHoy.filter(a => a.estado === 'Presente' || a.estado === 'Tarde').length;
-    document.getElementById('asistencia-hoy').textContent = presentes;
+    const presentes = asistenciaHoy.filter(a => a.estado === 'P' || a.estado === 'T' || a.estado === 'Presente' || a.estado === 'Tarde').length;
+    const ausentes = asistenciaHoy.filter(a => a.estado === 'A' || a.estado === 'E' || a.estado === 'Ausente' || a.estado === 'Excusa').length;
+    
+    document.getElementById('asistencia-presentes').textContent = presentes;
+    document.getElementById('asistencia-ausentes').textContent = ausentes;
+    document.getElementById('asistencia-detalle').textContent = "Asistencia guardada";
   } else {
-    document.getElementById('asistencia-hoy').textContent = "—";
+    document.getElementById('asistencia-presentes').textContent = "—";
+    document.getElementById('asistencia-ausentes').textContent = "—";
     document.getElementById('asistencia-detalle').textContent = "No se ha tomado asistencia hoy";
   }
 
@@ -312,7 +386,9 @@ async function cargarDashboard() {
 
   (tareas || []).forEach(t => {
     const calificados = notasPorTarea[t.id] || 0;
-    if (totalActivos > 0 && calificados >= totalActivos) {
+    t.completada = (totalActivos > 0 && calificados >= totalActivos);
+    
+    if (t.completada) {
       cump++;
       window.tareasClasificadas.cumplidas.push(t);
     } else if (t.fecha_vencimiento < fechaHoy) {
@@ -327,6 +403,15 @@ async function cargarDashboard() {
   document.getElementById('count-pendientes').textContent = pend;
   document.getElementById('count-vencidas').textContent = venc;
   document.getElementById('count-cumplidas').textContent = cump;
+  
+  // Destacar tareas pendientes para la semana actual
+  const enUnaSemana = new Date();
+  enUnaSemana.setDate(enUnaSemana.getDate() + 7);
+  const tareasSemanaActiva = window.tareasClasificadas.pendientes.filter(t => {
+    const d = new Date(t.fecha_vencimiento + "T00:00:00");
+    return d <= enUnaSemana;
+  }).length;
+  document.getElementById('tareas-pendientes-semana').textContent = tareasSemanaActiva;
 
   tareasGlobal = tareas || [];
   renderizarActividadesSemana(tareasGlobal);
@@ -352,29 +437,58 @@ function renderizarActividadesSemana(tareas) {
   }
 
   const agrupadas = {};
+  const completadas = [];
+  
   tareasSemana.forEach(t => {
-    const mat = t.materias?.nombre_materia || 'General';
-    if (!agrupadas[mat]) agrupadas[mat] = [];
-    agrupadas[mat].push(t);
+    if (t.completada) {
+      completadas.push(t);
+    } else {
+      const mat = t.materias?.nombre_materia || 'General';
+      if (!agrupadas[mat]) agrupadas[mat] = [];
+      agrupadas[mat].push(t);
+    }
   });
 
   cont.innerHTML = '';
   for (const [materia, lista] of Object.entries(agrupadas)) {
+    const color = getColorMateria(materia);
     const seccion = document.createElement('div');
-    seccion.innerHTML = `<h3 style="margin: 15px 0 10px; font-size: 14px; color: var(--primary-dark); border-bottom: 2px solid var(--primary-soft); padding-bottom: 5px;">${materia}</h3>`;
+    seccion.innerHTML = `<h3 style="margin: 15px 0 10px; font-size: 14px; color: ${color}; border-bottom: 2px solid ${color}40; padding-bottom: 5px;">${materia}</h3>`;
     
     lista.forEach(t => {
       const row = document.createElement('div'); row.className = 'task';
       row.innerHTML = `
         <div class="datos-tarea">
-          <div class="task-title">${t.titulo}</div>
-          <div class="task-desc">${t.descripcion || 'Sin descripción adicional'} · <em>Periodo ${t.periodo}</em></div>
+          <div class="task-title" style="color: ${color};">${t.titulo}</div>
+          <div class="task-desc">${t.descripcion || 'Sin descripción adicional'} · <em>Periodo ${t.periodo}</em> · <strong style="color:var(--text-secondary);">${t.categorias_actividades?.nombre || 'Sin categoría'}</strong></div>
         </div>
         <div class="deadline">Entrega:<br>${formatearFechaCorta(t.fecha_vencimiento)}</div>
       `;
       seccion.appendChild(row);
     });
     cont.appendChild(seccion);
+  }
+  
+  if (completadas.length > 0) {
+    const seccionFinal = document.createElement('div');
+    seccionFinal.innerHTML = `<h3 style="margin: 25px 0 10px; font-size: 13px; color: var(--muted); border-bottom: 1px dashed var(--border); padding-bottom: 5px;"><i data-lucide="check-circle" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> 100% Calificadas (Terminadas)</h3>`;
+    
+    completadas.forEach(t => {
+      const row = document.createElement('div'); 
+      row.className = 'task';
+      row.style.opacity = '0.6';
+      row.style.background = '#f8fafc';
+      const mat = t.materias?.nombre_materia || 'General';
+      row.innerHTML = `
+        <div class="datos-tarea" style="text-decoration: line-through; color: var(--muted);">
+          <div class="task-title" style="color: var(--muted);">${t.titulo} <span style="font-size: 11px; font-weight: normal;">(${mat})</span></div>
+          <div class="task-desc">${t.descripcion || 'Sin descripción adicional'}</div>
+        </div>
+        <div class="deadline" style="color: var(--muted);">Lista</div>
+      `;
+      seccionFinal.appendChild(row);
+    });
+    cont.appendChild(seccionFinal);
   }
 }
 
@@ -393,7 +507,10 @@ function mostrarDetalleDia(fechaISO) {
       div.style.cssText = 'padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;';
       div.innerHTML = `
         <div style="flex:1; min-width: 150px;">
-          <div style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:4px;"><i data-lucide="book-open" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>${mat} · Per. ${t.periodo}</div>
+          <div style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+            <div><i data-lucide="book-open" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>${mat} · Per. ${t.periodo}</div>
+            <div style="background: var(--primary-soft); color: var(--primary-dark); padding: 2px 6px; border-radius: 4px; font-size: 10px;">${t.categorias_actividades?.nombre || 'Sin categoría'}</div>
+          </div>
           <div style="font-weight:600; font-size:14px; color:var(--text);">${t.titulo}</div>
         </div>
         <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-align:right;">
@@ -427,11 +544,145 @@ function generarResumenMaterias(tareas) {
   
   const conteo = {};
   tareasSemana.forEach(t => {
-    const mat = t.materias?.nombre_materia || 'General';
-    conteo[mat] = (conteo[mat] || 0) + 1;
+    if (!t.completada) {
+      const mat = t.materias?.nombre_materia || 'General';
+      conteo[mat] = (conteo[mat] || 0) + 1;
+    }
   });
   
-  resumen.innerHTML = Object.entries(conteo).map(([mat, cant]) => `<span class="subject-tag">${mat}: ${cant}</span>`).join('');
+  if(Object.keys(conteo).length === 0) {
+     resumen.innerHTML = '<span style="color:var(--muted); font-size:13px;">Ninguna pendiente para esta semana.</span>';
+     return;
+  }
+  
+  resumen.innerHTML = Object.entries(conteo).map(([mat, cant]) => {
+    const color = getColorMateria(mat);
+    return `<span class="subject-tag" style="background-color: ${color}20; color: ${color}; border: 1px solid ${color}40;">${mat}: ${cant}</span>`;
+  }).join('');
+}
+
+
+function setVistaHorario(vista) {
+  vistaHorario = vista;
+  const btnDia = document.getElementById('btn-vista-dia');
+  const btnSemana = document.getElementById('btn-vista-semana');
+  
+  if(vista === 'dia') {
+    btnDia.style.background = 'white';
+    btnDia.style.boxShadow = 'var(--shadow-sm)';
+    btnDia.style.color = 'var(--text)';
+    
+    btnSemana.style.background = 'transparent';
+    btnSemana.style.boxShadow = 'none';
+    btnSemana.style.color = 'var(--text-secondary)';
+  } else {
+    btnSemana.style.background = 'white';
+    btnSemana.style.boxShadow = 'var(--shadow-sm)';
+    btnSemana.style.color = 'var(--text)';
+    
+    btnDia.style.background = 'transparent';
+    btnDia.style.boxShadow = 'none';
+    btnDia.style.color = 'var(--text-secondary)';
+  }
+  renderizarHorarioVisual();
+}
+
+function renderizarHorarioVisual() {
+  const area = document.getElementById('horario-render-area');
+  
+  if(horarioBloques.length === 0) {
+    area.innerHTML = '<div class="empty">No hay bloques horarios definidos. Ve a Configuración.</div>';
+    return;
+  }
+
+  const mapMaterias = {};
+  materias.forEach(m => mapMaterias[m.id] = m.nombre_materia);
+
+  let html = '';
+  
+  if(vistaHorario === 'semana') {
+    // Vista Semanal Completa
+    html += '<table style="width:100%; border-collapse:collapse; margin-top:10px;">';
+    html += '<thead><tr><th style="border:1px solid var(--border); padding:8px; background:#f8fafc; width:120px;">Bloque</th>';
+    const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+    dias.forEach(d => html += `<th style="border:1px solid var(--border); padding:8px; background:#f8fafc; text-align:center;">${d}</th>`);
+    html += '</tr></thead><tbody>';
+    
+    horarioBloques.forEach(b => {
+      html += '<tr>';
+      if(b.tipo === 'Descanso') {
+        html += `<td style="border:1px solid var(--border); padding:8px; background:#f8fafc;"><strong>${b.nombre}</strong><br><span style="font-size:11px; color:var(--muted);">${b.hora_inicio} - ${b.hora_fin}</span></td>`;
+        html += `<td colspan="5" style="border:1px solid var(--border); padding:8px; text-align:center; background:#f1f5f9; color:var(--muted); font-weight:600;">DESCANSO</td>`;
+      } else {
+        html += `<td style="border:1px solid var(--border); padding:8px; background:#f8fafc;"><strong>${b.nombre}</strong><br><span style="font-size:11px; color:var(--muted);">${b.hora_inicio} - ${b.hora_fin}</span></td>`;
+        for(let dia=1; dia<=5; dia++) {
+          const match = horarios.find(h => h.dia_semana === dia && h.bloque_id === b.id);
+          if(match) {
+            const nombreM = mapMaterias[match.materia_id] || 'Materia';
+            const color = getColorMateria(nombreM);
+            html += `<td style="border:1px solid var(--border); padding:8px; text-align:center; cursor:pointer; background:${color}10;" onclick="window.location.href='actividades.html?materia_id=${match.materia_id}'">
+              <span style="font-weight:600; color:${color}; font-size:13px;">${nombreM}</span>
+            </td>`;
+          } else {
+            html += `<td style="border:1px solid var(--border); padding:8px; text-align:center; color:var(--muted); font-size:12px;">Libre</td>`;
+          }
+        }
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  } else {
+    // Vista Día (Hoy)
+    const diaReal = new Date().getDay();
+    const diaSemana = (diaReal >= 1 && diaReal <= 5) ? diaReal : 1; // Si es finde, mostramos Lunes
+    
+    html += '<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">';
+    
+    horarioBloques.forEach(b => {
+      if(b.tipo === 'Descanso') {
+         html += `
+         <div style="display:flex; align-items:center; padding:12px; border-radius:8px; background:#f1f5f9; border:1px solid var(--border);">
+            <div style="width:100px; color:var(--text-secondary); font-weight:600; font-size:13px;">
+              ${b.hora_inicio}<br><span style="font-size:11px; font-weight:normal;">${b.hora_fin}</span>
+            </div>
+            <div style="flex:1; text-align:center; font-weight:bold; color:var(--muted); font-size:14px; letter-spacing:2px;">
+              ${b.nombre.toUpperCase()}
+            </div>
+         </div>`;
+      } else {
+         const match = horarios.find(h => h.dia_semana === diaSemana && h.bloque_id === b.id);
+         if(match) {
+           const nombreM = mapMaterias[match.materia_id] || 'Materia';
+           const color = getColorMateria(nombreM);
+           html += `
+           <div style="display:flex; align-items:center; padding:12px; border-radius:8px; background:white; border:1px solid var(--border); box-shadow:var(--shadow-sm); cursor:pointer; transition:transform 0.2s;" onclick="window.location.href='actividades.html?materia_id=${match.materia_id}'">
+              <div style="width:100px; color:var(--text-secondary); font-weight:600; font-size:13px;">
+                ${b.hora_inicio}<br><span style="font-size:11px; font-weight:normal; color:var(--muted);">${b.hora_fin}</span>
+              </div>
+              <div style="width:4px; height:35px; background:${color}; border-radius:4px; margin-right:15px;"></div>
+              <div style="flex:1;">
+                <div style="font-weight:700; color:var(--text); font-size:15px;">${nombreM}</div>
+                <div style="font-size:12px; color:var(--text-secondary);">${b.nombre}</div>
+              </div>
+              <div><i data-lucide="chevron-right" style="color:var(--muted); width:20px; height:20px;"></i></div>
+           </div>`;
+         } else {
+           // Hora libre
+           html += `
+           <div style="display:flex; align-items:center; padding:12px; border-radius:8px; background:#fafafa; border:1px dashed var(--border);">
+              <div style="width:100px; color:var(--muted); font-weight:600; font-size:13px;">
+                ${b.hora_inicio}<br><span style="font-size:11px; font-weight:normal;">${b.hora_fin}</span>
+              </div>
+              <div style="flex:1; font-weight:600; color:var(--muted); font-size:13px; font-style:italic;">Hora libre</div>
+           </div>`;
+         }
+      }
+    });
+    html += '</div>';
+  }
+  
+  area.innerHTML = html;
+  if(window.lucide) window.lucide.createIcons();
 }
 
 function cambiarMesCalendario(delta) {
@@ -493,7 +744,10 @@ function abrirModalTareasClasificadas(tipo) {
       div.style.cssText = 'padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;';
       div.innerHTML = `
         <div style="flex:1; min-width: 150px;">
-          <div style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:4px;"><i data-lucide="book-open" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>${mat} · Per. ${t.periodo}</div>
+          <div style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+            <div><i data-lucide="book-open" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>${mat} · Per. ${t.periodo}</div>
+            <div style="background: var(--primary-soft); color: var(--primary-dark); padding: 2px 6px; border-radius: 4px; font-size: 10px;">${t.categorias_actividades?.nombre || 'Sin categoría'}</div>
+          </div>
           <div style="font-weight:600; font-size:14px; color:var(--text);">${t.titulo}</div>
         </div>
         <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-align:right;">

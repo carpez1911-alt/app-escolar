@@ -140,3 +140,32 @@ Este documento sirve como registro continuo de los cambios, decisiones arquitect
 ### 4. Corrección de Fugas HTML en WhatsApp
 - **Problema:** Los reportes de asistencia y calificaciones enviados a WhatsApp incluían etiquetas HTML `<i data-lucide="..."></i>`, ensuciando el texto del mensaje.
 - **Solución:** Se reemplazaron las inyecciones de iconos HTML en las cadenas de texto de WhatsApp por Emojis Unicode nativos (📅, 📖, 📊), garantizando una presentación limpia, estructurada y legible en los dispositivos móviles de los acudientes.
+
+## Fecha: 31 de Agosto de 2026 (Configuración Global y Base de Datos)
+
+### 1. Refactorización de Configuración Global (`configuracion.html`)
+- **Problema:** La configuración estaba estática. El nombre de la clase "Mi Clase 502" estaba duro en el HTML y no se podían configurar horas de clase por materia ni el nombre de la institución.
+- **Solución:** 
+  - Se rediseñó la vista `configuracion.html` con una grilla compacta y limpia.
+  - Se agregaron campos dinámicos para Nombre de Clase y Nombre de Institución.
+  - Se modificó la entrada del horario para que en lugar de un `checkbox`, el usuario pueda ingresar el número exacto de horas que dicta cada materia por día.
+  - Se configuró `app.js` para extraer el nombre de la clase globalmente desde la base de datos e inyectarlo dinámicamente en el `<title>` y en la barra lateral `.brand-title`.
+
+### 2. Actualización de Modelo de Datos (Supabase SQL)
+- **Migración requerida:** Se agregaron las columnas `nombre_clase` (text, default 'Mi Clase 502') y `nombre_institucion` (text, nullable) a la tabla `configuracion_global`.
+- **Migración requerida:** Se agregó la columna `horas_clase` (integer, default 1) a la tabla `horario_semanal`.
+
+### 3. Registro de Proyecto y Credenciales Base
+- **Plataforma:** Supabase
+- **Referencia del Proyecto (URL ID):** `qmgyobgahiyvgysjjhax`
+- **URL del Dashboard:** [https://supabase.com/dashboard/project/qmgyobgahiyvgysjjhax](https://supabase.com/dashboard/project/qmgyobgahiyvgysjjhax)
+- **Motivo de registro:** Mantener un acceso directo y centralizado al panel de control de la base de datos para facilitar futuras migraciones y consultas directas en el SQL Editor.
+
+### 4. Perfeccionamiento de Notificaciones (Toasts)
+- **Problema:** Los mensajes emergentes (toasts) al guardar mostraban las etiquetas HTML de los iconos (ej. `<i data-lucide="..."></i>`) como texto plano y desaparecían muy rápido, brindando una experiencia confusa.
+- **Solución:**
+  - Se refactorizó la función global `mostrarToast()` en `app.js`.
+  - Se implementó un "limpiador" de etiquetas HTML con Regex (`/<[^>]*>?/gm`) para dejar solo el texto útil.
+  - Se introdujo lógica inteligente que identifica si el texto contiene palabras clave como "error" o "guardado" para inyectar automáticamente colores (verde para éxito, rojo para errores) mediante las nuevas clases CSS `.toast-success` y `.toast-error`.
+  - Se reescribió el texto de confirmación a un limpio "Guardado exitosamente".
+  - Se amplió el tiempo de visualización de 3.2 a 4.0 segundos.

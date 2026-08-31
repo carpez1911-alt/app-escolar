@@ -2,13 +2,29 @@ const APP_SUPABASE_URL = 'https://qmgyobgahiyvgysjjhax.supabase.co';
 const APP_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtZ3lvYmdhaGl5dmd5c2pqaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTU2OTcsImV4cCI6MjEwMjgzMTY5N30._o-3AMi4xzfYBVNAeUMpxX3rBL-qfXoFCuD6H_fQ1s0';
 window.clienteSupabaseCompartido = supabase.createClient(APP_SUPABASE_URL, APP_SUPABASE_KEY);
 
-function mostrarToast(mensaje) {
+function mostrarToast(mensaje, tipo = 'success') {
   const elemento = document.getElementById('toast');
   if (!elemento) return;
-  elemento.textContent = mensaje;
+  
+  elemento.classList.remove('toast-success', 'toast-error');
+  let textoLimpio = mensaje.replace(/<[^>]*>?/gm, '').trim();
+
+  if (tipo === 'error' || textoLimpio.toLowerCase().includes('error') || textoLimpio.toLowerCase().includes('completa correctamente') || textoLimpio.toLowerCase().includes('obligatorio') || textoLimpio.toLowerCase().includes('revisa')) {
+    elemento.classList.add('toast-error');
+    elemento.innerHTML = `<div style="display:flex; align-items:center;"><i data-lucide="alert-circle" style="width:18px;height:18px;margin-right:8px;"></i> <span>${textoLimpio}</span></div>`;
+  } else {
+    elemento.classList.add('toast-success');
+    if (textoLimpio.toLowerCase().includes('actualizad') || textoLimpio.toLowerCase().includes('guardad')) {
+      textoLimpio = 'Guardado exitosamente';
+    }
+    elemento.innerHTML = `<div style="display:flex; align-items:center;"><i data-lucide="check-circle" style="width:18px;height:18px;margin-right:8px;"></i> <span>${textoLimpio}</span></div>`;
+  }
+  
+  if (window.lucide) window.lucide.createIcons();
+
   elemento.style.display = 'block';
   clearTimeout(window.temporizadorToast);
-  window.temporizadorToast = setTimeout(() => { elemento.style.display = 'none'; }, 3200);
+  window.temporizadorToast = setTimeout(() => { elemento.style.display = 'none'; }, 4000);
 }
 
 function inyectarMenuGlobal() {
@@ -104,6 +120,22 @@ function formatearFechaCorta(fecha) {
   return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : 'Sin fecha';
 }
 
+function getColorMateria(nombreMateria) {
+  if(!nombreMateria) return 'var(--primary)';
+  const nombre = nombreMateria.toLowerCase();
+  if(nombre.includes('matemática')) return '#ef4444'; // Rojo
+  if(nombre.includes('lenguaje') || nombre.includes('español')) return '#3b82f6'; // Azul
+  if(nombre.includes('ciencia') || nombre.includes('naturales')) return '#10b981'; // Verde
+  if(nombre.includes('sociales') || nombre.includes('historia')) return '#f59e0b'; // Amarillo
+  if(nombre.includes('artística') || nombre.includes('arte')) return '#d946ef'; // Fucsia
+  if(nombre.includes('física') || nombre.includes('deporte')) return '#f97316'; // Naranja
+  if(nombre.includes('inglés') || nombre.includes('idioma')) return '#8b5cf6'; // Violeta
+  if(nombre.includes('ética') || nombre.includes('valores')) return '#14b8a6'; // Teal
+  if(nombre.includes('religión')) return '#06b6d4'; // Cyan
+  if(nombre.includes('tecnología') || nombre.includes('informática')) return '#64748b'; // Gris azulado
+  return 'var(--primary)'; // Default
+}
+
 async function cerrarSesion() {
   await window.clienteSupabaseCompartido.auth.signOut();
   window.location.href = 'login.html';
@@ -125,12 +157,31 @@ if (document.readyState === 'loading') {
     configurarMenu();
     authGuard();
     initLucideObserver();
+    aplicarConfiguracionGlobal();
   }, { once: true });
 } else {
   inyectarMenuGlobal();
   configurarMenu();
   authGuard();
   initLucideObserver();
+  aplicarConfiguracionGlobal();
+}
+
+async function aplicarConfiguracionGlobal() {
+  try {
+    const { data } = await window.clienteSupabaseCompartido
+      .from('configuracion_global')
+      .select('nombre_clase')
+      .limit(1).single();
+    
+    if (data && data.nombre_clase) {
+      document.title = document.title.replace('Mi Clase 502', data.nombre_clase);
+      const titleEls = document.querySelectorAll('.brand-title');
+      titleEls.forEach(el => el.textContent = data.nombre_clase);
+    }
+  } catch (error) {
+    console.error('Error cargando nombre de clase:', error);
+  }
 }
 
 function initLucideObserver() {

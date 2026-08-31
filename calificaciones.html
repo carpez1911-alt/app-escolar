@@ -212,7 +212,7 @@ async function cargarPlanilla() {
   tbody.innerHTML = `<tr><td colspan="15" class="loading">Cargando actividades del Periodo ${periodo}...</td></tr>`;
   const [resEst, resTareas, resNotas, resPromedios] = await Promise.all([
     clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
-    clienteSupabase.from('tareas').select('id, titulo, descripcion, materia_id, periodo').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
+    clienteSupabase.from('tareas').select('id, titulo, descripcion, materia_id, periodo, categorias_actividades(nombre)').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
     clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota').eq('materia_id', materiaId).eq('periodo', periodo),
     clienteSupabase.from('v_promedios_estudiantes').select('estudiante_id, promedio_definitivo').eq('materia_id', materiaId).eq('periodo', periodo)
   ]);
@@ -288,8 +288,10 @@ function renderizarPlanillaCalificar() {
   subthead.hidden = true;
   
   tareasARenderizar.forEach(tarea => {
-     const encabezado = crearCelda('th', tarea.titulo || 'Actividad');
-     encabezado.title = tarea.descripcion ? `${tarea.titulo}\n\n${tarea.descripcion}` : (tarea.titulo || 'Actividad');
+     const nombreCat = tarea.categorias_actividades ? tarea.categorias_actividades.nombre : 'Sin categoría';
+     const encabezado = crearCelda('th', '');
+     encabezado.innerHTML = `<div style="font-size:10px; color:var(--primary); font-weight:800; text-transform:uppercase; margin-bottom:2px;">${nombreCat}</div><div>${tarea.titulo || 'Actividad'}</div>`;
+     encabezado.title = tarea.descripcion ? `[${nombreCat}] ${tarea.titulo}\n\n${tarea.descripcion}` : `[${nombreCat}] ${tarea.titulo || 'Actividad'}`;
      thead.appendChild(encabezado);
   });
 
@@ -384,45 +386,67 @@ async function guardarNotas() {
     const periodo = document.getElementById('filtro-periodo').value;
     const celdas = document.querySelectorAll('.celda-nota');
     let datosAGuardar = [];
+    let notasAEliminar = [];
 
     // Recorremos todas las celdas de la tabla para ver si tienen texto
     celdas.forEach(celda => {
         let texto = celda.textContent.trim();
-        // Cambiamos comas por puntos por si el teclado está en español (ej. 8,5 -> 8.5)
         texto = texto.replace(',', '.'); 
+        
+        const estId = Number(celda.dataset.estudiante);
+        const matId = Number(celda.dataset.materia);
+        const tarId = Number(celda.dataset.tarea);
+        const perId = parseInt(periodo);
+        
+        const notaAnterior = notasCargadas.find(n => n.estudiante_id === estId && n.tarea_id === tarId);
         
         if (texto !== '') {
             let notaNumerica = Number(texto);
-            // Si lo que escribieron es un número válido, lo preparamos para guardar
-            if (!isNaN(notaNumerica)) {
-                if (notaNumerica < 0 || notaNumerica > 10) return;
+            if (!isNaN(notaNumerica) && notaNumerica >= 0 && notaNumerica <= 10) {
                 datosAGuardar.push({
-                    estudiante_id: Number(celda.dataset.estudiante),
-                    materia_id: Number(celda.dataset.materia),
-                    tarea_id: Number(celda.dataset.tarea),
-                    periodo: parseInt(periodo),
+                    ...(notaAnterior ? { id: notaAnterior.id } : {}),
+                    estudiante_id: estId,
+                    materia_id: matId,
+                    tarea_id: tarId,
+                    periodo: perId,
                     nota: notaNumerica
                 });
+            }
+        } else {
+            // Si la celda está vacía pero antes tenía una nota, programamos su eliminación de la base de datos
+            if (notaAnterior) {
+                notasAEliminar.push(notaAnterior.id);
             }
         }
     });
 
-    if (datosAGuardar.length === 0) {
-      toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Escribe notas válidas entre 0 y 10.');
+    if (datosAGuardar.length === 0 && notasAEliminar.length === 0) {
+        toast('<i data-lucide="info" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ No hay cambios nuevos para guardar.');
         botonGuardar.disabled = false;
         return;
     }
 
-    // El comando UPSERT inserta la nota nueva o actualiza la vieja automáticamente
-    let { error } = await clienteSupabase
-      .from('calificaciones')
-      .upsert(datosAGuardar, { onConflict: 'estudiante_id, materia_id, periodo, tarea_id' });
+    let errorOcurrido = null;
 
-    if (error) {
-        console.error('Error al guardar calificaciones:', error);
-        toast('Error DB: ' + (error.message || 'No fue posible guardar las calificaciones.'));
+    // 1. Ejecutar las eliminaciones si existen
+    if (notasAEliminar.length > 0) {
+        const { error } = await clienteSupabase.from('calificaciones').delete().in('id', notasAEliminar);
+        if (error) errorOcurrido = error;
+    }
+
+    // 2. Ejecutar inserciones o actualizaciones (upsert) si existen y no hubo error previo
+    if (datosAGuardar.length > 0 && !errorOcurrido) {
+        const { error } = await clienteSupabase
+          .from('calificaciones')
+          .upsert(datosAGuardar, { onConflict: 'estudiante_id, materia_id, periodo, tarea_id' });
+        if (error) errorOcurrido = error;
+    }
+
+    if (errorOcurrido) {
+        console.error('Error al guardar calificaciones:', errorOcurrido);
+        toast('Error DB: ' + (errorOcurrido.message || 'No fue posible guardar las calificaciones.'));
     } else {
-        toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Calificaciones guardadas correctamente.');
+        toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Calificaciones actualizadas correctamente.');
         await cargarPlanilla();
     }
       botonGuardar.disabled = false;

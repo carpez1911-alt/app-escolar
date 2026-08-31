@@ -338,6 +338,201 @@ function marcarTodosPresentes(){
   document.querySelectorAll('.student').forEach(row=>{
     const id=row.dataset.id;
     const btn=row.querySelector('.status-btn'); // Selecciona el primero que es P
+document.getElementById('wa-tipo').addEventListener('change', (e) => {
+  const isDia = e.target.value === 'dia';
+  document.getElementById('wa-group-dia').style.display = isDia ? 'block' : 'none';
+  document.getElementById('wa-group-semana').style.display = isDia ? 'none' : 'block';
+});
+document.getElementById('wa-fecha-dia').value = fechaLocalISO();
+document.getElementById('wa-fecha-semana').value = fechaLocalISO();
+
+async function generarPrevisualizacion() {
+  const tipo = document.getElementById('wa-tipo').value;
+  let fechaInicio, fechaFin, tituloReporte;
+  
+  if (tipo === 'dia') {
+    fechaInicio = document.getElementById('wa-fecha-dia').value;
+    fechaFin = fechaInicio;
+    tituloReporte = `Fecha: ${formatearFechaCorta(fechaInicio)}`;
+  } else {
+    const d = new Date(document.getElementById('wa-fecha-semana').value + 'T00:00:00');
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const lunes = new Date(d.setDate(diff));
+    const viernes = new Date(lunes); 
+    viernes.setDate(lunes.getDate() + 4);
+    
+    fechaInicio = lunes.toISOString().split('T')[0];
+    fechaFin = viernes.toISOString().split('T')[0];
+    tituloReporte = `Semana: ${formatearFechaCorta(fechaInicio)} al ${formatearFechaCorta(fechaFin)}`;
+  }
+  
+  if (!fechaInicio) return;
+  toast('Generando reporte...');
+  
+  const [{ data: estData, error: estErr }, { data: asisData, error: asisErr }] = await Promise.all([
+    clienteSupabase.from('estudiantes').select('id, nombre_completo, telefono_acudiente').eq('estado','Activo').order('nombre_completo'),
+    clienteSupabase.from('asistencia').select('estudiante_id, estado, fecha').gte('fecha', fechaInicio).lte('fecha', fechaFin).neq('estado', 'P')
+  ]);
+  
+  if (estErr || asisErr) { toast('Error al consultar datos'); return; }
+  
+  // 1. Agrupar datos por estudiante
+  const estudiantesMap = {};
+  estData.forEach(e => {
+    estudiantesMap[e.id] = { nombre: e.nombre_completo, telefono: e.telefono_acudiente, faltas: [] };
+  });
+  
+  const ausentes = [], tardanzas = [], excusas = [];
+  
+  asisData.forEach(a => {
+    if (!estudiantesMap[a.estudiante_id]) return;
+    const est = estudiantesMap[a.estudiante_id];
+    const desc = tipo === 'semana' ? `- ${est.nombre} (${formatearFechaCorta(a.fecha)})` : `- ${est.nombre}`;
+    
+    if (a.estado === 'A') { ausentes.push(desc); est.faltas.push(`Ausente (${formatearFechaCorta(a.fecha)})`); }
+    if (a.estado === 'T') { tardanzas.push(desc); est.faltas.push(`Tardanza (${formatearFechaCorta(a.fecha)})`); }
+    if (a.estado === 'E') { excusas.push(desc); est.faltas.push(`Excusa (${formatearFechaCorta(a.fecha)})`); }
+  });
+  
+  // 2. Renderizar tabla de previsualización
+  const tbody = document.getElementById('wa-preview-table');
+  tbody.innerHTML = '';
+  document.getElementById('wa-table-container').style.display = 'block';
+  
+  estData.forEach(e => {
+    const est = estudiantesMap[e.id];
+    const tr = document.createElement('tr');
+    
+    const tdNombre = document.createElement('td');
+    tdNombre.style.padding = '10px'; tdNombre.style.borderBottom = '1px solid var(--border)';
+    tdNombre.style.fontWeight = '600';
+    tdNombre.textContent = est.nombre;
+    
+    const tdFaltas = document.createElement('td');
+    tdFaltas.style.padding = '10px'; tdFaltas.style.borderBottom = '1px solid var(--border)';
+    if (est.faltas.length > 0) {
+      tdFaltas.innerHTML = est.faltas.join('<br>');
+    } else {
+      tdFaltas.innerHTML = '<span style="color:#15803d; font-weight:bold;">Sin faltas</span>';
+    }
+    
+    const tdAcciones = document.createElement('td');
+    tdAcciones.style.padding = '10px'; tdAcciones.style.borderBottom = '1px solid var(--border)';
+    tdAcciones.style.textAlign = 'right';
+    
+    const btnIndiv = document.createElement('button');
+    btnIndiv.className = 'secondary-btn';
+    btnIndiv.style.fontSize = '12px'; btnIndiv.style.padding = '4px 8px';
+    btnIndiv.innerHTML = '<i data-lucide="smartphone" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar';
+    btnIndiv.onclick = () => enviarWhatsAppIndividual(est, tituloReporte);
+    
+    tdAcciones.appendChild(btnIndiv);
+    tr.append(tdNombre, tdFaltas, tdAcciones);
+    tbody.appendChild(tr);
+  });
+
+  // 3. Renderizar mensaje general
+  let msj = ` *Reporte de Asistencia - Mi Clase 502*\n📅 ${tituloReporte}\n\n`;
+  if (ausentes.length) msj += `*Ausentes:*\n${ausentes.join('\n')}\n\n`;
+  if (tardanzas.length) msj += `🟠 *Tardanzas:*\n${tardanzas.join('\n')}\n\n`;
+  if (excusas.length) msj += `🟡 *Excusas:*\n${excusas.join('\n')}\n\n`;
+  
+  if (!ausentes.length && !tardanzas.length && !excusas.length) {
+    msj += `*Excelente asistencia.* No hay inasistencias reportadas.\n`;
+  }
+  
+  document.getElementById('wa-preview').value = msj;
+  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Listado y reporte cargados');
+}
+
+function enviarWhatsAppIndividual(est, tituloReporte) {
+  if (!est.telefono) {
+    toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Este estudiante no tiene un teléfono de acudiente registrado.');
+    return;
+  }
+  let msj = ` *Reporte de Asistencia - Mi Clase 502*\n Alumno: ${est.nombre}\n📅 ${tituloReporte}\n\n`;
+  if (est.faltas.length === 0) {
+    msj += `Excelente asistencia. No se reportan faltas ni tardanzas en este periodo.`;
+  } else {
+    msj += `Se han registrado las siguientes inasistencias:\n- ${est.faltas.join('\n- ')}`;
+  }
+  
+  const phone = est.telefono.replace(/\D/g, ''); // Deja solo números
+  window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msj)}`, '_blank');
+}
+
+function enviarWhatsApp() {
+  const msj = document.getElementById('wa-preview').value;
+  if (!msj.trim()) { toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Genera el reporte primero'); return; }
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msj)}`, '_blank');
+}
+
+async function cargarEstudiantes(){
+  const cont = document.getElementById('lista-estudiantes');
+  const fecha = fechaAsistencia.value;
+  if (!fecha) { toast('Selecciona una fecha válida.'); return; }
+  const { data: config, error: configError } = await clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single();
+  if (configError || !config?.año_actual) {
+    cont.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️</div>No fue posible cargar el año académico activo.</div>';
+    toast('No se pudo leer la configuración institucional.');
+    return;
+  }
+  añoActivo = config.año_actual;
+  const [{ data, error }, { data: registros, error: errorAsistencia }] = await Promise.all([
+    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado, año_lectivo').eq('estado','Activo').eq('año_lectivo', añoActivo).order('id'),
+    clienteSupabase.from('asistencia').select('id, estudiante_id, estado, fecha').eq('fecha', fecha)
+  ]);
+  if(error || errorAsistencia){cont.innerHTML='<div class="empty"><div class="empty-icon"><i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️</div>No fue posible cargar los estudiantes o la asistencia.</div>'; toast('Error al conectar con Supabase'); return;}
+  asistenciasTemporales = {};
+  asistenciasExistentes = Object.fromEntries((registros || []).map(registro => [String(registro.estudiante_id), registro]));
+  
+  if (registros && registros.length > 0) {
+    let presentes = 0;
+    let ausentes = 0;
+    registros.forEach(r => {
+      if (r.estado === 'P') presentes++;
+      else if (['A', 'E', 'T'].includes(r.estado)) ausentes++;
+    });
+    document.getElementById('contador').textContent = `Presentes: ${presentes} | Ausentes: ${ausentes} | Total: ${data.length}`;
+  } else {
+    document.getElementById('contador').textContent = `Total: ${data.length} alumnos`;
+  }
+  
+  cont.innerHTML='';
+  
+  data.forEach(e=>{
+    const row=document.createElement('div'); row.className='student'; row.dataset.id=e.id;
+    const info=document.createElement('div'); info.className='student-info';
+    const avatar=document.createElement('div'); avatar.className='avatar'; avatar.textContent=(e.nombre_completo||'?').trim().charAt(0).toUpperCase();
+    const text=document.createElement('div');
+    const name=document.createElement('div'); name.className='student-name'; name.textContent=e.nombre_completo||'Sin nombre';
+    const id=document.createElement('div'); id.className='student-id'; id.textContent=`Estudiante #${e.id}`;
+    text.append(name,id); info.append(avatar,text);
+    
+    const grid=document.createElement('div'); grid.className='status-grid';
+    const estadoGuardado = asistenciasExistentes[String(e.id)]?.estado?.toLowerCase();
+    if (estadoGuardado) asistenciasTemporales[e.id] = estadoGuardado.toUpperCase();
+    [['P','Presente','p'],['E','Excusa','e'],['T','Tardanza','t'],['A','Ausente','a']].forEach(([label,title,key])=>{
+      const b=document.createElement('button'); b.className='status-btn'; b.textContent=label; b.title=title;
+      if (estadoGuardado === key) b.classList.add(`selected-${key}`);
+      b.onclick=()=>seleccionarEstado(b,key,e.id); grid.appendChild(b);
+    });
+    row.append(info,grid); cont.appendChild(row);
+  });
+}
+
+function seleccionarEstado(btn,estado,id){
+  const row=btn.closest('.student');
+  row.querySelectorAll('.status-btn').forEach(b=>b.className='status-btn');
+  btn.classList.add('selected-'+estado);
+  asistenciasTemporales[id]=estado.toUpperCase();
+}
+
+function marcarTodosPresentes(){
+  document.querySelectorAll('.student').forEach(row=>{
+    const id=row.dataset.id;
+    const btn=row.querySelector('.status-btn'); // Selecciona el primero que es P
     seleccionarEstado(btn,'p',id);
   });
   toast('<i data-lucide="zap" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Todos marcados como presentes');
@@ -345,19 +540,32 @@ function marcarTodosPresentes(){
 
 async function guardarAsistencia(){
   const fecha = fechaAsistencia.value;
-  const datos = Object.entries(asistenciasTemporales).map(([id,estado])=>({estudiante_id:Number(id), estado:estado}));
+  if(!fecha){ toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Selecciona una fecha'); return; }
   
-  if(!fecha || !datos.length){toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Selecciona una fecha y al menos un estado'); return;}
-  const operaciones = datos.map(dato => {
-    const existente = asistenciasExistentes[String(dato.estudiante_id)];
-    return existente
-      ? clienteSupabase.from('asistencia').update({ estado: dato.estado }).eq('id', existente.id)
-      : clienteSupabase.from('asistencia').insert({ ...dato, fecha });
+  const datos = Object.entries(asistenciasTemporales).map(([id,estado]) => {
+    const existente = asistenciasExistentes[String(id)];
+    return {
+      ...(existente ? { id: existente.id } : {}), // Si ya existía, pasamos su ID para que lo actualice
+      estudiante_id: Number(id),
+      estado: estado,
+      fecha: fecha
+    };
   });
-  const respuestas = await Promise.all(operaciones);
-  const error = respuestas.find(respuesta => respuesta.error)?.error;
-  if(error){ toast('Error: No se pudo guardar la asistencia'); console.error(error); return; }
-  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Asistencia guardada correctamente');
+  
+  if(!datos.length){ toast('<i data-lucide="info" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> No hay asistencias para guardar'); return; }
+  
+  toast('Guardando asistencia...');
+  
+  // Upsert actualiza si mandamos el ID, e inserta si no lo mandamos
+  const { error } = await clienteSupabase.from('asistencia').upsert(datos);
+  
+  if(error){ 
+    toast('Error: No se pudo guardar la asistencia'); 
+    console.error(error); 
+    return; 
+  }
+  
+  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Asistencia guardada y blindada contra duplicados');
   await cargarEstudiantes();
 }
 

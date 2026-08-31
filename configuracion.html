@@ -9,10 +9,12 @@
 <script src="app.js"></script>
 <style>
   .dias-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
-  .dia-check { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .dia-check input { cursor: pointer; }
+  .dia-check { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; }
+  .dia-check input { cursor: pointer; text-align: center; }
   .materia-horario-row { padding: 14px 0; border-bottom: 1px solid #eef2f7; }
   .materia-horario-row:last-child { border-bottom: 0; }
+  .input-compact { display: inline-block; width: auto; max-width: 130px; }
+  .input-mini { display: inline-block; width: auto; max-width: 70px; text-align: center; }
 </style>
 
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -21,11 +23,11 @@
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <div class="brand-mark"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️</div>
+    <div class="brand-mark"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Configuración del Sistema</div></div>
   </div>
   <div class="nav-actions" id="contenedor-menu-global"></div>
-  </nav>
+</nav>
 
 <main class="page">
   <section class="hero">
@@ -38,26 +40,39 @@
 
   <!-- AJUSTES DE PERIODO Y AÑO -->
   <section class="card">
-    <div class="toolbar"><div class="toolbar-title"><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Periodos y Año Lectivo</div></div>
+    <div class="toolbar"><div class="toolbar-title"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Ajustes Generales de la Clase</div></div>
     <div class="form-content">
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+      <div style="display:flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+        <div class="form-group" style="flex: 1; min-width: 200px;">
+          <label for="cfg-nombre-clase">Nombre de la Clase:</label>
+          <input type="text" id="cfg-nombre-clase" class="form-control" placeholder="Ej. Mi Clase 502">
+        </div>
+        <div class="form-group" style="flex: 1; min-width: 200px;">
+          <label for="cfg-institucion">Nombre del Docente / Institución:</label>
+          <input type="text" id="cfg-institucion" class="form-control" placeholder="Opcional">
+        </div>
+      </div>
+      
+      <div style="display:flex; flex-wrap: wrap; gap: 16px;">
         <div class="form-group">
           <label for="cfg-anio">Año Lectivo:</label>
-          <input type="number" id="cfg-anio" class="form-control" min="2000" max="2100" placeholder="Año lectivo">
+          <input type="number" id="cfg-anio" class="form-control input-compact" min="2000" max="2100" placeholder="2026">
         </div>
         <div class="form-group">
           <label for="cfg-total-periodos">Esquema Institucional:</label>
-          <select id="cfg-total-periodos" class="form-control" onchange="ajustarSelectorPeriodoActual()">
+          <select id="cfg-total-periodos" class="form-control input-compact" onchange="ajustarSelectorPeriodoActual()">
+            <option value="1">1 Periodo</option>
+            <option value="2">2 Periodos</option>
             <option value="3">3 Periodos</option>
             <option value="4">4 Periodos</option>
           </select>
         </div>
         <div class="form-group">
           <label for="cfg-periodo-actual">Periodo Actual en Curso:</label>
-          <select id="cfg-periodo-actual" class="form-control"></select>
+          <select id="cfg-periodo-actual" class="form-control input-compact"></select>
         </div>
       </div>
-      <button class="primary-btn" style="margin-top: 10px;" onclick="guardarConfiguracion()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Ajustes Generales</button>
+      <button class="primary-btn" style="margin-top: 15px;" onclick="guardarConfiguracion()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Ajustes Generales</button>
     </div>
   </section>
 
@@ -93,17 +108,45 @@
     </div>
   </section>
 
+  <!-- CONFIGURACIÓN DEL CAMPANARIO -->
+  <section class="card">
+    <div class="toolbar">
+      <div>
+        <div class="toolbar-title"><i data-lucide="bell" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Bloques Horarios (Campanario)</div>
+        <div class="toolbar-meta">Define las horas de clase y descansos. Guarda esto antes de asignar las materias.</div>
+      </div>
+      <button class="secondary-btn" onclick="guardarBloques()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Bloques</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>Orden</th><th>Nombre</th><th>Tipo</th><th>Hora Inicio</th><th>Hora Fin</th><th>Acciones</th></tr></thead>
+        <tbody id="lista-bloques"><tr><td colspan="6" class="loading">Cargando bloques...</td></tr></tbody>
+      </table>
+      <button class="secondary-btn" style="margin: 15px;" onclick="agregarBloqueVacio()"><i data-lucide="plus" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Añadir nuevo bloque</button>
+    </div>
+  </section>
+
   <!-- CONFIGURACIÓN DEL HORARIO SEMANAL -->
   <section class="card">
     <div class="toolbar">
       <div>
-        <div class="toolbar-title">⏰ Horario Semanal de Clases (Lunes a Viernes)</div>
-        <div class="toolbar-meta">Marca los días en que se dicta cada asignatura</div>
+        <div class="toolbar-title"><i data-lucide="calendar" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Horario Semanal Interactivo</div>
+        <div class="toolbar-meta">Asigna las materias a cada bloque de tiempo.</div>
       </div>
-      <button class="secondary-btn" onclick="guardarHorario()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Horario</button>
+      <button class="primary-btn" onclick="guardarHorario()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar Horario Completo</button>
     </div>
-    <div class="form-content" id="lista-horarios">
-      <div class="loading">Cargando materias y horario...</div>
+    <div class="table-container" style="overflow-x: auto;">
+      <table style="min-width: 800px;">
+        <thead>
+          <tr>
+            <th style="width: 140px; background: #f8fafc;">Bloque</th>
+            <th style="text-align:center;">Lunes</th><th style="text-align:center;">Martes</th><th style="text-align:center;">Miércoles</th><th style="text-align:center;">Jueves</th><th style="text-align:center;">Viernes</th>
+          </tr>
+        </thead>
+        <tbody id="lista-horarios">
+          <tr><td colspan="6" class="loading">Cargando matriz del horario...</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 </main>
@@ -125,16 +168,18 @@ const diasSemana = [
 
 let materias = [];
 let horariosActuales = [];
+let bloquesHorario = [];
 let marcosPeriodos = [];
 let categorias = [];
 
 async function inicializar() {
-  const [resCfg, resMat, resHor, resMarcos, resCat] = await Promise.all([
-    clienteSupabase.from('configuracion_global').select('año_actual, cantidad_periodos, periodo_actual').limit(1).single(),
+  const [resCfg, resMat, resHor, resMarcos, resCat, resBloques] = await Promise.all([
+    clienteSupabase.from('configuracion_global').select('año_actual, cantidad_periodos, periodo_actual, nombre_clase, nombre_institucion').limit(1).single(),
     clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia'),
-    clienteSupabase.from('horario_semanal').select('id, materia_id, dia_semana'),
+    clienteSupabase.from('horario_semanal').select('id, materia_id, dia_semana, bloque_id'),
     clienteSupabase.from('marcos_periodos').select('id, año, periodo, fecha_inicio, fecha_fin').order('periodo'),
-    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre')
+    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre'),
+    clienteSupabase.from('horario_bloques').select('*').order('orden')
   ]);
 
   if (resCfg.error || resMat.error || resHor.error || resMarcos.error) {
@@ -145,6 +190,8 @@ async function inicializar() {
   if (resCfg.data) {
     document.getElementById('cfg-anio').value = resCfg.data.año_actual;
     document.getElementById('cfg-total-periodos').value = resCfg.data.cantidad_periodos || 3;
+    document.getElementById('cfg-nombre-clase').value = resCfg.data.nombre_clase || 'Mi Clase 502';
+    document.getElementById('cfg-institucion').value = resCfg.data.nombre_institucion || '';
     ajustarSelectorPeriodoActual(resCfg.data.periodo_actual);
   }
 
@@ -152,6 +199,8 @@ async function inicializar() {
   horariosActuales = resHor.data || [];
   marcosPeriodos = resMarcos.data || [];
   categorias = resCat.data || [];
+  bloquesHorario = resBloques.data || [];
+  renderizarBloques();
   renderizarPeriodos();
   renderizarHorario();
   renderizarCategorias();
@@ -167,7 +216,7 @@ function renderizarCategorias() {
   categorias.forEach(cat => {
     const fila = document.createElement('tr');
     fila.dataset.id = cat.id;
-    fila.innerHTML = `<td><input type="text" class="form-control cat-nombre" value="${cat.nombre}"></td><td><input type="number" class="form-control cat-porcentaje" value="${cat.porcentaje}" min="0" max="100" step="0.01"></td>`;
+    fila.innerHTML = `<td><input type="text" class="form-control cat-nombre" value="${cat.nombre}"></td><td><input type="number" class="form-control cat-porcentaje input-mini" value="${cat.porcentaje}" min="0" max="100" step="0.01"> %</td>`;
     contenedor.appendChild(fila);
   });
 }
@@ -219,7 +268,9 @@ function renderizarPeriodos() {
   marcosPeriodos.forEach(marco => {
     const fila = document.createElement('tr');
     fila.dataset.id = marco.id;
-    fila.innerHTML = `<td>${marco.año ?? '-'}</td><td>Periodo ${marco.periodo ?? '-'}</td><td><input class="form-control periodo-fecha-inicio" type="date" value="${marco.fecha_inicio || ''}"><small class="toolbar-meta fecha-periodo-visible">${formatearFechaCorta(marco.fecha_inicio)}</small></td><td><input class="form-control periodo-fecha-fin" type="date" value="${marco.fecha_fin || ''}"><small class="toolbar-meta fecha-periodo-visible">${formatearFechaCorta(marco.fecha_fin)}</small></td>`;
+    fila.innerHTML = `<td>${marco.año ?? '-'}</td><td>Periodo ${marco.periodo ?? '-'}</td>
+    <td><input class="form-control periodo-fecha-inicio" style="display:inline-block; width:130px; margin-right:5px;" type="date" value="${marco.fecha_inicio || ''}"><small class="toolbar-meta fecha-periodo-visible">${formatearFechaCorta(marco.fecha_inicio)}</small></td>
+    <td><input class="form-control periodo-fecha-fin" style="display:inline-block; width:130px; margin-right:5px;" type="date" value="${marco.fecha_fin || ''}"><small class="toolbar-meta fecha-periodo-visible">${formatearFechaCorta(marco.fecha_fin)}</small></td>`;
     fila.querySelector('.periodo-fecha-inicio').addEventListener('change', evento => { evento.target.nextElementSibling.textContent = formatearFechaCorta(evento.target.value); });
     fila.querySelector('.periodo-fecha-fin').addEventListener('change', evento => { evento.target.nextElementSibling.textContent = formatearFechaCorta(evento.target.value); });
     contenedor.appendChild(fila);
@@ -268,29 +319,120 @@ function ajustarSelectorPeriodoActual(valorSeleccionado = 1) {
   select.value = valorSeleccionado <= total ? valorSeleccionado : 1;
 }
 
+function renderizarBloques() {
+  const cont = document.getElementById('lista-bloques');
+  if (bloquesHorario.length === 0) {
+    cont.innerHTML = '<tr><td colspan="6" class="empty">No hay bloques definidos. Usa el botón inferior para añadir uno.</td></tr>';
+    return;
+  }
+  cont.innerHTML = '';
+  bloquesHorario.sort((a,b) => a.orden - b.orden).forEach((b, index) => {
+    const tr = document.createElement('tr');
+    tr.className = 'fila-bloque';
+    tr.dataset.id = b.id || '';
+    tr.innerHTML = `
+      <td><input type="number" class="form-control blq-orden input-mini" value="${b.orden || index + 1}"></td>
+      <td><input type="text" class="form-control blq-nombre" value="${b.nombre || ''}" placeholder="Ej. 1ra Hora"></td>
+      <td>
+        <select class="form-control blq-tipo" onchange="renderizarHorario()">
+          <option value="Clase" ${b.tipo==='Clase'?'selected':''}>Clase</option>
+          <option value="Descanso" ${b.tipo==='Descanso'?'selected':''}>Descanso</option>
+        </select>
+      </td>
+      <td><input type="time" class="form-control blq-inicio" value="${b.hora_inicio || ''}"></td>
+      <td><input type="time" class="form-control blq-fin" value="${b.hora_fin || ''}"></td>
+      <td><button class="secondary-btn" style="color:var(--danger); padding:6px;" onclick="this.closest('tr').remove(); renderizarHorario();"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button></td>
+    `;
+    cont.appendChild(tr);
+  });
+  if(window.lucide) window.lucide.createIcons();
+}
+
+function agregarBloqueVacio() {
+  bloquesHorario.push({ orden: bloquesHorario.length + 1, nombre: '', tipo: 'Clase', hora_inicio: '', hora_fin: '' });
+  renderizarBloques();
+  renderizarHorario();
+}
+
+async function guardarBloques() {
+  const filas = document.querySelectorAll('.fila-bloque');
+  const bloquesAGuardar = [];
+  
+  filas.forEach(fila => {
+    bloquesAGuardar.push({
+      id: fila.dataset.id ? parseInt(fila.dataset.id) : undefined,
+      orden: parseInt(fila.querySelector('.blq-orden').value) || 1,
+      nombre: fila.querySelector('.blq-nombre').value.trim(),
+      tipo: fila.querySelector('.blq-tipo').value,
+      hora_inicio: fila.querySelector('.blq-inicio').value,
+      hora_fin: fila.querySelector('.blq-fin').value
+    });
+  });
+
+  if (bloquesAGuardar.some(b => !b.nombre || !b.hora_inicio || !b.hora_fin)) {
+    mostrarAviso('Completa todos los campos de los bloques.');
+    return;
+  }
+
+  mostrarToast('Guardando bloques...');
+  
+  // Limpiamos y reescribimos los bloques
+  await clienteSupabase.from('horario_bloques').delete().neq('id', 0);
+  
+  const insertData = bloquesAGuardar.map(b => ({orden: b.orden, nombre: b.nombre, tipo: b.tipo, hora_inicio: b.hora_inicio, hora_fin: b.hora_fin}));
+  
+  const { data, error } = await clienteSupabase.from('horario_bloques').insert(insertData).select();
+  if (error) {
+    mostrarAviso('Error al guardar bloques: ' + error.message);
+  } else {
+    bloquesHorario = data;
+    renderizarBloques();
+    renderizarHorario();
+    mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Bloques actualizados exitosamente');
+  }
+}
+
 function renderizarHorario() {
   const cont = document.getElementById('lista-horarios');
   cont.innerHTML = '';
+  
+  if (bloquesHorario.length === 0) {
+    cont.innerHTML = '<tr><td colspan="6" class="empty">Primero define los bloques arriba.</td></tr>';
+    return;
+  }
+  
+  // Para los dropdowns
+  let optionsMaterias = '<option value="">-- Libre --</option>';
+  materias.forEach(m => {
+    optionsMaterias += `<option value="${m.id}">${m.nombre_materia}</option>`;
+  });
 
-  materias.forEach(mat => {
-    const row = document.createElement('div');
-    row.className = 'materia-horario-row';
+  bloquesHorario.sort((a,b) => a.orden - b.orden).forEach(bloque => {
+    const tr = document.createElement('tr');
+    tr.dataset.bloqueId = bloque.id || '';
     
-    let checksHtml = diasSemana.map(d => {
-      const estaMarcado = horariosActuales.some(h => h.materia_id === mat.id && h.dia_semana === d.num);
-      return `
-        <label class="dia-check">
-          <input type="checkbox" class="chk-horario" data-materia="${mat.id}" data-dia="${d.num}" ${estaMarcado ? 'checked' : ''}>
-          ${d.nombre}
-        </label>
-      `;
-    }).join('');
-
-    row.innerHTML = `
-      <div style="font-weight: 750; margin-bottom: 5px;">${mat.nombre_materia}</div>
-      <div class="dias-grid">${checksHtml}</div>
-    `;
-    cont.appendChild(row);
+    // Si es un descanso, pintamos toda la fila de gris
+    if (bloque.tipo === 'Descanso') {
+      tr.innerHTML = `<td style="font-weight:600; background:#f8fafc; border-right:2px solid var(--border);">${bloque.nombre}<br><small style="color:var(--muted); font-weight:normal;">${bloque.hora_inicio} - ${bloque.hora_fin}</small></td>
+      <td colspan="5" style="text-align:center; background:#f1f5f9; color:var(--muted); font-weight:600; font-style:italic;">DESCANSO</td>`;
+    } else {
+      let tds = `<td style="font-weight:600; background:#f8fafc; border-right:2px solid var(--border);">${bloque.nombre}<br><small style="color:var(--muted); font-weight:normal;">${bloque.hora_inicio} - ${bloque.hora_fin}</small></td>`;
+      
+      diasSemana.forEach(dia => {
+        // Find existing match
+        const match = horariosActuales.find(h => h.bloque_id === bloque.id && h.dia_semana === dia.num);
+        let selectedMateria = match ? match.materia_id : '';
+        
+        let localOptions = optionsMaterias;
+        if (selectedMateria) {
+           localOptions = localOptions.replace(`value="${selectedMateria}"`, `value="${selectedMateria}" selected`);
+        }
+        
+        tds += `<td style="text-align:center;"><select class="form-control selector-materia-matriz" data-dia="${dia.num}" style="width:100%; font-size:12px; padding:6px 4px;">${localOptions}</select></td>`;
+      });
+      tr.innerHTML = tds;
+    }
+    cont.appendChild(tr);
   });
 }
 
@@ -298,41 +440,75 @@ async function guardarConfiguracion() {
   const anio = parseInt(document.getElementById('cfg-anio').value);
   const totalPeriodos = parseInt(document.getElementById('cfg-total-periodos').value);
   const periodoActual = parseInt(document.getElementById('cfg-periodo-actual').value);
+  const nombreClase = document.getElementById('cfg-nombre-clase').value.trim();
+  const nombreInstitucion = document.getElementById('cfg-institucion').value.trim();
 
-  if (!anio || anio < 2000 || !totalPeriodos || !periodoActual) {
-    mostrarToast('Completa correctamente el año y el periodo actual.');
+  if (!anio || anio < 2000 || !totalPeriodos || !periodoActual || !nombreClase) {
+    mostrarToast('Completa correctamente el año, periodo y nombre de la clase.');
     return;
   }
 
   const { error } = await clienteSupabase
     .from('configuracion_global')
-    .update({ año_actual: anio, cantidad_periodos: totalPeriodos, periodo_actual: periodoActual })
+    .update({ 
+      año_actual: anio, 
+      cantidad_periodos: totalPeriodos, 
+      periodo_actual: periodoActual,
+      nombre_clase: nombreClase,
+      nombre_institucion: nombreInstitucion
+    })
     .eq('id', 1);
 
   if (error) { console.error(error); mostrarToast(`Error al guardar configuración: ${error.message}`); }
-  else { mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Configuración general actualizada'); }
+  else { 
+    mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Configuración general actualizada'); 
+    setTimeout(() => location.reload(), 1500);
+  }
 }
 
 async function guardarHorario() {
-  mostrarToast('Guardando horario...');
-  const checkboxes = document.querySelectorAll('.chk-horario:checked');
-  const nuevosHorarios = Array.from(checkboxes).map(c => ({
-    materia_id: parseInt(c.dataset.materia),
-    dia_semana: parseInt(c.dataset.dia)
-  }));
+  mostrarToast('Guardando matriz del horario...');
+  const filas = document.querySelectorAll('#lista-horarios tr[data-bloque-id]');
+  const nuevosHorarios = [];
+  
+  let bloquesSinId = false;
+  filas.forEach(tr => {
+    const bloqueId = parseInt(tr.dataset.bloqueId);
+    if (!bloqueId) { bloquesSinId = true; }
+    else {
+      const selects = tr.querySelectorAll('.selector-materia-matriz');
+      selects.forEach(select => {
+        const materiaId = parseInt(select.value);
+        if (materiaId) {
+           nuevosHorarios.push({
+             materia_id: materiaId,
+             dia_semana: parseInt(select.dataset.dia),
+             bloque_id: bloqueId
+           });
+        }
+      });
+    }
+  });
+
+  if (bloquesSinId) {
+    mostrarAviso('Existen bloques sin guardar. Por favor, guarda los bloques primero.');
+    return;
+  }
 
   // Limpiar horario anterior y guardar el nuevo
   const { error: errorBorrado } = await clienteSupabase.from('horario_semanal').delete().neq('id', 0);
   if (errorBorrado) {
-    console.error(errorBorrado);
-    mostrarToast(`Error al actualizar horario: ${errorBorrado.message}`);
+    mostrarAviso(`Error al limpiar horario viejo: ${errorBorrado.message}`);
     return;
   }
   if (nuevosHorarios.length > 0) {
     const { error } = await clienteSupabase.from('horario_semanal').insert(nuevosHorarios);
-    if (error) { console.error(error); mostrarToast(`Error al guardar horario: ${error.message}`); return; }
+    if (error) { mostrarAviso(`Error al insertar nueva matriz: ${error.message}`); return; }
   }
-  mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Horario semanal actualizado');
+  
+  // Actualizar la variable local
+  horariosActuales = nuevosHorarios;
+  mostrarToast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Matriz de horario actualizada');
 }
 
 document.getElementById('btn-guardar-periodos').addEventListener('click', guardarPeriodos);

@@ -149,6 +149,13 @@ async function inicializarFiltros() {
     resMat.data.forEach(m => {
       selectMateria.innerHTML += `<option value="${m.id}">${m.nombre_materia}</option>`;
     });
+    
+    // Auto-seleccionar materia si viene en la URL (ej. desde el horario del dashboard)
+    const params = new URLSearchParams(window.location.search);
+    const materiaIdUrl = params.get('materia_id');
+    if (materiaIdUrl) {
+      selectMateria.value = materiaIdUrl;
+    }
   }
 
   cargarActividades();
@@ -172,7 +179,14 @@ async function cargarActividades() {
     consulta = consulta.eq('materia_id', materiaFiltro);
   }
 
-  const { data, error } = await consulta;
+  const [resTareas, resEstudiantes, resCalificaciones] = await Promise.all([
+    consulta,
+    clienteSupabase.from('estudiantes').select('id', { count: 'exact', head: true }).eq('estado', 'Activo'),
+    clienteSupabase.from('calificaciones').select('tarea_id').not('nota', 'is', null)
+  ]);
+
+  const data = resTareas.data;
+  const error = resTareas.error;
 
   if (error) {
     contenedor.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="x-circle" style="width: 32px; height: 32px; display: inline-block; vertical-align: middle;"></i></div>Error al cargar las actividades.</div>';
@@ -188,28 +202,72 @@ async function cargarActividades() {
   }
 
   contenedor.innerHTML = '';
+  
+  const totalActivos = resEstudiantes.count || 0;
+  const notasPorTarea = {};
+  if (resCalificaciones.data) {
+    resCalificaciones.data.forEach(c => {
+      notasPorTarea[c.tarea_id] = (notasPorTarea[c.tarea_id] || 0) + 1;
+    });
+  }
+
+  const pendientes = [];
+  const completadas = [];
+
   data.forEach(tarea => {
+    const calificados = notasPorTarea[tarea.id] || 0;
+    tarea.completada = (totalActivos > 0 && calificados >= totalActivos);
+    if (tarea.completada) completadas.push(tarea);
+    else pendientes.push(tarea);
+  });
+
+  const renderizarTarea = (tarea, esCompletada) => {
     const nombreMateria = tarea.materias ? tarea.materias.nombre_materia : 'General';
     const nombreCat = tarea.categorias_actividades ? `${tarea.categorias_actividades.nombre} (${tarea.categorias_actividades.porcentaje}%)` : 'Sin categoría';
+    const color = getColorMateria(nombreMateria);
+    
     const div = document.createElement('div');
     div.className = 'task';
     div.style.cssText = 'display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;';
-    div.innerHTML = `
-      <div class="datos-tarea" style="flex:1; min-width:0;">
-        <span style="display: inline-block; background-color: var(--warning); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
-        <span style="display: inline-block; background-color: var(--primary); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
-        <div style="font-weight: 700;">${tarea.titulo}</div>
-        <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
-        <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 4px;">Vence: ${formatearFechaCorta(tarea.fecha_vencimiento)}</div>
-      </div>
-      <div style="display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap;">
-        <button class="secondary-btn" onclick="editarActividad(${tarea.id})" style="min-width:80px;"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Editar</button>
-        <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5; min-width:90px;" onclick="eliminarActividad(${tarea.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Eliminar</button>
-      </div>
-    `;
+    
+    if (esCompletada) {
+      div.style.opacity = '0.7';
+      div.style.background = '#f8fafc';
+      div.innerHTML = `
+        <div class="datos-tarea" style="flex:1; min-width:0; text-decoration: line-through; color: var(--muted);">
+          <span style="display: inline-block; background-color: #cbd5e1; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
+          <span style="display: inline-block; background-color: #cbd5e1; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
+          <div style="font-weight: 700; color: var(--muted);">${tarea.titulo} <span style="font-size:11px; font-weight:normal; margin-left:8px;"><i data-lucide="check-circle" style="width:12px;height:12px;vertical-align:middle;"></i> 100% Calificada</span></div>
+          <div style="font-size: 13px; margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
+          <div style="font-size: 12px; font-weight: 800; margin-top: 4px;">Lista</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap;">
+          <button class="secondary-btn" onclick="editarActividad(${tarea.id})" style="min-width:80px;"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Editar</button>
+          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5; min-width:90px;" onclick="eliminarActividad(${tarea.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Eliminar</button>
+        </div>
+      `;
+    } else {
+      div.innerHTML = `
+        <div class="datos-tarea" style="flex:1; min-width:0;">
+          <span style="display: inline-block; background-color: ${color}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
+          <span style="display: inline-block; border: 1px solid ${color}40; background-color: ${color}10; color: ${color}; padding: 2px 7px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
+          <div style="font-weight: 700;">${tarea.titulo}</div>
+          <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
+          <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 4px;">Vence: ${formatearFechaCorta(tarea.fecha_vencimiento)}</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap;">
+          <button class="secondary-btn" onclick="editarActividad(${tarea.id})" style="min-width:80px;"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Editar</button>
+          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5; min-width:90px;" onclick="eliminarActividad(${tarea.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Eliminar</button>
+        </div>
+      `;
+    }
     contenedor.appendChild(div);
-  });
-  lucide.createIcons();
+  };
+
+  pendientes.forEach(t => renderizarTarea(t, false));
+  completadas.forEach(t => renderizarTarea(t, true));
+  
+  if(window.lucide) window.lucide.createIcons();
 }
 
 // 3. ELIMINAR ACTIVIDAD
@@ -223,11 +281,25 @@ async function eliminarActividad(id) {
     toast('No se puede comprobar el historial; la actividad no fue eliminada.');
     return;
   }
+  
+  let confirmarEliminar = false;
   if ((cantidadCalificaciones || 0) > 0 || (cantidadEntregas || 0) > 0) {
-    toast('No se puede eliminar: la actividad tiene calificaciones o entregas asociadas.');
-    return;
+    if (confirm('⚠️ Esta actividad ya tiene calificaciones asignadas.\n\n¿Estás seguro de que deseas eliminar la actividad junto con TODAS sus notas? Esta acción NO se puede deshacer.')) {
+      const { error: errCal } = await clienteSupabase.from('calificaciones').delete().eq('tarea_id', id);
+      const { error: errEnt } = await clienteSupabase.from('entregas_tareas').delete().eq('tarea_id', id);
+      if (errCal || errEnt) {
+        toast('Error al limpiar el historial de notas. Operación cancelada.');
+        return;
+      }
+      confirmarEliminar = true;
+    } else {
+      return;
+    }
+  } else {
+    confirmarEliminar = confirm('¿Estás seguro de que deseas eliminar esta actividad?');
   }
-  if (confirm('¿Estás seguro de que deseas eliminar esta actividad?')) {
+  
+  if (confirmarEliminar) {
     const { error } = await clienteSupabase.from('tareas').delete().eq('id', id);
     if(error) {
       toast(`Error al eliminar: ${error.message}`);

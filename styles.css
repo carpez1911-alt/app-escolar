@@ -52,6 +52,18 @@ button, input, select, textarea { font: inherit; }
 button { cursor: pointer; border: none; background: none; }
 button i, button svg { pointer-events: none; }
 
+/* Accesibilidad: Delineado claro al navegar con teclado */
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Custom Scrollbar Premium */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
 /* Prevent all images/media from overflowing */
 img, video, svg { max-width: 100%; height: auto; }
 
@@ -345,11 +357,13 @@ td.text-left { text-align: left; }
 .loading { padding: 40px; text-align: center; color: var(--text-secondary); font-weight: 500; }
 .toast { 
   position: fixed; right: 24px; bottom: 24px; z-index: 1050; 
-  background: #323232; color: white; padding: 14px 24px; border-radius: 4px; 
+  background: #323232; color: white; padding: 14px 24px; border-radius: 8px; 
   box-shadow: var(--shadow-md); font-size: 14px; font-weight: 500; display: none; 
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   max-width: calc(100vw - 48px);
 }
+.toast-success { background: #10b981 !important; color: white !important; }
+.toast-error { background: #ef4444 !important; color: white !important; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ===========================

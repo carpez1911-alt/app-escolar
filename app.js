@@ -62,6 +62,7 @@ function inyectarMenuGlobal() {
         <a href="consolidado.html"><i data-lucide="bar-chart-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Consolidado de Notas</a>
         <a href="reportes.html"><i data-lucide="pie-chart" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Reportes y filtros</a>
         <a href="directorio.html"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Estudiantes y Materias</a>
+        <a href="observador.html"><i data-lucide="file-text" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Observador Estudiantil</a>
         <a href="configuracion.html"><i data-lucide="settings" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 12px;"></i> Configuración</a>
       </div>
       <div class="sidebar-footer">

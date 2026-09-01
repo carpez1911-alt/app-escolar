@@ -80,7 +80,7 @@
       </div>
       <div class="table-container" style="margin-top: 0;">
         <table class="dir-table">
-          <thead><tr><th>ID</th><th>Nombre Completo</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>ID</th><th>Documento</th><th>Nombre Completo</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody id="lista-estudiantes">
               <tr><td colspan="4" class="loading">Cargando estudiantes...</td></tr>
           </tbody>
@@ -119,6 +119,16 @@
     <div class="form-group">
       <label>Nombre Completo:</label>
       <input type="text" id="edit-estudiante-nombre" class="form-control" placeholder="Apellidos y Nombres">
+    </div>
+
+    <div class="form-group">
+      <label>Documento de Identidad:</label>
+      <input type="text" id="edit-estudiante-doc" class="form-control" placeholder="Ej. T.I. 123456789">
+    </div>
+    
+    <div class="form-group">
+      <label>Nombre del Acudiente:</label>
+      <input type="text" id="edit-estudiante-acudiente" class="form-control" placeholder="Ej. Juan Pérez">
     </div>
     
     <div class="form-group">
@@ -167,7 +177,7 @@ async function cargarDirectorio() {
   
   const [resCfg, resEst, resMat] = await Promise.all([
     clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single(),
-    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado, telefono_acudiente').order('nombre_completo'),
+    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado, telefono_acudiente, documento_identidad, nombre_acudiente').order('nombre_completo'),
     clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
   ]);
 
@@ -200,10 +210,11 @@ function renderizarEstudiantes() {
     tbody.innerHTML += `
       <tr>
         <td>${est.id}</td>
+        <td>${est.documento_identidad || '-'}</td>
         <td style="font-weight: 600;">${est.nombre_completo}</td>
         <td><span class="estado-badge ${estadoClass}">${est.estado}</span></td>
         <td>
-          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}', '${(est.telefono_acudiente || '').replace(/'/g, "\\'")}')"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
+          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}', '${(est.documento_identidad || '').replace(/'/g, "\\'")}', '${(est.nombre_acudiente || '').replace(/'/g, "\\'")}', '${(est.telefono_acudiente || '').replace(/'/g, "\\'")}')"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
           <button class="action-btn" title="${toggleAction}" onclick="toggleEstadoEstudiante(${est.id}, '${est.estado}')">${toggleIcon}</button>
         </td>
       </tr>
@@ -239,10 +250,12 @@ function cerrarModal(modalId) {
 }
 
 // === ESTUDIANTES ===
-function abrirModalEstudiante(id = null, nombre = '', telefono = '') {
+function abrirModalEstudiante(id = null, nombre = '', doc = '', acudiente = '', telefono = '') {
   document.getElementById('modal-estudiante-titulo').textContent = id ? 'Editar Estudiante' : 'Nuevo Estudiante';
   document.getElementById('edit-estudiante-id').value = id || '';
   document.getElementById('edit-estudiante-nombre').value = nombre;
+  document.getElementById('edit-estudiante-doc').value = doc;
+  document.getElementById('edit-estudiante-acudiente').value = acudiente;
   document.getElementById('edit-estudiante-telefono').value = telefono;
   document.getElementById('modal-estudiante').style.display = 'flex';
 }
@@ -250,17 +263,28 @@ function abrirModalEstudiante(id = null, nombre = '', telefono = '') {
 async function guardarEstudiante() {
   const id = document.getElementById('edit-estudiante-id').value;
   const nombre = document.getElementById('edit-estudiante-nombre').value.trim();
+  const doc = document.getElementById('edit-estudiante-doc').value.trim();
+  const acudiente = document.getElementById('edit-estudiante-acudiente').value.trim();
   const telefono = document.getElementById('edit-estudiante-telefono').value.trim();
   
   if (!nombre) { toast('El nombre es obligatorio.'); return; }
   if (!añoActual) { toast('Error: No se ha configurado el año académico.'); return; }
 
+  const payload = {
+    nombre_completo: nombre,
+    documento_identidad: doc || null,
+    nombre_acudiente: acudiente || null,
+    telefono_acudiente: telefono || null
+  };
+
   let error;
   if (id) {
-    const res = await clienteSupabase.from('estudiantes').update({ nombre_completo: nombre, telefono_acudiente: telefono }).eq('id', id);
+    const res = await clienteSupabase.from('estudiantes').update(payload).eq('id', id);
     error = res.error;
   } else {
-    const res = await clienteSupabase.from('estudiantes').insert([{ nombre_completo: nombre, telefono_acudiente: telefono, estado: 'Activo', año_lectivo: añoActual }]);
+    payload.estado = 'Activo';
+    payload.año_lectivo = añoActual;
+    const res = await clienteSupabase.from('estudiantes').insert([payload]);
     error = res.error;
   }
 

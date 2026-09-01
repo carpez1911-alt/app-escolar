@@ -63,6 +63,8 @@
           <select class="form-control" id="wa-tipo">
             <option value="dia">Por Día</option>
             <option value="semana">Por Semana</option>
+            <option value="mes">Por Mes</option>
+            <option value="personalizado">Personalizado</option>
           </select>
         </div>
         <div class="form-group" id="wa-group-dia">
@@ -72,6 +74,18 @@
         <div class="form-group" id="wa-group-semana" style="display:none;">
           <label for="wa-fecha-semana">Semana (Inicio Lunes)</label>
           <input class="form-control" type="date" id="wa-fecha-semana">
+        </div>
+        <div class="form-group" id="wa-group-mes" style="display:none;">
+          <label for="wa-mes">Mes</label>
+          <input class="form-control" type="month" id="wa-mes">
+        </div>
+        <div class="form-group" id="wa-group-personalizado-inicio" style="display:none;">
+          <label for="wa-fecha-inicio">Desde</label>
+          <input class="form-control" type="date" id="wa-fecha-inicio">
+        </div>
+        <div class="form-group" id="wa-group-personalizado-fin" style="display:none;">
+          <label for="wa-fecha-fin">Hasta</label>
+          <input class="form-control" type="date" id="wa-fecha-fin">
         </div>
         <div class="filter-actions">
           <button class="secondary-btn" onclick="generarPrevisualizacion()"> Generar</button>
@@ -144,12 +158,18 @@ document.querySelectorAll('.report-tab').forEach(tab => {
 });
 
 document.getElementById('wa-tipo').addEventListener('change', (e) => {
-  const isDia = e.target.value === 'dia';
-  document.getElementById('wa-group-dia').style.display = isDia ? 'block' : 'none';
-  document.getElementById('wa-group-semana').style.display = isDia ? 'none' : 'block';
+  const tipo = e.target.value;
+  document.getElementById('wa-group-dia').style.display = tipo === 'dia' ? 'block' : 'none';
+  document.getElementById('wa-group-semana').style.display = tipo === 'semana' ? 'block' : 'none';
+  document.getElementById('wa-group-mes').style.display = tipo === 'mes' ? 'block' : 'none';
+  document.getElementById('wa-group-personalizado-inicio').style.display = tipo === 'personalizado' ? 'block' : 'none';
+  document.getElementById('wa-group-personalizado-fin').style.display = tipo === 'personalizado' ? 'block' : 'none';
 });
 document.getElementById('wa-fecha-dia').value = fechaLocalISO();
 document.getElementById('wa-fecha-semana').value = fechaLocalISO();
+document.getElementById('wa-mes').value = fechaLocalISO().slice(0, 7);
+document.getElementById('wa-fecha-inicio').value = fechaLocalISO();
+document.getElementById('wa-fecha-fin').value = fechaLocalISO();
 
 async function generarPrevisualizacion() {
   const tipo = document.getElementById('wa-tipo').value;
@@ -159,7 +179,7 @@ async function generarPrevisualizacion() {
     fechaInicio = document.getElementById('wa-fecha-dia').value;
     fechaFin = fechaInicio;
     tituloReporte = `Fecha: ${formatearFechaCorta(fechaInicio)}`;
-  } else {
+  } else if (tipo === 'semana') {
     const d = new Date(document.getElementById('wa-fecha-semana').value + 'T00:00:00');
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -170,6 +190,20 @@ async function generarPrevisualizacion() {
     fechaInicio = lunes.toISOString().split('T')[0];
     fechaFin = viernes.toISOString().split('T')[0];
     tituloReporte = `Semana: ${formatearFechaCorta(fechaInicio)} al ${formatearFechaCorta(fechaFin)}`;
+  } else if (tipo === 'mes') {
+    const val = document.getElementById('wa-mes').value;
+    if (!val) return;
+    const [y, m] = val.split('-');
+    const startDate = new Date(y, m - 1, 1);
+    const endDate = new Date(y, m, 0);
+    fechaInicio = startDate.toISOString().split('T')[0];
+    fechaFin = endDate.toISOString().split('T')[0];
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    tituloReporte = `Mes: ${meses[parseInt(m)-1]} ${y}`;
+  } else if (tipo === 'personalizado') {
+    fechaInicio = document.getElementById('wa-fecha-inicio').value;
+    fechaFin = document.getElementById('wa-fecha-fin').value;
+    tituloReporte = `Rango: ${formatearFechaCorta(fechaInicio)} al ${formatearFechaCorta(fechaFin)}`;
   }
   
   if (!fechaInicio) return;
@@ -338,13 +372,23 @@ function marcarTodosPresentes(){
   document.querySelectorAll('.student').forEach(row=>{
     const id=row.dataset.id;
     const btn=row.querySelector('.status-btn'); // Selecciona el primero que es P
+    if(btn) btn.click();
+  });
+}
+
 document.getElementById('wa-tipo').addEventListener('change', (e) => {
-  const isDia = e.target.value === 'dia';
-  document.getElementById('wa-group-dia').style.display = isDia ? 'block' : 'none';
-  document.getElementById('wa-group-semana').style.display = isDia ? 'none' : 'block';
+  const tipo = e.target.value;
+  document.getElementById('wa-group-dia').style.display = tipo === 'dia' ? 'block' : 'none';
+  document.getElementById('wa-group-semana').style.display = tipo === 'semana' ? 'block' : 'none';
+  document.getElementById('wa-group-mes').style.display = tipo === 'mes' ? 'block' : 'none';
+  document.getElementById('wa-group-personalizado-inicio').style.display = tipo === 'personalizado' ? 'block' : 'none';
+  document.getElementById('wa-group-personalizado-fin').style.display = tipo === 'personalizado' ? 'block' : 'none';
 });
 document.getElementById('wa-fecha-dia').value = fechaLocalISO();
 document.getElementById('wa-fecha-semana').value = fechaLocalISO();
+document.getElementById('wa-mes').value = fechaLocalISO().slice(0, 7);
+document.getElementById('wa-fecha-inicio').value = fechaLocalISO();
+document.getElementById('wa-fecha-fin').value = fechaLocalISO();
 
 async function generarPrevisualizacion() {
   const tipo = document.getElementById('wa-tipo').value;
@@ -354,7 +398,7 @@ async function generarPrevisualizacion() {
     fechaInicio = document.getElementById('wa-fecha-dia').value;
     fechaFin = fechaInicio;
     tituloReporte = `Fecha: ${formatearFechaCorta(fechaInicio)}`;
-  } else {
+  } else if (tipo === 'semana') {
     const d = new Date(document.getElementById('wa-fecha-semana').value + 'T00:00:00');
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -365,6 +409,20 @@ async function generarPrevisualizacion() {
     fechaInicio = lunes.toISOString().split('T')[0];
     fechaFin = viernes.toISOString().split('T')[0];
     tituloReporte = `Semana: ${formatearFechaCorta(fechaInicio)} al ${formatearFechaCorta(fechaFin)}`;
+  } else if (tipo === 'mes') {
+    const val = document.getElementById('wa-mes').value;
+    if (!val) return;
+    const [y, m] = val.split('-');
+    const startDate = new Date(y, m - 1, 1);
+    const endDate = new Date(y, m, 0);
+    fechaInicio = startDate.toISOString().split('T')[0];
+    fechaFin = endDate.toISOString().split('T')[0];
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    tituloReporte = `Mes: ${meses[parseInt(m)-1]} ${y}`;
+  } else if (tipo === 'personalizado') {
+    fechaInicio = document.getElementById('wa-fecha-inicio').value;
+    fechaFin = document.getElementById('wa-fecha-fin').value;
+    tituloReporte = `Rango: ${formatearFechaCorta(fechaInicio)} al ${formatearFechaCorta(fechaFin)}`;
   }
   
   if (!fechaInicio) return;

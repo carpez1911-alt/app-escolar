@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Observador del Estudiante Inteligente — I.E. Nuestra Señora del Pilar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-dark: #172554;
+      --text-main: #0f172a;
+      --border-color: #cbd5e1;
+      --bg-panel: #ffffff;
+    }
+    
+    
+    .top-action-bar { max-width: 950px; margin: 0 auto 15px auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .app-title-tag { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--primary); }
+    .btn { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; transition: all 0.15s; }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-success { background-color: #059669; color: white; }
+    .btn-outline { background-color: white; border-color: #cbd5e1; color: #334155; }
+    .control-panel { max-width: 950px; margin: 0 auto 25px auto; background: var(--bg-panel); border-radius: 14px; padding: 22px 26px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 18px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    label { font-size: 11.5px; font-weight: 600; color: #334155; display: flex; justify-content: space-between; }
+    input, select, textarea { width: 100%; padding: 8px 11px; border-radius: 7px; border: 1px solid #cbd5e1; font-size: 12.5px; }
+    .competence-banner { background: #f8fafc; border-left: 4px solid var(--primary); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 11.5px; margin: 12px 0 16px 0; }
+    .teacher-action-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px; margin-top: 10px; }
+    .teacher-action-card.t2 { background: #fffbeb; border-color: #fde68a; }
+    .teacher-action-card.t3 { background: #fef2f2; border-color: #fecaca; }
+    .sheet-wrapper { max-width: 950px; margin: 0 auto; display: flex; justify-content: center; }
+    .print-sheet { width: 216mm; min-height: 279mm; background: #ffffff; padding: 12mm 14mm; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
+    .inst-header { display: flex; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 10px; gap: 14px; }
+    .inst-logo-box { width: 54px; height: 54px; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--primary); background: #f8fafc; flex-shrink: 0; }
+    .inst-title-box { flex-grow: 1; text-align: center; }
+    .inst-title-box h1 { font-family: 'Cinzel', serif; font-size: 14.5px; font-weight: 700; color: var(--primary); }
+    .inst-title-box h2 { font-size: 10px; font-weight: 600; color: #475569; }
+    .inst-title-box .doc-type-title { font-size: 11.5px; font-weight: 800; background: #f1f5f9; display: inline-block; padding: 2px 14px; border-radius: 4px; border: 1px solid #cbd5e1; margin-top: 3px; }
+    .inst-meta-box { text-align: right; font-size: 9px; font-weight: 600; color: #334155; border-left: 1px solid #cbd5e1; padding-left: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px; }
+    .data-table td { border: 1px solid #94a3b8; padding: 4px 6px; }
+    .data-table .label-cell { background-color: #f1f5f9; font-weight: 700; width: 16%; }
+    .data-table .val-cell { font-weight: 500; width: 34%; }
+    .classification-bar { background: #f8fafc; border: 1px solid #94a3b8; border-radius: 4px; padding: 5px 8px; margin-bottom: 8px; display: flex; justify-content: space-between; font-size: 9.5px; font-weight: 600; }
+    .class-item { display: flex; align-items: center; gap: 4px; }
+    .class-checkbox { width: 13px; height: 13px; border: 1.5px solid #475569; border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; background: white; }
+    .class-checkbox.checked { background: var(--primary); color: white; border-color: var(--primary); }
+    .section-block { margin-bottom: 7px; }
+    .section-header { background: #f1f5f9; border: 1px solid #94a3b8; border-bottom: none; padding: 3px 8px; font-size: 9.5px; font-weight: 700; display: flex; justify-content: space-between; }
+    .section-content-box { border: 1px solid #94a3b8; padding: 6px 8px; font-size: 9.8px; line-height: 1.35; min-height: 52px; background: white; text-align: justify; }
+    .section-content-box.hechos-box { min-height: 68px; }
+    .section-content-box.descargos-box { min-height: 50px; font-style: italic; background: #fafafa; }
+    .section-content-box.compromisos-box { min-height: 68px; }
+    .signatures-section { margin-top: 10px; border-top: 1px dashed #94a3b8; padding-top: 8px; }
+    .signatures-title { font-size: 8.5px; font-weight: 700; text-align: center; text-transform: uppercase; color: #475569; margin-bottom: 8px; }
+    .signatures-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .signature-item { text-align: center; }
+    .sig-line { border-bottom: 1px solid #334155; height: 30px; margin-bottom: 4px; }
+    .sig-name { font-size: 8.5px; font-weight: 700; }
+    .sig-role { font-size: 7.5px; color: #64748b; }
+    .print-footer { margin-top: 6px; padding-top: 4px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 8px; color: #64748b; }
+    @page { size: letter portrait; margin: 10mm 12mm; }
+    @media print {
+      
+      .no-print, .control-panel, .top-action-bar { display: none !important; }
+      .sheet-wrapper { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      .print-sheet { width: 100% !important; min-height: auto !important; height: auto !important; box-shadow: none !important; padding: 0 !important; }
+    }
+  </style>
+
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<!-- Botón Flotante de Regreso -->
+<button onclick="window.location.href='dashboard.html'" class="fab-back no-print" title="Regresar al Panel Principal">
+  <i data-lucide="arrow-left" style="width: 24px; height: 24px;"></i>
+</button>
+
+<div class="app-shell">
+<nav class="navbar no-print">
+  <div class="brand">
+    <div class="brand-mark"><i data-lucide="file-text" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Observador</div></div>
+  </div>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+</nav>
+<main class="page">
+
+  <div class="top-action-bar no-print">
+    <div class="app-title-tag" id="app-title-tag">Generador del Observador Estudiantil</div>
+    <div>
+      <button class="btn btn-success" type="button" onclick="window.print()"><i data-lucide="printer" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Imprimir / Guardar PDF</button>
+    </div>
+  </div>
+
+  <div class="control-panel no-print">
+    <div class="panel-header">
+      <h2>⚙️ Configuración y Redacción Asistida del Registro</h2>
+      <span>Docente: <strong id="docente-nombre">Cargando...</strong></span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column: span 2;">
+        <label for="selTipo">1. Tipo de Situación / Proceso:</label>
+        <select id="selTipo" onchange="onCambioTipo()">
+          <option value="T1">Situación Tipo I (Falta Leve / Manejo Pedagógico en Aula)</option>
+          <option value="T2">Situación Tipo II (Falta Grave / Agresión / Remisión Obligatoria)</option>
+          <option value="T3">Situación Tipo III (Falta Gravísima / Presunto Delito / Ruta Externa)</option>
+          <option value="PIAR">Acompañamiento Académico / Socioemocional (PIAR / DUA)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="selEstudiante">2. Estudiante de 5°02:</label>
+        <select id="selEstudiante" onchange="onSeleccionarEstudiante()"></select>
+      </div>
+      <div class="form-group">
+        <label for="txtDocEstudiante">Doc. Identidad:</label>
+        <input type="text" id="txtDocEstudiante" value="" placeholder="Ej. T.I. 123456" oninput="actualizarVistaPrevia()">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="selAsignatura">3. Asignatura / Espacio:</label>
+        <select id="selAsignatura" onchange="actualizarVistaPrevia()">
+          <option value="Lengua Castellana">Lengua Castellana</option>
+          <option value="Matemáticas">Matemáticas</option>
+          <option value="Ciencias Naturales">Ciencias Naturales</option>
+          <option value="Ciencias Sociales">Ciencias Sociales</option>
+          <option value="Inglés">Inglés</option>
+          <option value="Educación Física">Educación Física</option>
+          <option value="Tecnología e Informática">Tecnología e Informática</option>
+          <option value="Ética y Valores Humanos">Ética y Valores Humanos</option>
+          <option value="Dirección de Grupo">Dirección de Grupo</option>
+          <option value="Descanso Pedagógico">Descanso Pedagógico</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="txtFecha">4. Fecha:</label>
+        <input type="date" id="txtFecha" onchange="actualizarVistaPrevia()">
+      </div>
+      <div class="form-group">
+        <label for="txtHora">5. Hora:</label>
+        <input type="time" id="txtHora" onchange="actualizarVistaPrevia()">
+      </div>
+    </div>
+    <div class="competence-banner" id="bannerCompetencia">
+      <i data-lucide="scale" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> <span id="textoCompetencia" style="vertical-align: middle;">Docente de Aula / Director de Grupo (Manejo 100% Pedagógico en el Aula)</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label for="selSituacionCatalogo">6. Situación Frecuente (10 Tipificadas + Opción Otro):</label>
+        <select id="selSituacionCatalogo" onchange="onCambioSituacion()"></select>
+      </div>
+    </div>
+    <div class="teacher-action-card" id="cardAccionesDocente">
+      <div style="font-weight:700; margin-bottom:6px; display: flex; align-items: center;"><i data-lucide="target" style="width: 16px; height: 16px; margin-right: 6px;"></i> Acciones Pedagógicas y de Manejo del Docente (5 Opciones Sugeridas):</div>
+      <select id="selAccionDocente" onchange="onCambioAccionDocente()"></select>
+    </div>
+    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+      <div class="form-group">
+        <label for="txtHechosEditor" style="display: flex; align-items: center;"><i data-lucide="file-text" style="width: 14px; height: 14px; margin-right: 6px;"></i> 1. Descripción Objetiva de los Hechos (Editable):</label>
+        <textarea id="txtHechosEditor" rows="3" oninput="actualizarVistaPrevia()"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="txtDescargosEditor" style="display: flex; align-items: center;"><i data-lucide="message-circle" style="width: 14px; height: 14px; margin-right: 6px;"></i> 2. Descargos y Versión Libre del Estudiante (Art. 29 C.P.):</label>
+        <textarea id="txtDescargosEditor" rows="2" oninput="actualizarVistaPrevia()"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="txtCompromisosEditor" style="display: flex; align-items: center;"><i data-lucide="handshake" style="width: 14px; height: 14px; margin-right: 6px;"></i> 3. Acciones Pedagógicas y Compromisos Acordados:</label>
+        <textarea id="txtCompromisosEditor" rows="4" oninput="actualizarVistaPrevia()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-wrapper">
+    <div class="print-sheet">
+      <div>
+        <div class="inst-header">
+          <div class="inst-logo-box"><i data-lucide="building" style="width: 48px; height: 48px; color: #475569;"></i></div>
+          <div class="inst-title-box">
+            <h1>INSTITUCIÓN EDUCATIVA NUESTRA SEÑORA DEL PILAR</h1>
+            <h2>SISTEMA INTEGRADO DE GESTIÓN ESCOLAR — SEGUIMIENTO Y DEBIDO PROCESO</h2>
+            <div class="doc-type-title" id="previewTituloDoc">REGISTRO DE CONVIVENCIA ESCOLAR (LEY 1620 DE 2013)</div>
+          </div>
+          <div class="inst-meta-box">
+            <div>AÑO: <strong>2026</strong></div>
+            <div>FOLIO: <strong style="color:#dc2626;">OBS-042</strong></div>
+            <div>JORNADA: <strong>MAÑANA</strong></div>
+          </div>
+        </div>
+        <table class="data-table">
+          <tr>
+            <td class="label-cell">Estudiante:</td>
+            <td class="val-cell"><strong id="previewNombreEstudiante">Andrés Felipe Mendoza Gómez</strong></td>
+            <td class="label-cell">Doc. Identidad:</td>
+            <td class="val-cell" id="previewDocEstudiante">T.I. 1.082.345.123</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Grado / Grupo:</td>
+            <td class="val-cell"><strong>5°02</strong></td>
+            <td class="label-cell">Fecha y Hora:</td>
+            <td class="val-cell"><span id="previewFecha">27/08/2026</span> — <span id="previewHora">09:15 AM</span></td>
+          </tr>
+          <tr>
+            <td class="label-cell">Asignatura:</td>
+            <td class="val-cell" id="previewAsignatura">Lengua Castellana</td>
+            <td class="label-cell">Docente:</td>
+            <td class="val-cell"><strong id="preview-docente-nombre">Cargando...</strong></td>
+          </tr>
+        </table>
+        <div class="classification-bar">
+          <div class="class-item"><span class="class-checkbox" id="chkTipo1">✓</span><span>Tipo I (Leve)</span></div>
+          <div class="class-item"><span class="class-checkbox" id="chkTipo2">&nbsp;</span><span>Tipo II (Grave)</span></div>
+          <div class="class-item"><span class="class-checkbox" id="chkTipo3">&nbsp;</span><span>Tipo III (Gravísima)</span></div>
+          <div class="class-item"><span class="class-checkbox" id="chkTipoPIAR">&nbsp;</span><span>Pedagógico / PIAR</span></div>
+        </div>
+        <div class="section-block">
+          <div class="section-header"><span>1. DESCRIPCIÓN OBJETIVA DE LOS HECHOS</span><span style="font-size:8px;color:#64748b;">Factual y descriptivo</span></div>
+          <div class="section-content-box hechos-box" id="previewHechos"></div>
+        </div>
+        <div class="section-block">
+          <div class="section-header"><span>2. DESCARGOS Y VERSIÓN LIBRE DEL ESTUDIANTE</span><span style="font-size:8px;color:#64748b;">Art. 29 C.P.</span></div>
+          <div class="section-content-box descargos-box" id="previewDescargos"></div>
+        </div>
+        <div class="section-block">
+          <div class="section-header"><span>3. ACCIONES PEDAGÓGICAS Y COMPROMISOS ACORDADOS</span><span style="font-size:8px;color:#64748b;">Restaura y previene</span></div>
+          <div class="section-content-box compromisos-box" id="previewCompromisos"></div>
+        </div>
+      </div>
+      <div>
+        <div class="signatures-section">
+          <div class="signatures-title">Constancia de Notificación y Aceptación de Compromisos</div>
+          <div class="signatures-grid" id="previewGridFirmas"></div>
+        </div>
+        <div class="print-footer">
+          <span>Garantía de Debido Proceso Escolar — Ley 1620 de 2013 | Ley 1098 de 2006</span>
+          <span>I.E. Nuestra Señora del Pilar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <script>
+    const clienteSupabase = window.clienteSupabaseCompartido;
+    const toast = mostrarToast;
+
+    let estudiantes = [];
+    let materias = [];
+    let configuracion = {};
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Fetch dynamic data
+      const [resCfg, resEst, resMat] = await Promise.all([
+        clienteSupabase.from('configuracion_global').select('*').limit(1).single(),
+        clienteSupabase.from('estudiantes').select('id, nombre_completo, documento_identidad').eq('estado', 'Activo').order('nombre_completo'),
+        clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
+      ]);
+
+      if (resCfg.data) configuracion = resCfg.data;
+      if (resEst.data) estudiantes = resEst.data;
+      if (resMat.data) materias = resMat.data;
+
+      // Populate Institution Info
+      const instName = configuracion.nombre_institucion || 'INSTITUCIÓN EDUCATIVA';
+      const docName = configuracion.nombre_docente || 'Docente Titular';
+      const instYear = configuracion.año_actual || new Date().getFullYear();
+
+      document.querySelector('.inst-title-box h1').textContent = instName.toUpperCase();
+      document.querySelector('.inst-meta-box div:nth-child(1) strong').textContent = instYear;
+      document.getElementById('docente-nombre').textContent = docName;
+      document.getElementById('preview-docente-nombre').textContent = docName;
+
+      // Populate Students Dropdown
+      const selEst = document.getElementById('selEstudiante');
+      selEst.innerHTML = '<option value="">-- Selecciona un estudiante --</option>';
+      estudiantes.forEach((e) => {
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = `${e.nombre_completo}`;
+        selEst.appendChild(opt);
+      });
+
+      // Populate Subjects Dropdown
+      const selAsig = document.getElementById('selAsignatura');
+      selAsig.innerHTML = '<option value="">-- Selecciona una asignatura --</option>';
+      materias.forEach((m) => {
+        const opt = document.createElement('option');
+        opt.value = m.nombre_materia;
+        opt.textContent = m.nombre_materia;
+        selAsig.appendChild(opt);
+      });
+      
+      // Auto-set Date and Time
+      const now = new Date();
+      document.getElementById('txtFecha').value = now.toISOString().split('T')[0];
+      document.getElementById('txtHora').value = now.toTimeString().slice(0, 5);
+      
+      // Update Title Tag
+      if (configuracion.nombre_clase) {
+        document.getElementById('app-title-tag').textContent = 'Observador Estudiantil — ' + configuracion.nombre_clase;
+      }
+
+      onCambioTipo();
+    });
+
+    function getEstudianteSeleccionado() {
+      const id = document.getElementById('selEstudiante').value;
+      return estudiantes.find(e => String(e.id) === String(id));
+    }
+
+    const CATALOGO_SITUACIONES = {
+      'T1': [
+        {
+          texto: "1. Interrupción constante de la explicación de clase (levantarse sin permiso, ruido)",
+          acciones: [
+            "Se realizó una pausa pedagógica y se dio una instrucción clara, privada y objetiva sobre la conducta esperada.",
+            "Se indagaron las causas de la distracción y se registró la versión del estudiante en sus propias palabras.",
+            "Se otorgó un rol activo en el aula para canalizar la atención y energía del estudiante.",
+            "Se anotaron los hechos específicos y los llamados de atención, junto con la versión del estudiante.",
+            "Se fijó una fecha de revisión del compromiso en 8 días y se informó al acudiente sobre la conducta."
+          ]
+        },
+        {
+          texto: "2. Uso no autorizado de celulares o dispositivos distractores durante la sesión",
+          acciones: [
+            "Se solicitó el guardado del dispositivo de manera serena, evitando confrontaciones en público.",
+            "Se conversó sobre el impacto del distractor en el ritmo de aprendizaje del estudiante y el de sus compañeros.",
+            "Se permitió que el estudiante expresara el motivo de uso del dispositivo y se consignó su respuesta.",
+            "Se acordó que el dispositivo permanecerá en la mochila o en la mesa del docente durante la clase.",
+            "Se envió un reporte breve al acudiente para alinear pautas de uso responsable en casa."
+          ]
+        },
+        {
+          texto: "3. Discusiones o altercados verbales por puestos, turnos o útiles escolares",
+          acciones: [
+            "Se separó a los estudiantes involucrados temporalmente para reducir la tensión emocional.",
+            "Se recibieron los descargos e impresiones de cada estudiante de forma independiente.",
+            "Se facilitó un espacio de diálogo dirigido a la concertación de acuerdos de respeto mutuo.",
+            "Se registró el hecho en el observador tipificándolo como Tipo I, con sus respectivos acuerdos.",
+            "Se programó un seguimiento al cumplimiento de lo pactado en un plazo de 15 días."
+          ]
+        },
+        {
+          texto: "4. Lenguaje inapropiado o burlas esporádicas hacia compañeros de clase",
+          acciones: [
+            "Se frenó la interacción de inmediato señalando la incorrección del lenguaje utilizado.",
+            "Se reflexionó en privado con el estudiante sobre el efecto de las palabras en la convivencia escolar.",
+            "Se promovió una disculpa consciente o una acción reparadora hacia el compañero afectado.",
+            "Se documentó la versión del estudiante y su compromiso escrito de respetarse con sus pares.",
+            "Se programó un taller reflexivo en la hora de dirección de grupo sobre comunicación asertiva."
+          ]
+        },
+        {
+          texto: "5. Lanzamiento o deterioro menor e involuntario de material educativo de pares",
+          acciones: [
+            "Se detuvo el lanzamiento de objetos y se verificó que ningún estudiante haya resultado lastimado.",
+            "Se escuchó la explicación del estudiante sobre cómo y por qué ocurrieron los hechos.",
+            "Se acordó la reparación, ordenamiento o reposición del bien o material dañado.",
+            "Se anotó detalladamente el hecho en el observador, especificando el acuerdo reparador.",
+            "Se comunicó al acudiente lo sucedido y el compromiso asumido por su acudido."
+          ]
+        },
+        {
+          texto: "6. Llegadas tardías reiteradas al aula de clase o a la jornada escolar",
+          acciones: [
+            "Se permitió el ingreso al aula sin interrumpir la clase, registrando la hora exacta de llegada.",
+            "Se indagaron los motivos de la impuntualidad (transporte, rutinas de sueño o situaciones familiares).",
+            "Se registraron los motivos expresados por el estudiante en la ficha de seguimiento.",
+            "Se diseñó conjuntamente una estrategia de gestión del tiempo y preparación previa.",
+            "Se notificó al padre de familia para coordinar el cumplimiento de los horarios desde el hogar."
+          ]
+        },
+        {
+          texto: "7. Incumplimiento de las pautas de presentación personal o uniforme establecidas",
+          acciones: [
+            "Se abordó al estudiante en privado para no exponerlo frente al grupo.",
+            "Se verificó si existen dificultades socioeconómicas, climáticas o familiares para el cumplimiento.",
+            "Se consignaron las razones del incumplimiento expresadas por el estudiante.",
+            "Se estableció un plazo razonable para la normalización de la presentación personal.",
+            "Se reportó a bienestar escolar al identificarse una posible situación de desprotección o vulnerabilidad."
+          ]
+        }
+      ],
+      'T2': [
+        {
+          texto: "8. Agresión física leve (empujones, jaloneos) que no genera incapacidad médica",
+          acciones: [
+            "Se intervino inmediatamente para separar a los estudiantes y salvaguardar su integridad.",
+            "Se remitió al servicio de salud escolar para verificar que no existan lesiones ocultas.",
+            "Se tomó la versión escrita individual de cada uno de los involucrados.",
+            "Se documentó la falta como Tipo II y se convocó con urgencia a los acudientes.",
+            "Se remitió al Comité de Convivencia y Orientación Escolar con acta de compromiso no agresivo."
+          ]
+        },
+        {
+          texto: "9. Burlas u hostigamiento sistemático y repetido hacia un compañero (Acoso escolar / Bullying)",
+          acciones: [
+            "Se brindó un espacio seguro, apoyo emocional y contención inmediata al estudiante afectado.",
+            "Se revisaron las anotaciones previas en el observador para verificar la sistematicidad de la conducta.",
+            "Se recibió la versión escrita oficial tanto del estudiante agresor como de los testimonios.",
+            "Se notificó formalmente a los acudientes de las partes y se informó a Coordinación y Orientación.",
+            "Se establecieron compromisos pedagógicos estrictos de no agresión con fechas de seguimiento semanal."
+          ]
+        },
+        {
+          texto: "10. Difusión de comentarios difamatorios o burlas a través de redes sociales (Ciberacoso)",
+          acciones: [
+            "Se solicitó al acudiente/víctima guardar evidencia digital sin revictimizar al menor.",
+            "Se requirió al estudiante señalado y se registró su versión sobre la creación o difusión de la publicación.",
+            "Se convocó a reunión urgente con los padres de familia para exponer la gravedad del hecho.",
+            "Se reportó el caso formalmente para aplicar el procedimiento del Manual de Convivencia.",
+            "Se firmó un acuerdo pedagógico sobre uso ético de la tecnología con revisión a 15 días."
+          ]
+        },
+        {
+          texto: "11. Expresiones irrespetuosas u ofensas verbales severas hacia docentes o directivos",
+          acciones: [
+            "Se mantuvo la calma, evitando discusiones acaloradas, y se remitió al estudiante a coordinación.",
+            "Se permitió un espacio de enfriamiento y se tomó la declaración escrita del estudiante.",
+            "Se redactaron de forma objetiva las frases o conductas manifestadas, sin adjetivos subjetivos.",
+            "Se citó obligatoriamente a la familia para revisar la falta y acordar medidas reparadoras.",
+            "Se remitió a Orientación Escolar para trabajar aspectos de autorregulación y respeto a la autoridad."
+          ]
+        },
+        {
+          texto: "12. Daño intencional a la infraestructura, muebles o equipos del establecimiento educativo",
+          acciones: [
+            "Se detuvo la acción inmediatamente, se aseguró el área y se notificó a la administración del colegio.",
+            "Se registró en el observador la explicación del estudiante sobre los motivos del hecho.",
+            "Se formuló el reporte especificando el bien afectado, la fecha, la hora y los involucrados.",
+            "Se acordó con el acudiente el plan de reparación o restitución del bien dañado.",
+            "Se asignó una actividad de servicio escolar relacionada con el cuidado de los bienes comunes."
+          ]
+        }
+      ],
+      'T3': [
+        {
+          texto: "16. Presunta comisión de un delito (Tipo III) según la Ley 1620",
+          acciones: [
+            "Se garantizó la protección inmediata de los involucrados y se informó a la rectoría.",
+            "Se notificó de forma inmediata a la Policía de Infancia y Adolescencia.",
+            "Se citó de carácter urgente a los acudientes de los estudiantes implicados.",
+            "Se reportó el caso en el Sistema de Información Unificado de Convivencia Escolar (SIUCE).",
+            "Se remitió a las autoridades competentes y se inició el debido proceso disciplinario interno."
+          ]
+        }
+      ],
+      'PIAR': [
+        {
+          texto: "13. Incumplimiento reiterado en la entrega de tareas o talleres por falta de organización",
+          acciones: [
+            "Se indagó si la causa del incumplimiento es conceptual, de organización o familiar.",
+            "Se consignó la justificación dada por el estudiante al ser indagado sobre las tareas faltantes.",
+            "Se estableció flexibilización de fechas o ajustes razonables ante posibles barreras de aprendizaje.",
+            "Se definió un cronograma de entregas pendientes con fechas y horas límite.",
+            "Se informó al acudiente sobre el plan de apoyo para que realice seguimiento en el hogar."
+          ]
+        },
+        {
+          texto: "14. Bajo rendimiento persistente acompañado de apatía o desinterés académico",
+          acciones: [
+            "Se dialogó en privado para identificar posibles bloqueos emocionales o académicos.",
+            "Se identificaron las áreas de mayor interés del estudiante para vincularlas a la asignatura.",
+            "Se registró la percepción del estudiante sobre su desempeño y sus necesidades de apoyo.",
+            "Se asignó un compañero tutor para reforzar los temas de mayor dificultad.",
+            "Se acordó un plan de mejora con la familia y se fijó fecha de revisión en 15 días."
+          ]
+        },
+        {
+          texto: "15. Reconocimiento por avance significativo, liderazgo o superación de dificultades",
+          acciones: [
+            "Se felicitó al estudiante resaltando las acciones y el esfuerzo específico que demostró.",
+            "Se consignó el logro, felicitación o avance destacado en la ficha de seguimiento.",
+            "Se invitó al estudiante a apoyar la monitoría del curso o liderar proyectos del aula.",
+            "Se envió una nota al acudiente destacando el avance significativo del estudiante.",
+            "Se acordaron nuevas metas académicas o convivenciales para mantener su motivación."
+          ]
+        }
+      ]
+    };
+
+    function onCambioTipo() {
+      const tipo = document.getElementById('selTipo').value;
+      const selSit = document.getElementById('selSituacionCatalogo');
+      selSit.innerHTML = '';
+      
+      const situaciones = CATALOGO_SITUACIONES[tipo] || [];
+      
+      situaciones.forEach((sit, index) => {
+        const opt = document.createElement('option');
+        opt.value = index; 
+        opt.textContent = sit.texto;
+        selSit.appendChild(opt);
+      });
+      
+      const optOtro = document.createElement('option');
+      optOtro.value = 'otro'; 
+      optOtro.textContent = 'Otro caso / Redacción manual personalizada...';
+      selSit.appendChild(optOtro);
+      
+      onCambioSituacion();
+    }
+
+    function onCambioSituacion() {
+      const tipo = document.getElementById('selTipo').value;
+      const situacionIndex = document.getElementById('selSituacionCatalogo').value;
+      const selAcc = document.getElementById('selAccionDocente');
+      selAcc.innerHTML = '';
+      
+      let acciones = [];
+      if (situacionIndex === 'otro' || !CATALOGO_SITUACIONES[tipo] || !CATALOGO_SITUACIONES[tipo][situacionIndex]) {
+        acciones = [
+          "Se realizó un diálogo reflexivo y se establecieron acuerdos de mejora.",
+          "Se notificó al acudiente para realizar seguimiento en casa.",
+          "Se remitió el caso a Orientación Escolar para acompañamiento.",
+          "Se aplicó una acción pedagógica restaurativa según el manual de convivencia."
+        ];
+      } else {
+        acciones = CATALOGO_SITUACIONES[tipo][situacionIndex].acciones;
+      }
+      
+      acciones.forEach((txt, i) => {
+        const opt = document.createElement('option');
+        opt.value = i; 
+        opt.textContent = txt;
+        selAcc.appendChild(opt);
+      });
+      
+      reaplicarConectores();
+    }
+
+    function onCambioAccionDocente() { reaplicarConectores(); }
+    
+    function onSeleccionarEstudiante() {
+      const est = getEstudianteSeleccionado();
+      if(est) {
+        document.getElementById('txtDocEstudiante').value = est.documento_identidad || '';
+      } else {
+        document.getElementById('txtDocEstudiante').value = '';
+      }
+      reaplicarConectores();
+    }
+
+    function reaplicarConectores() {
+      const est = getEstudianteSeleccionado();
+      const nombreEst = est ? est.nombre_completo : '[ESTUDIANTE]';
+      const fechaRaw = document.getElementById('txtFecha').value;
+      const fecha = fechaRaw ? fechaRaw.split('-').reverse().join('/') : '';
+      const horaRaw = document.getElementById('txtHora').value;
+      let hora = horaRaw;
+      if (horaRaw) {
+        const [h, m] = horaRaw.split(':');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        hora = `${h12}:${m} ${ampm}`;
+      }
+      const asig = document.getElementById('selAsignatura').value || '[ASIGNATURA]';
+      const docName = configuracion.nombre_docente || 'Docente Titular';
+      const tipo = document.getElementById('selTipo').value;
+      
+      const selSitText = document.getElementById('selSituacionCatalogo').options[document.getElementById('selSituacionCatalogo').selectedIndex]?.text || '';
+      const selAccText = document.getElementById('selAccionDocente').options[document.getElementById('selAccionDocente').selectedIndex]?.text || '';
+      
+      let baseHechos = `El día ${fecha}, siendo aproximadamente las ${hora}, en el espacio pedagógico de ${asig} (Grado ${configuracion.grado || '5°02'}), se constató que el estudiante ${nombreEst} incurrió en una conducta que amerita intervención. `;
+      if (document.getElementById('selSituacionCatalogo').value !== 'otro') {
+          baseHechos += `Situación observada: ${selSitText}. `;
+      }
+      baseHechos += `Ante los hechos observados, el docente titular ${docName} procedió conforme al manual de convivencia y la Ley 1620 de 2013.`;
+      
+      document.getElementById('txtHechosEditor').value = baseHechos;
+      document.getElementById('txtDescargosEditor').value = `"El estudiante ${nombreEst}, en ejercicio pleno de su garantía constitucional al debido proceso (Art. 29 C.P.), manifiesta en su versión libre: 'Reconozco lo ocurrido y manifiesto mi compromiso de mejora'."`;
+      
+      let baseCompromisos = `1. ACCIÓN PEDAGÓGICA ADOPTADA POR EL DOCENTE:
+   • ${selAccText}.
+2. COMPROMISOS ASUMIDOS POR EL ESTUDIANTE:
+   • El estudiante ${nombreEst} se compromete a respetar los acuerdos establecidos.
+3. CORRESPONSABILIDAD FAMILIAR:
+   • El acudiente realizará seguimiento en casa.
+FECHA DE PRÓXIMA REVISIÓN: A definir.`;
+      
+      document.getElementById('txtCompromisosEditor').value = baseCompromisos;
+      actualizarVistaPrevia();
+    }
+
+    function actualizarVistaPrevia() {
+      const est = getEstudianteSeleccionado();
+      const nombreEst = est ? est.nombre_completo : 'Nombre del Estudiante';
+      const docEst = document.getElementById('txtDocEstudiante').value || '-';
+      const tipo = document.getElementById('selTipo').value;
+      const docName = configuracion.nombre_docente || 'Docente Titular';
+
+      document.getElementById('previewNombreEstudiante').textContent = nombreEst;
+      document.getElementById('previewDocEstudiante').textContent = docEst;
+      
+      document.title = nombreEst !== 'Nombre del Estudiante' ? `Observador - ${nombreEst}` : 'Observador Estudiantil';
+      
+      const fechaRaw = document.getElementById('txtFecha').value;
+      document.getElementById('previewFecha').textContent = fechaRaw ? fechaRaw.split('-').reverse().join('/') : '';
+      
+      const horaRaw = document.getElementById('txtHora').value;
+      let horaFormat = horaRaw;
+      if (horaRaw) {
+        const [h, m] = horaRaw.split(':');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        horaFormat = `${h12}:${m} ${ampm}`;
+      }
+      document.getElementById('previewHora').textContent = horaFormat;
+      document.getElementById('previewAsignatura').textContent = document.getElementById('selAsignatura').value || '-';
+
+      document.getElementById('chkTipo1').className = 'class-checkbox ' + (tipo === 'T1' ? 'checked' : '');
+      document.getElementById('chkTipo2').className = 'class-checkbox ' + (tipo === 'T2' ? 'checked' : '');
+      document.getElementById('chkTipo3').className = 'class-checkbox ' + (tipo === 'T3' ? 'checked' : '');
+      document.getElementById('chkTipoPIAR').className = 'class-checkbox ' + (tipo === 'PIAR' ? 'checked' : '');
+
+      document.getElementById('previewHechos').innerHTML = document.getElementById('txtHechosEditor').value.replace(/\\n/g, '<br>');
+      document.getElementById('previewDescargos').innerHTML = document.getElementById('txtDescargosEditor').value.replace(/\\n/g, '<br>');
+      document.getElementById('previewCompromisos').innerHTML = document.getElementById('txtCompromisosEditor').value.replace(/\\n/g, '<br>');
+
+      const grid = document.getElementById('previewGridFirmas');
+      grid.innerHTML = `
+        <div class="signature-item"><div class="sig-line"></div><div class="sig-name">${nombreEst}</div><div class="sig-role">Estudiante (Grado ${configuracion.grado || '5°02'})</div></div>
+        <div class="signature-item"><div class="sig-line"></div><div class="sig-name">Padre de Familia / Acudiente</div><div class="sig-role">C.C. ___________________</div></div>
+        <div class="signature-item"><div class="sig-line"></div><div class="sig-name" id="preview-docente-firma">${docName}</div><div class="sig-role">Docente Titular / Registra</div></div>
+        <div class="signature-item"><div class="sig-line"></div><div class="sig-name">Coordinación de Convivencia</div><div class="sig-role">Seguimiento Institucional</div></div>
+      `;
+    }
+
+  </script>
+
+
+</main>
+<div class="toast" id="toast"></div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

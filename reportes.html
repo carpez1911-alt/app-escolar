@@ -118,7 +118,13 @@ function actualizarSelectorActividad() {
   const materiaId = document.getElementById('filtro-materia').value;
   const actividad = document.getElementById('filtro-actividad');
   const actividadesFiltradas = materiaId ? estado.tareas.filter(t => String(t.materia_id) === String(materiaId)) : estado.tareas;
-  actividad.innerHTML = '<option value="">Todas las actividades</option>' + actividadesFiltradas.map(item => `<option value="${item.id}">${item.titulo}</option>`).join('');
+  if (actividadesFiltradas.length === 0) {
+    actividad.innerHTML = '<option value="">No hay actividades</option>';
+    actividad.disabled = true;
+  } else {
+    actividad.innerHTML = '<option value="">Todas las actividades</option>' + actividadesFiltradas.map(item => `<option value="${item.id}">${item.titulo}</option>`).join('');
+    actividad.disabled = false;
+  }
 }
 function fechaCalificacion(item) { return String(item.fecha_registro || '').slice(0, 10); }
 function fechaAsistencia(item) { return String(item.fecha || '').slice(0, 10); }

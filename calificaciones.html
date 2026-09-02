@@ -84,7 +84,11 @@
         <button class="primary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar</button>
         <button class="secondary-btn" id="btn-copiar-columna" type="button" title="Copiar columna" onclick="copiarColumna()" style="padding: 10px; min-width: auto;"><i data-lucide="copy" style="width: 18px; height: 18px; display: block;"></i></button>
         <button class="secondary-btn" id="btn-rellenar-uno" type="button" title="Rellenar vacíos con 1.0" onclick="rellenarConUno()" style="padding: 10px; min-width: auto;"><i data-lucide="edit-3" style="width: 18px; height: 18px; display: block;"></i></button>
-        <button class="primary-btn" id="btn-reporte-general" type="button" style="background-color: #25D366; border-color: #25D366; color: white;" onclick="enviarReporteGeneralCalificaciones()"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Reporte general</button>
+        <select id="tipo-reporte" class="form-control" style="width: auto; min-width: 150px; display: inline-block; margin-left: auto;">
+          <option value="general">Reporte General (Promedios)</option>
+          <option value="actividad">Reporte de Actividad Seleccionada</option>
+        </select>
+        <button class="primary-btn" id="btn-reporte-general" type="button" style="background-color: #25D366; border-color: #25D366; color: white;" onclick="enviarReporteGeneralCalificaciones()"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar Reporte</button>
       </div>
     </div>
   </section>
@@ -149,19 +153,52 @@ function promedioDeFila(fila) {
 }
 
 function enviarWhatsApp(nombre, promedio, periodo) {
-  if (promedio === '-') {
-    mostrarToast('El estudiante todavía no tiene calificaciones.');
-    return;
-  }
+  const tipoReporte = document.getElementById('tipo-reporte')?.value || 'general';
   const materia = document.getElementById('filtro-materia').selectedOptions[0]?.textContent || '';
-  const mensaje = ` *Reporte de Calificaciones*\n Estudiante: ${nombre}\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n\n📊 *Promedio Definitivo:* ${promedio}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+  const hoy = typeof fechaLocalISO === 'function' ? fechaLocalISO() : new Date().toISOString().slice(0, 10);
+  const fechaHoy = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(hoy) : hoy;
+
+  if (tipoReporte === 'general') {
+    if (promedio === '-') {
+      mostrarToast('El estudiante todavía no tiene calificaciones.');
+      return;
+    }
+    const mensaje = ` *Reporte de Calificaciones*\n Estudiante: ${nombre}\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n🗓️ Fecha: ${fechaHoy}\n\n📊 *Promedio Definitivo:* ${promedio}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+  } else {
+    const actividadSelect = document.getElementById('filtro-actividad');
+    const actividadId = actividadSelect.value;
+    if (!actividadId || actividadId === 'todas') {
+      mostrarToast('Selecciona una actividad específica para enviar su reporte.');
+      return;
+    }
+    const actividadNombre = actividadSelect.selectedOptions[0]?.textContent?.replace(' (Calificada)', '')?.trim();
+    
+    const estudiante = listaEstudiantes.find(e => e.nombre_completo === nombre);
+    const notaObj = notasCargadas.find(n => String(n.estudiante_id) === String(estudiante.id) && String(n.tarea_id) === String(actividadId));
+    const nota = (notaObj && notaObj.nota !== null) ? notaObj.nota : 'Sin calificar';
+    
+    const tarea = listaTareas.find(t => String(t.id) === String(actividadId));
+    let strFechaActividad = '';
+    if (notaObj && notaObj.fecha_registro) {
+      strFechaActividad = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(notaObj.fecha_registro) : notaObj.fecha_registro.slice(0, 10);
+    } else if (tarea && tarea.fecha_vencimiento) {
+      strFechaActividad = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(tarea.fecha_vencimiento) : tarea.fecha_vencimiento.slice(0, 10);
+    } else {
+      strFechaActividad = fechaHoy;
+    }
+    const infoFecha = strFechaActividad ? `\n🗓️ Fecha: ${strFechaActividad}` : '';
+
+    const mensaje = ` *Reporte de Actividad*\n Estudiante: ${nombre}\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n📝 Actividad: ${actividadNombre}${infoFecha}\n\n📊 *Nota:* ${nota}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+  }
 }
 
 function enviarReporteGeneralCalificaciones() {
   const materiaSelect = document.getElementById('filtro-materia');
   const materia = materiaSelect.selectedOptions[0]?.textContent;
   const periodo = document.getElementById('filtro-periodo').value;
+  const tipoReporte = document.getElementById('tipo-reporte')?.value || 'general';
 
   if (!materiaSelect.value || !periodo) {
     toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Selecciona una materia para generar el reporte general.');
@@ -172,15 +209,46 @@ function enviarReporteGeneralCalificaciones() {
     return;
   }
 
-  let msj = ` *Reporte Consolidado de Notas*\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n\n`;
-  
-  listaEstudiantes.forEach(est => {
-    const pro = promediosCargados.find(p => String(p.estudiante_id) === String(est.id));
-    const promedio = (pro && pro.promedio_definitivo !== null) ? pro.promedio_definitivo : 'Sin notas';
-    msj += `* ${est.nombre_completo}: *${promedio}*\n`;
-  });
+  const hoy = typeof fechaLocalISO === 'function' ? fechaLocalISO() : new Date().toISOString().slice(0, 10);
+  const fechaHoy = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(hoy) : hoy;
 
-  window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`, '_blank');
+  if (tipoReporte === 'general') {
+    let msj = ` *Reporte Consolidado de Notas*\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n🗓️ Fecha: ${fechaHoy}\n\n`;
+    
+    listaEstudiantes.forEach(est => {
+      const pro = promediosCargados.find(p => String(p.estudiante_id) === String(est.id));
+      const promedio = (pro && pro.promedio_definitivo !== null) ? pro.promedio_definitivo : 'Sin notas';
+      msj += `* ${est.nombre_completo}: *${promedio}*\n`;
+    });
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`, '_blank');
+  } else {
+    const actividadSelect = document.getElementById('filtro-actividad');
+    const actividadId = actividadSelect.value;
+    if (!actividadId || actividadId === 'todas') {
+      toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Selecciona una actividad específica para enviar su reporte.');
+      return;
+    }
+    const actividadNombre = actividadSelect.selectedOptions[0]?.textContent?.replace(' (Calificada)', '')?.trim();
+    const tarea = listaTareas.find(t => String(t.id) === String(actividadId));
+    let strFechaAct = '';
+    if (tarea && tarea.fecha_vencimiento) {
+      strFechaAct = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(tarea.fecha_vencimiento) : tarea.fecha_vencimiento.slice(0, 10);
+    } else {
+      strFechaAct = fechaHoy;
+    }
+    const infoFecha = strFechaAct ? `\n🗓️ Fecha de actividad: ${strFechaAct}` : '';
+
+    let msj = ` *Reporte de Actividad*\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n📝 Actividad: ${actividadNombre}${infoFecha}\n\n`;
+    
+    listaEstudiantes.forEach(est => {
+      const notaObj = notasCargadas.find(n => String(n.estudiante_id) === String(est.id) && String(n.tarea_id) === String(actividadId));
+      const nota = (notaObj && notaObj.nota !== null) ? notaObj.nota : 'Sin calificar';
+      msj += `* ${est.nombre_completo}: *${nota}*\n`;
+    });
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`, '_blank');
+  }
 }
 
 function actualizarPromedios(fila) {
@@ -212,8 +280,8 @@ async function cargarPlanilla() {
   tbody.innerHTML = `<tr><td colspan="15" class="loading">Cargando actividades del Periodo ${periodo}...</td></tr>`;
   const [resEst, resTareas, resNotas, resPromedios] = await Promise.all([
     clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
-    clienteSupabase.from('tareas').select('id, titulo, descripcion, materia_id, periodo, categorias_actividades(nombre)').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
-    clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota').eq('materia_id', materiaId).eq('periodo', periodo),
+    clienteSupabase.from('tareas').select('id, titulo, descripcion, materia_id, periodo, fecha_vencimiento, categorias_actividades(nombre)').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
+    clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota, fecha_registro').eq('materia_id', materiaId).eq('periodo', periodo),
     clienteSupabase.from('v_promedios_estudiantes').select('estudiante_id, promedio_definitivo').eq('materia_id', materiaId).eq('periodo', periodo)
   ]);
   if (resEst.error || resTareas.error || resNotas.error || resPromedios?.error) { 

@@ -162,6 +162,52 @@ Este documento sirve como registro continuo de los cambios, decisiones arquitect
 - **Motivo de registro:** Mantener un acceso directo y centralizado al panel de control de la base de datos para facilitar futuras migraciones y consultas directas en el SQL Editor.
 
 ### 4. Perfeccionamiento de Notificaciones (Toasts)
+- **Causa Raíz:** Una condición de carrera (*race condition*). La inyección del menú en el DOM (via  pp.js) ocurría un milisegundo después de que el motor de iconos (lucide.createIcons()) ya había escaneado la página. Por ende, los iconos del menú inyectado quedaban en blanco a menos que la página tuviera elementos dinámicos que forzaran una re-renderización posterior.
+- **Solución:** Se forzó explícitamente el llamado a window.lucide.createIcons() directamente dentro de la función inyectarMenuGlobal() de  pp.js. De esta manera, tan pronto como el menú es creado en memoria, sus iconos son renderizados, garantizando estabilidad visual en el 100% de las páginas.
+
+## Fecha: 30 de Agosto de 2026 (Perfeccionamiento UI/UX y Funcionalidades Clave)
+
+### 1. Panel de Calificaciones (Usabilidad y Matriz Completa)
+- **Titulares Ajustables:** Se modificó el comportamiento CSS de las cabeceras de la tabla (`th`) para que el texto baje a una nueva línea automáticamente (como en Excel o Word al ajustar texto), reduciendo dramáticamente el ancho de las columnas sin depender de arrastre táctil que falla en móviles.
+- **Vista de 'Todas las actividades':** Se implementó una vista de mega-planilla que muestra cada actividad en una columna individual simultáneamente.
+- **Navegación Inteligente de Matriz:** Se adaptó la lógica interna para soportar el pegado de datos desde Excel y el uso de la tecla `Enter` en cualquier columna de la mega-planilla, detectando automáticamente la columna activa para desplazarse hacia abajo de forma perfecta.
+
+### 2. Dashboard y Navegación General
+- **Estructura HTML Saneada:** Se corrigió un error de duplicidad en el código HTML de `dashboard.html` que mostraba por duplicado la sección de próximas actividades y el calendario.
+- **Clasificación Inteligente de Tareas:** La tarjeta de 'Tareas registradas' ahora divide las tareas en 3 etiquetas visuales (Pendientes, Vencidas y Cumplidas) con autoselección al darles clic, desplegando un modal interactivo.
+- **Calendario Interactivo Avanzado:** 
+  - Se implementaron flechas de navegación lateral para retroceder o avanzar de mes.
+  - Se añadieron hipervínculos dinámicos (Deep Links): Al hacer clic en un día con actividades, se abre el modal correspondiente; al hacer clic en una actividad desde el modal, el sistema redirige automáticamente a la planilla de calificaciones de esa actividad exacta.
+
+### 3. Reportes y Filtros Integrados
+- **Selectores Inteligentes (Actividades por Materia):** Se corrigió la lógica en `reportes.html`. Ahora, al seleccionar una 'Materia', el filtro secundario de 'Actividad' se autocompleta mostrando exclusivamente las actividades asociadas a esa materia.
+- **Optimización Espacial de Filtros:** Se consolidaron los botones de texto ('Aplicar', 'Limpiar') en botones cuadrados compactos empleando iconos (lupa, brocha) para maximizar el área útil en pantallas pequeñas.
+
+### 4. Corrección de Fugas HTML en WhatsApp
+- **Problema:** Los reportes de asistencia y calificaciones enviados a WhatsApp incluían etiquetas HTML `<i data-lucide="..."></i>`, ensuciando el texto del mensaje.
+- **Solución:** Se reemplazaron las inyecciones de iconos HTML en las cadenas de texto de WhatsApp por Emojis Unicode nativos (📅, 📖, 📊), garantizando una presentación limpia, estructurada y legible en los dispositivos móviles de los acudientes.
+
+## Fecha: 31 de Agosto de 2026 (Configuración Global y Base de Datos)
+
+### 1. Refactorización de Configuración Global (`configuracion.html`)
+- **Problema:** La configuración estaba estática. El nombre de la clase "Mi Clase 502" estaba duro en el HTML y no se podían configurar horas de clase por materia ni el nombre de la institución.
+- **Solución:** 
+  - Se rediseñó la vista `configuracion.html` con una grilla compacta y limpia.
+  - Se agregaron campos dinámicos para Nombre de Clase y Nombre de Institución.
+  - Se modificó la entrada del horario para que en lugar de un `checkbox`, el usuario pueda ingresar el número exacto de horas que dicta cada materia por día.
+  - Se configuró `app.js` para extraer el nombre de la clase globalmente desde la base de datos e inyectarlo dinámicamente en el `<title>` y en la barra lateral `.brand-title`.
+
+### 2. Actualización de Modelo de Datos (Supabase SQL)
+- **Migración requerida:** Se agregaron las columnas `nombre_clase` (text, default 'Mi Clase 502') y `nombre_institucion` (text, nullable) a la tabla `configuracion_global`.
+- **Migración requerida:** Se agregó la columna `horas_clase` (integer, default 1) a la tabla `horario_semanal`.
+
+### 3. Registro de Proyecto y Credenciales Base
+- **Plataforma:** Supabase
+- **Referencia del Proyecto (URL ID):** `qmgyobgahiyvgysjjhax`
+- **URL del Dashboard:** [https://supabase.com/dashboard/project/qmgyobgahiyvgysjjhax](https://supabase.com/dashboard/project/qmgyobgahiyvgysjjhax)
+- **Motivo de registro:** Mantener un acceso directo y centralizado al panel de control de la base de datos para facilitar futuras migraciones y consultas directas en el SQL Editor.
+
+### 4. Perfeccionamiento de Notificaciones (Toasts)
 - **Problema:** Los mensajes emergentes (toasts) al guardar mostraban las etiquetas HTML de los iconos (ej. `<i data-lucide="..."></i>`) como texto plano y desaparecían muy rápido, brindando una experiencia confusa.
 - **Solución:**
   - Se refactorizó la función global `mostrarToast()` en `app.js`.
@@ -169,3 +215,19 @@ Este documento sirve como registro continuo de los cambios, decisiones arquitect
   - Se introdujo lógica inteligente que identifica si el texto contiene palabras clave como "error" o "guardado" para inyectar automáticamente colores (verde para éxito, rojo para errores) mediante las nuevas clases CSS `.toast-success` y `.toast-error`.
   - Se reescribió el texto de confirmación a un limpio "Guardado exitosamente".
   - Se amplió el tiempo de visualización de 3.2 a 4.0 segundos.
+
+## [31 de Agosto de 2026] - Horarios y Observador Legal
+
+### 1. Módulo de Horario Semanal (`horario.html`)
+- **Interfaz Interactiva:** Se diseñó una matriz semanal interactiva (Lunes a Viernes) para asignar materias a bloques de tiempo.
+- **Base de Datos:** Se crearon las tablas `horario_bloques` y `horario_semanal` en Supabase con políticas de seguridad (RLS).
+- **Lógica SQL:** Se escribieron funciones PL/pgSQL (`upsert_bloques` y `upsert_matriz_horario`) para insertar y actualizar las configuraciones del horario sin problemas de duplicados (upsert).
+
+### 2. Módulo de Observador Estudiantil (`observador.html`)
+- **Ajustes en BD:** Se agregaron `documento_identidad` y `nombre_acudiente` a la tabla `estudiantes`.
+- **Catálogo Legal (Ley 1620):** Se integró un catálogo completo con 15 situaciones tipificadas (Tipos I, II, III y PIAR) y 5 acciones pedagógicas predefinidas por situación.
+- **Generación de Reportes Automática:** El sistema ahora toma la información y redacta automáticamente el reporte de incidentes en tercera persona y tono formal, con vista previa en tiempo real.
+- **UI Profesional:** Se removieron los emojis, reemplazándolos con iconos de la librería **Lucide Icons** para un aspecto profesional y limpio. Se ajustaron las firmas estáticas en el PDF.
+
+### 3. Navegación
+- Se enlazaron ambos módulos (`horario.html` y `observador.html`) a la barra lateral (Sidebar) en `app.js` y a los paneles rápidos de `dashboard.html`.

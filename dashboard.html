@@ -7,94 +7,180 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
+<style>
+  .dashboard-columns { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+  @media (max-width: 900px) { .dashboard-columns { grid-template-columns: 1fr; } }
+  .mini-calendar { width: 100%; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 15px; }
+  .cal-header { background: var(--primary); color: white; text-align: center; padding: 10px; font-weight: bold; font-size: 14px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); }
+  .cal-day-name { background: var(--surface); text-align: center; font-size: 11px; padding: 5px 0; font-weight: 600; color: var(--muted); }
+  .cal-day { background: white; height: 50px; padding: 5px; font-size: 12px; position: relative; cursor: pointer; transition: background 0.2s; }
+  .cal-day:hover { background: #f8fafc; }
+  .cal-day.today { font-weight: bold; color: var(--primary-dark); background: #eff6ff; }
+  .cal-day.has-task::after { content: ''; display: block; width: 6px; height: 6px; background: #eab308; border-radius: 50%; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); }
+  .cal-day.muted { color: #cbd5e1; }
+  .subject-summary { margin-bottom: 10px; }
+  .subject-tag { display: inline-block; padding: 4px 8px; background: var(--primary-soft); color: var(--primary-dark); border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; font-weight: 500; }
+</style>
+
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <div class="brand-mark">🎓</div>
+    <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Panel del docente</div></div>
   </div>
-  <div class="nav-actions">
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
 <section class="hero">
   <div>
     <div class="eyebrow">● Resumen docente</div>
-    <h1>Buenos días, docente 👋</h1>
+    <h1>Buenos días, <span id="nombre-docente">docente</span></h1>
     <p>Aquí tienes una vista rápida de lo que requiere atención.</p>
   </div>
-  <div class="date-pill">📅 <span id="fecha">Cargando...</span></div>
+  <div class="date-pill" style="display:flex; align-items:center; gap: 15px; padding: 5px 15px;">
+    <span><i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> <span id="fecha">Cargando...</span></span>
+    <a href="index.html" style="text-decoration:none; background:var(--primary); color:white; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; display:flex; align-items:center;"><i data-lucide="check-square" style="width: 14px; height: 14px; margin-right: 4px;"></i> Pasar Asistencia</a>
+  </div>
 </section>
 
 <section class="dashboard-grid">
-  <div class="card stat"><div class="stat-label">👥 Estudiantes activos</div><div class="stat-value" id="total-estudiantes">—</div><div class="stat-note">Grupo 502 · Año <span id="lbl-anio">...</span></div></div>
-  <div class="card stat"><div class="stat-label">📝 Tareas registradas</div><div class="stat-value" id="total-tareas">—</div><div class="stat-note">Periodo actual: <span id="lbl-periodo">...</span></div></div>
-  <div class="card stat"><div class="stat-label">⚡ Acciones rápidas</div><div class="action-row" style="margin-top:10px"><a class="primary-btn" href="index.html" style="text-decoration:none; text-align:center;">Registrar asistencia</a></div></div>
+  <div class="card stat">
+    <div class="stat-label"><i data-lucide="users" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiantes activos</div>
+    <div class="stat-value" id="total-estudiantes">—</div>
+    <div class="stat-note"><span id="nombre-grupo">Grupo Principal</span> · Año <span id="lbl-anio">...</span></div>
+    
+    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: flex; gap: 20px;">
+      <div>
+        <div class="stat-label" style="font-size: 12px; color: var(--success);"><i data-lucide="user-check" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Presentes</div>
+        <div class="stat-value" id="asistencia-presentes" style="font-size: 22px; color: var(--success);">—</div>
+      </div>
+      <div>
+        <div class="stat-label" style="font-size: 12px; color: var(--danger);"><i data-lucide="user-x" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Ausentes</div>
+        <div class="stat-value" id="asistencia-ausentes" style="font-size: 22px; color: var(--danger);">—</div>
+      </div>
+    </div>
+    <div class="stat-note" id="asistencia-detalle" style="margin-top: 8px; font-size: 11px;">Calculando...</div>
+  </div>
+  <div class="card stat" style="justify-content: flex-start;">
+    <div class="stat-label"><i data-lucide="edit-3" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividades Pendientes</div>
+    <div class="stat-value" id="tareas-pendientes-semana" style="margin-bottom: 5px;">—</div>
+    <div class="stat-note" style="margin-bottom: 15px; margin-top: 0;">Para hoy y los próximos 7 días</div>
+    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto;">
+      <button onclick="abrirModalTareasClasificadas('pendientes')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--primary-soft); color:var(--primary-dark); cursor:pointer;">Pendientes (<span id="count-pendientes">0</span>)</button>
+      <button onclick="abrirModalTareasClasificadas('vencidas')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--danger-soft); color:var(--danger); cursor:pointer;">Vencidas (<span id="count-vencidas">0</span>)</button>
+      <button onclick="abrirModalTareasClasificadas('cumplidas')" style="flex:1; border:none; padding:6px; border-radius:6px; font-size:11px; font-weight:700; background:var(--success-soft); color:var(--success); cursor:pointer;">Cumplidas (<span id="count-cumplidas">0</span>)</button>
+    </div>
+  </div>
+
 </section>
 
-<!-- ASIGNAR TAREA CON FECHA INTELIGENTE -->
-<section class="card">
-  <div class="toolbar">
-    <div><div class="toolbar-title">📝 Asignar Nueva Actividad / Tarea</div></div>
-  </div>
-  <div class="form-content">
-      <div class="form-group">
-          <label for="materia-tarea">Materia:</label>
-          <select id="materia-tarea" class="form-control" onchange="sugerirFechaClase()">
-              <option value="">Seleccione una materia...</option>
-          </select>
+<div class="dashboard-columns">
+  <div class="col-main">
+    <!-- HORARIO VISUAL -->
+    <section class="card">
+      <div class="toolbar">
+        <div>
+          <div class="toolbar-title"><i data-lucide="clock" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Horario de Clases</div>
+        </div>
+        <div style="display:flex; background:var(--surface); border-radius:8px; padding:4px;">
+          <button id="btn-vista-dia" onclick="setVistaHorario('dia')" style="border:none; background:white; padding:4px 12px; border-radius:6px; font-size:12px; font-weight:600; box-shadow:var(--shadow-sm); cursor:pointer; color:var(--text);">Hoy</button>
+          <button id="btn-vista-semana" onclick="setVistaHorario('semana')" style="border:none; background:transparent; padding:4px 12px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text-secondary); cursor:pointer;">Semana</button>
+        </div>
       </div>
+      <div class="table-container" style="overflow-x:auto;">
+        <div id="horario-render-area" style="min-width: 600px; padding-bottom: 10px;">
+           <div class="loading">Cargando horario...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ASIGNAR TAREA CON FECHA INTELIGENTE -->
+    <section class="card">
+      <div class="toolbar">
+        <div><div class="toolbar-title"><i data-lucide="edit" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;"></i> Asignar Nueva Actividad</div></div>
+      </div>
+      <div class="form-content">
           <div class="form-group">
-            <label for="periodo-tarea">Periodo académico:</label>
-            <select id="periodo-tarea" class="form-control" onchange="cambiarPeriodoTarea()"></select>
+              <label for="materia-tarea">Materia:</label>
+              <select id="materia-tarea" class="form-control" onchange="sugerirFechaClase()">
+                  <option value="">Seleccione una materia...</option>
+              </select>
           </div>
-      <div class="form-group">
-          <label for="categoria-tarea">Categoría de Actividad:</label>
-          <select id="categoria-tarea" class="form-control">
-              <option value="">Seleccione una categoría...</option>
-          </select>
-      </div>
-      <div class="form-group">
-          <label for="titulo-tarea">Título de la Actividad:</label>
-          <input type="text" id="titulo-tarea" class="form-control" placeholder="Ej. Taller de Fracciones">
-      </div>
-      <div class="form-group">
-          <label for="desc-tarea">Descripción:</label>
-          <textarea id="desc-tarea" rows="2" class="form-control" placeholder="Instrucciones de la actividad"></textarea>
-      </div>
-      <div class="form-group">
-          <label for="fecha-tarea">Fecha de Entrega / Clase:</label>
-          <input type="date" id="fecha-tarea" class="form-control">
-          <small id="sugerencia-nota" style="color: var(--muted); margin-top: 4px; display: block;"></small>
-      </div>
-      <button class="primary-btn" onclick="crearTarea()">💾 Guardar y Publicar Actividad</button>
-  </div>
-</section>
+              <div class="form-group">
+                <label for="periodo-tarea">Periodo académico:</label>
+                <select id="periodo-tarea" class="form-control" onchange="cambiarPeriodoTarea()"></select>
+              </div>
+          <div class="form-group">
+              <label for="categoria-tarea">Categoría de Actividad:</label>
+              <select id="categoria-tarea" class="form-control">
+                  <option value="">Seleccione una categoría...</option>
+              </select>
+          </div>
+          <div class="form-group">
+              <label for="titulo-tarea">Título de la Actividad:</label>
+              <input type="text" id="titulo-tarea" class="form-control" placeholder="Ej. Taller de Fracciones">
+          </div>
+          <div class="form-group">
+              <label for="desc-tarea">Descripción:</label>
+              <textarea id="desc-tarea" rows="2" class="form-control" placeholder="Instrucciones de la actividad"></textarea>
+          </div>
+          <div class="form-group">
+              <label for="fecha-tarea">Fecha de Entrega / Clase:</label>
+              <input type="date" id="fecha-tarea" class="form-control">
+              <small id="sugerencia-nota" style="color: var(--muted); margin-top: 4px; display: block;"></small>
+          </div>
+          <button class="primary-btn" onclick="crearTarea()"><i data-lucide="save" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Guardar y Publicar</button>
 
-<section class="card task-card">
-  <div class="toolbar">
-    <div><div class="toolbar-title">📌 Actividades Registradas</div><div class="toolbar-meta">Ordenadas por fecha de vencimiento</div></div>
+      </div>
+    </section>
+
+    <section class="card task-card">
+      <div class="toolbar" style="cursor: pointer; user-select: none;" onclick="toggleAccordion('contenedor-tareas', 'icono-acordeon')">
+        <div>
+          <div class="toolbar-title">
+            <i data-lucide="chevron-down" id="icono-acordeon" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px; transition: transform 0.3s;"></i> 
+            Actividades de la Semana
+          </div>
+          <div class="toolbar-meta">Agrupadas por materia (clic para ocultar/mostrar)</div>
+        </div>
+      </div>
+      <div class="task-list" id="contenedor-tareas" style="transition: max-height 0.3s ease; max-height: 2000px; overflow: hidden;"><div class="loading">Cargando actividades…</div></div>
+    </section>
   </div>
-  <div class="task-list" id="contenedor-tareas"><div class="loading">Cargando actividades…</div></div>
-</section>
+
+  <div class="col-side">
+    <section class="card">
+      <div class="toolbar" style="margin-bottom: 10px;">
+        <div><div class="toolbar-title">Próximos 7 Días</div></div>
+      </div>
+      <div id="resumen-materias" class="subject-summary">
+        <div class="loading">Cargando resumen...</div>
+      </div>
+      <div id="mini-calendario" class="mini-calendar"></div>
+    </section>
+  </div>
+</div>
 </main>
 <div class="toast" id="toast"></div>
+
+<!-- MODAL DE TAREAS CLASIFICADAS -->
+<div id="modal-tareas-clasificadas" class="modal-overlay">
+  <div class="modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="margin: 0; font-size: 18px;" id="mtc-titulo">Tareas</h3>
+      <button onclick="document.getElementById('modal-tareas-clasificadas').classList.remove('open')" style="color: var(--text-secondary);"><i data-lucide="x" style="width: 24px; height: 24px;"></i></button>
+    </div>
+    <div id="mtc-lista" class="task-list" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+      <!-- Las tareas se inyectan aquí -->
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -105,8 +191,12 @@ document.getElementById('fecha').textContent = formatearFechaCorta(fechaLocalISO
 
 let materias = [];
 let horarios = [];
+let horarioBloques = [];
+let vistaHorario = 'dia';
 let marcoPeriodoActual = null;
 let marcosPeriodos = [];
+let tareasGlobal = [];
+let fechaCalendarioActivo = new Date();
 
 function esFinDeSemana(fecha) {
   const diaSemana = fecha.getDay(); // 0 = Domingo, 6 = Sábado
@@ -122,15 +212,18 @@ function getLeyendaCategoria(nombre) {
 }
 
 async function cargarDatosIniciales() {
-  const [resMat, resHor, resCfg, resCat] = await Promise.all([
+  const [resMat, resHor, resCfg, resCat, resBloq] = await Promise.all([
     clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia'),
-    clienteSupabase.from('horario_semanal').select('id, materia_id, dia_semana'),
-    clienteSupabase.from('configuracion_global').select('año_actual, cantidad_periodos, periodo_actual').limit(1).single(),
-    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre')
+    clienteSupabase.from('horario_semanal').select('id, materia_id, dia_semana, bloque_id'),
+    clienteSupabase.from('configuracion_global').select('año_actual, cantidad_periodos, periodo_actual, nombre_institucion').limit(1).single(),
+    clienteSupabase.from('categorias_actividades').select('id, nombre, porcentaje').order('nombre'),
+    clienteSupabase.from('horario_bloques').select('*').order('orden')
   ]);
 
   materias = resMat.data || [];
   horarios = resHor.data || [];
+  horarioBloques = resBloq.data || [];
+  renderizarHorarioVisual();
 
   const selectCat = document.getElementById('categoria-tarea');
   if (resCat.data) {
@@ -141,9 +234,26 @@ async function cargarDatosIniciales() {
   select.innerHTML = '<option value="">Seleccione una materia...</option>';
   materias.forEach(m => select.innerHTML += `<option value="${m.id}">${m.nombre_materia}</option>`);
 
+  // Obtener datos del usuario logueado
+  const { data: { session } } = await clienteSupabase.auth.getSession();
+  if (session && session.user) {
+    // Si tienes el nombre guardado en los metadatos o usamos el correo
+    const nombreUsuario = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+    // Capitalizar la primera letra
+    const nombreCapitalizado = nombreUsuario.charAt(0).toUpperCase() + nombreUsuario.slice(1);
+    
+    // Usar el nombre de la institución (docente) configurado, o el nombre de usuario como fallback
+    const nombreFinal = (resCfg.data && resCfg.data.nombre_institucion) ? resCfg.data.nombre_institucion : nombreCapitalizado;
+    document.getElementById('nombre-docente').textContent = nombreFinal;
+  } else if (resCfg.data && resCfg.data.nombre_institucion) {
+    document.getElementById('nombre-docente').textContent = resCfg.data.nombre_institucion;
+  }
+
   if (resCfg.data) {
-    document.getElementById('lbl-anio').textContent = resCfg.data.año_actual;
-    document.getElementById('lbl-periodo').textContent = `Periodo ${resCfg.data.periodo_actual}`;
+    document.getElementById('lbl-anio').textContent = resCfg.data.año_actual || new Date().getFullYear();
+    // Asignar el nombre del grupo dinámicamente si existe en tu BD, por ahora lo dejamos genérico o basado en la config
+    document.getElementById('nombre-grupo').textContent = resCfg.data.nombre_grupo || 'Tu Grupo';
+
     const selectorPeriodo = document.getElementById('periodo-tarea');
     const cantidadPeriodos = Number(resCfg.data.cantidad_periodos) || 3;
     selectorPeriodo.innerHTML = Array.from({ length: cantidadPeriodos }, (_, index) => `<option value="${index + 1}">Periodo ${index + 1}</option>`).join('');
@@ -154,6 +264,19 @@ async function cargarDatosIniciales() {
   }
 
   cargarDashboard();
+}
+
+function toggleAccordion(contentId, iconId) {
+  const content = document.getElementById(contentId);
+  const icon = document.getElementById(iconId);
+  if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+    content.style.maxHeight = '0px';
+    icon.style.transform = 'rotate(-90deg)';
+  } else {
+    content.style.maxHeight = content.scrollHeight + 50 + 'px';
+    icon.style.transform = 'rotate(0deg)';
+    setTimeout(() => { if (content.style.maxHeight !== '0px') content.style.maxHeight = 'none'; }, 300);
+  }
 }
 
 function cambiarPeriodoTarea() {
@@ -176,13 +299,12 @@ function sugerirFechaClase() {
     return;
   }
 
-  // Buscar el próximo día válido de clase a partir de mañana
   let fechaBusqueda = new Date();
   let encontrada = false;
 
   for (let i = 1; i <= 14; i++) {
     fechaBusqueda.setDate(fechaBusqueda.getDate() + 1);
-    let diaSem = fechaBusqueda.getDay(); // 1 = Lunes, 5 = Viernes
+    let diaSem = fechaBusqueda.getDay(); 
     const fechaISO = fechaLocalISO(fechaBusqueda);
     const dentroPeriodo = !marcoPeriodoActual || (fechaISO >= marcoPeriodoActual.fecha_inicio && fechaISO <= marcoPeriodoActual.fecha_fin);
     if (diasClase.includes(diaSem) && !esFinDeSemana(fechaBusqueda) && dentroPeriodo) {
@@ -194,7 +316,7 @@ function sugerirFechaClase() {
   if (encontrada) {
     const fechaISO = fechaLocalISO(fechaBusqueda);
     inputFecha.value = fechaISO;
-    infoSpan.textContent = `💡 Sugerencia automática: Próxima clase según horario (${formatearFechaCorta(fechaISO)}).`;
+    infoSpan.textContent = 'Sugerencia automática: Próxima clase según horario.';
   }
 }
 
@@ -206,28 +328,9 @@ async function crearTarea() {
   const fechaVencimiento = document.getElementById('fecha-tarea').value;
 
   if (!materiaId || !categoriaId || !titulo || !fechaVencimiento) {
-    mostrarToast('⚠️ Completa los campos obligatorios, incluyendo la categoría');
+    mostrarToast('Completa los campos obligatorios');
     return;
   }
-
-  if (marcoPeriodoActual && (fechaVencimiento < marcoPeriodoActual.fecha_inicio || fechaVencimiento > marcoPeriodoActual.fecha_fin)) {
-    mostrarToast('La fecha debe estar dentro del periodo académico actual.');
-    return;
-  }
-  if (!marcoPeriodoActual) {
-    mostrarToast('No existe un marco académico para el periodo seleccionado.');
-    return;
-  }
-
-  const diaSeleccionado = new Date(`${fechaVencimiento}T00:00:00`).getDay();
-  const diasMateria = horarios.filter(h => h.materia_id === parseInt(materiaId)).map(h => h.dia_semana);
-  if (diasMateria.length && !diasMateria.includes(diaSeleccionado)) {
-    if (!confirm('⚠️ Atención: La fecha seleccionada no coincide con los días de clase configurados en el horario para esta materia.\n\n¿Deseas registrar la actividad de todos modos (crear una novedad)?')) {
-      return;
-    }
-  }
-
-  const periodoActual = Number.parseInt(document.getElementById('periodo-tarea').value, 10) || 1;
 
   const { error } = await clienteSupabase.from('tareas').insert([{
     materia_id: parseInt(materiaId),
@@ -235,53 +338,435 @@ async function crearTarea() {
     titulo: titulo,
     descripcion: descripcion,
     fecha_vencimiento: fechaVencimiento,
-    periodo: periodoActual
+    periodo: parseInt(document.getElementById('periodo-tarea').value)
   }]);
 
   if (error) {
     mostrarToast('Error al guardar la actividad');
   } else {
-    mostrarToast('✓ Actividad registrada correctamente');
-    document.getElementById('materia-tarea').value = '';
-    document.getElementById('titulo-tarea').value = '';
-    document.getElementById('desc-tarea').value = '';
-    document.getElementById('fecha-tarea').value = '';
-    document.getElementById('sugerencia-nota').textContent = '';
+    mostrarToast('Actividad registrada correctamente');
     cargarDashboard();
   }
 }
 
 async function cargarDashboard() {
-  const [{ data: estudiantes }, { data: tareas }] = await Promise.all([
+  const fechaHoy = fechaLocalISO();
+  const [{ data: estudiantes }, { data: tareas }, { data: asistenciaHoy }, { data: calificaciones }] = await Promise.all([
     clienteSupabase.from('estudiantes').select('id').eq('estado', 'Activo'),
-    clienteSupabase.from('tareas').select('*, materias(nombre_materia)').order('fecha_vencimiento', { ascending: true })
+    clienteSupabase.from('tareas').select('*, materias(nombre_materia), categorias_actividades(nombre)').order('fecha_vencimiento', { ascending: true }),
+    clienteSupabase.from('asistencia').select('estado').eq('fecha', fechaHoy),
+    clienteSupabase.from('calificaciones').select('tarea_id').not('nota', 'is', null)
   ]);
 
-  document.getElementById('total-estudiantes').textContent = estudiantes ? estudiantes.length : 0;
-  document.getElementById('total-tareas').textContent = tareas ? tareas.length : 0;
+  const totalActivos = estudiantes ? estudiantes.length : 0;
+  document.getElementById('total-estudiantes').textContent = totalActivos;
 
+  if (asistenciaHoy && asistenciaHoy.length > 0) {
+    const presentes = asistenciaHoy.filter(a => a.estado === 'P' || a.estado === 'T' || a.estado === 'Presente' || a.estado === 'Tarde').length;
+    const ausentes = asistenciaHoy.filter(a => a.estado === 'A' || a.estado === 'E' || a.estado === 'Ausente' || a.estado === 'Excusa').length;
+    
+    document.getElementById('asistencia-presentes').textContent = presentes;
+    document.getElementById('asistencia-ausentes').textContent = ausentes;
+    document.getElementById('asistencia-detalle').textContent = "Asistencia guardada";
+  } else {
+    document.getElementById('asistencia-presentes').textContent = "—";
+    document.getElementById('asistencia-ausentes').textContent = "—";
+    document.getElementById('asistencia-detalle').textContent = "No se ha tomado asistencia hoy";
+  }
+
+  const notasPorTarea = {};
+  if (calificaciones && calificaciones.length > 0) {
+    calificaciones.forEach(c => {
+      notasPorTarea[c.tarea_id] = (notasPorTarea[c.tarea_id] || 0) + 1;
+    });
+  }
+
+  let pend = 0, venc = 0, cump = 0;
+  window.tareasClasificadas = { pendientes: [], vencidas: [], cumplidas: [] };
+
+  (tareas || []).forEach(t => {
+    const calificados = notasPorTarea[t.id] || 0;
+    t.completada = (totalActivos > 0 && calificados >= totalActivos);
+    
+    if (t.completada) {
+      cump++;
+      window.tareasClasificadas.cumplidas.push(t);
+    } else if (t.fecha_vencimiento < fechaHoy) {
+      venc++;
+      window.tareasClasificadas.vencidas.push(t);
+    } else {
+      pend++;
+      window.tareasClasificadas.pendientes.push(t);
+    }
+  });
+
+  document.getElementById('count-pendientes').textContent = pend;
+  document.getElementById('count-vencidas').textContent = venc;
+  document.getElementById('count-cumplidas').textContent = cump;
+  
+  // Destacar tareas pendientes para la semana actual
+  const enUnaSemana = new Date();
+  enUnaSemana.setDate(enUnaSemana.getDate() + 7);
+  const tareasSemanaActiva = window.tareasClasificadas.pendientes.filter(t => {
+    const d = new Date(t.fecha_vencimiento + "T00:00:00");
+    return d <= enUnaSemana;
+  }).length;
+  document.getElementById('tareas-pendientes-semana').textContent = tareasSemanaActiva;
+
+  tareasGlobal = tareas || [];
+  renderizarActividadesSemana(tareasGlobal);
+  generarResumenMaterias(tareasGlobal);
+  generarCalendario(tareasGlobal);
+  
+  setTimeout(() => { if (window.lucide) lucide.createIcons(); }, 100);
+}
+
+function renderizarActividadesSemana(tareas) {
   const cont = document.getElementById('contenedor-tareas');
-  if (!tareas || tareas.length === 0) {
-    cont.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div>No hay actividades pendientes.</div>';
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const enUnaSemana = new Date(hoy); enUnaSemana.setDate(hoy.getDate() + 7);
+  
+  const tareasSemana = tareas.filter(t => {
+    const d = new Date(t.fecha_vencimiento + "T00:00:00");
+    return d >= hoy && d <= enUnaSemana;
+  });
+
+  if (tareasSemana.length === 0) {
+    cont.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="check-circle" style="width: 32px; height: 32px; color: var(--muted);"></i></div>No hay actividades para esta semana.</div>';
     return;
   }
 
-  cont.innerHTML = '';
-  tareas.forEach(t => {
-    const row = document.createElement('div'); row.className = 'task';
-    row.innerHTML = `
-      <div class="datos-tarea">
-        <span class="task-badge">${t.materias?.nombre_materia || 'General'}</span>
-        <div class="task-title">${t.titulo}</div>
-        <div class="task-desc">${t.descripcion || 'Sin descripción adicional'} · <em>Periodo ${t.periodo}</em></div>
-      </div>
-      <div class="deadline">Entrega:<br>${formatearFechaCorta(t.fecha_vencimiento)}</div>
-    `;
-    cont.appendChild(row);
+  const agrupadas = {};
+  const completadas = [];
+  
+  tareasSemana.forEach(t => {
+    if (t.completada) {
+      completadas.push(t);
+    } else {
+      const mat = t.materias?.nombre_materia || 'General';
+      if (!agrupadas[mat]) agrupadas[mat] = [];
+      agrupadas[mat].push(t);
+    }
   });
+
+  cont.innerHTML = '';
+  for (const [materia, lista] of Object.entries(agrupadas)) {
+    const color = getColorMateria(materia);
+    const seccion = document.createElement('div');
+    seccion.innerHTML = `<h3 style="margin: 15px 0 10px; font-size: 14px; color: ${color}; border-bottom: 2px solid ${color}40; padding-bottom: 5px;">${materia}</h3>`;
+    
+    lista.forEach(t => {
+      const row = document.createElement('div'); row.className = 'task';
+      row.innerHTML = `
+        <div class="datos-tarea">
+          <div class="task-title" style="color: ${color};">${t.titulo}</div>
+          <div class="task-desc">${t.descripcion || 'Sin descripción adicional'} · <em>Periodo ${t.periodo}</em> · <strong style="color:var(--text-secondary);">${t.categorias_actividades?.nombre || 'Sin categoría'}</strong></div>
+        </div>
+        <div class="deadline">Entrega:<br>${formatearFechaCorta(t.fecha_vencimiento)}</div>
+      `;
+      seccion.appendChild(row);
+    });
+    cont.appendChild(seccion);
+  }
+  
+  if (completadas.length > 0) {
+    const seccionFinal = document.createElement('div');
+    seccionFinal.innerHTML = `<h3 style="margin: 25px 0 10px; font-size: 13px; color: var(--muted); border-bottom: 1px dashed var(--border); padding-bottom: 5px;"><i data-lucide="check-circle" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> 100% Calificadas (Terminadas)</h3>`;
+    
+    completadas.forEach(t => {
+      const row = document.createElement('div'); 
+      row.className = 'task';
+      row.style.opacity = '0.6';
+      row.style.background = '#f8fafc';
+      const mat = t.materias?.nombre_materia || 'General';
+      row.innerHTML = `
+        <div class="datos-tarea" style="text-decoration: line-through; color: var(--muted);">
+          <div class="task-title" style="color: var(--muted);">${t.titulo} <span style="font-size: 11px; font-weight: normal;">(${mat})</span></div>
+          <div class="task-desc">${t.descripcion || 'Sin descripción adicional'}</div>
+        </div>
+        <div class="deadline" style="color: var(--muted);">Lista</div>
+      `;
+      seccionFinal.appendChild(row);
+    });
+    cont.appendChild(seccionFinal);
+  }
+}
+
+function mostrarDetalleDia(fechaISO) {
+  const tareasDelDia = tareasGlobal.filter(t => t.fecha_vencimiento === fechaISO);
+  if (tareasDelDia.length === 0) return;
+  
+  document.getElementById('mtc-titulo').textContent = "Actividades del " + formatearFechaCorta(fechaISO);
+  const contenedor = document.getElementById('mtc-lista');
+  contenedor.innerHTML = '';
+  
+  tareasDelDia.forEach(t => {
+      const mat = t.materias?.nombre_materia || 'General';
+      const div = document.createElement('div');
+      div.className = 'task-item-clickable';
+      div.style.cssText = 'padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;';
+      div.innerHTML = `
+        <div style="flex:1; min-width: 150px;">
+          <div style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+            <div><i data-lucide="book-open" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>${mat} · Per. ${t.periodo}</div>
+            <div style="background: var(--primary-soft); color: var(--primary-dark); padding: 2px 6px; border-radius: 4px; font-size: 10px;">${t.categorias_actividades?.nombre || 'Sin categoría'}</div>
+          </div>
+          <div style="font-weight:600; font-size:14px; color:var(--text);">${t.titulo}</div>
+        </div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-align:right;">
+          <i data-lucide="calendar-days" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i>${formatearFechaCorta(t.fecha_vencimiento)}
+        </div>
+      `;
+      div.onclick = () => {
+        window.location.href = `calificaciones.html?materia_id=${t.materia_id}&periodo=${t.periodo}&tarea_id=${t.id}`;
+      };
+      contenedor.appendChild(div);
+  });
+  
+  document.getElementById('modal-tareas-clasificadas').classList.add('open');
+  if(window.lucide) window.lucide.createIcons();
+}
+
+function generarResumenMaterias(tareas) {
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const enUnaSemana = new Date(hoy); enUnaSemana.setDate(hoy.getDate() + 7);
+  
+  const tareasSemana = tareas.filter(t => {
+    const d = new Date(t.fecha_vencimiento + "T00:00:00");
+    return d >= hoy && d <= enUnaSemana;
+  });
+  
+  const resumen = document.getElementById('resumen-materias');
+  if(tareasSemana.length === 0) {
+    resumen.innerHTML = '<span style="color:var(--muted); font-size:13px;">Ninguna para esta semana.</span>';
+    return;
+  }
+  
+  const conteo = {};
+  tareasSemana.forEach(t => {
+    if (!t.completada) {
+      const mat = t.materias?.nombre_materia || 'General';
+      conteo[mat] = (conteo[mat] || 0) + 1;
+    }
+  });
+  
+  if(Object.keys(conteo).length === 0) {
+     resumen.innerHTML = '<span style="color:var(--muted); font-size:13px;">Ninguna pendiente para esta semana.</span>';
+     return;
+  }
+  
+  resumen.innerHTML = Object.entries(conteo).map(([mat, cant]) => {
+    const color = getColorMateria(mat);
+    return `<span class="subject-tag" style="background-color: ${color}20; color: ${color}; border: 1px solid ${color}40;">${mat}: ${cant}</span>`;
+  }).join('');
+}
+
+
+function setVistaHorario(vista) {
+  vistaHorario = vista;
+  const btnDia = document.getElementById('btn-vista-dia');
+  const btnSemana = document.getElementById('btn-vista-semana');
+  
+  if(vista === 'dia') {
+    btnDia.style.background = 'white';
+    btnDia.style.boxShadow = 'var(--shadow-sm)';
+    btnDia.style.color = 'var(--text)';
+    
+    btnSemana.style.background = 'transparent';
+    btnSemana.style.boxShadow = 'none';
+    btnSemana.style.color = 'var(--text-secondary)';
+  } else {
+    btnSemana.style.background = 'white';
+    btnSemana.style.boxShadow = 'var(--shadow-sm)';
+    btnSemana.style.color = 'var(--text)';
+    
+    btnDia.style.background = 'transparent';
+    btnDia.style.boxShadow = 'none';
+    btnDia.style.color = 'var(--text-secondary)';
+  }
+  renderizarHorarioVisual();
+}
+
+function renderizarHorarioVisual() {
+  const area = document.getElementById('horario-render-area');
+  
+  if(horarioBloques.length === 0) {
+    area.innerHTML = '<div class="empty">No hay bloques horarios definidos. Ve a Configuración.</div>';
+    return;
+  }
+
+  const mapMaterias = {};
+  materias.forEach(m => mapMaterias[m.id] = m.nombre_materia);
+
+  let html = '';
+  
+  if(vistaHorario === 'semana') {
+    // Vista Semanal Completa
+    html += '<table style="width:100%; border-collapse:collapse; margin-top:10px;">';
+    html += '<thead><tr><th style="border:1px solid var(--border); padding:8px; background:#f8fafc; width:120px;">Bloque</th>';
+    const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+    dias.forEach(d => html += `<th style="border:1px solid var(--border); padding:8px; background:#f8fafc; text-align:center;">${d}</th>`);
+    html += '</tr></thead><tbody>';
+    
+    horarioBloques.forEach(b => {
+      html += '<tr>';
+      if(b.tipo === 'Descanso') {
+        html += `<td style="border:1px solid var(--border); padding:8px; background:#f8fafc;"><strong>${b.nombre}</strong><br><span style="font-size:11px; color:var(--muted);">${b.hora_inicio} - ${b.hora_fin}</span></td>`;
+        html += `<td colspan="5" style="border:1px solid var(--border); padding:8px; text-align:center; background:#f1f5f9; color:var(--muted); font-weight:600;">DESCANSO</td>`;
+      } else {
+        html += `<td style="border:1px solid var(--border); padding:8px; background:#f8fafc;"><strong>${b.nombre}</strong><br><span style="font-size:11px; color:var(--muted);">${b.hora_inicio} - ${b.hora_fin}</span></td>`;
+        for(let dia=1; dia<=5; dia++) {
+          const match = horarios.find(h => h.dia_semana === dia && h.bloque_id === b.id);
+          if(match) {
+            const nombreM = mapMaterias[match.materia_id] || 'Materia';
+            const color = getColorMateria(nombreM);
+            html += `<td style="border:1px solid var(--border); padding:8px; text-align:center; cursor:pointer; background:${color}10;" onclick="window.location.href='actividades.html?materia_id=${match.materia_id}'">
+              <span style="font-weight:600; color:${color}; font-size:13px;">${nombreM}</span>
+            </td>`;
+          } else {
+            html += `<td style="border:1px solid var(--border); padding:8px; text-align:center; color:var(--muted); font-size:12px;">Libre</td>`;
+          }
+        }
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  } else {
+    // Vista Día (Hoy)
+    const diaReal = new Date().getDay();
+    const diaSemana = (diaReal >= 1 && diaReal <= 5) ? diaReal : 1; // Si es finde, mostramos Lunes
+    
+    html += '<div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">';
+    
+    horarioBloques.forEach(b => {
+      if(b.tipo === 'Descanso') {
+         html += `
+         <div style="display:flex; align-items:center; padding:12px; border-radius:8px; background:#f1f5f9; border:1px solid var(--border);">
+            <div style="width:100px; color:var(--text-secondary); font-weight:600; font-size:13px;">
+              ${b.hora_inicio}<br><span style="font-size:11px; font-weight:normal;">${b.hora_fin}</span>
+            </div>
+            <div style="flex:1; text-align:center; font-weight:bold; color:var(--muted); font-size:14px; letter-spacing:2px;">
+              ${b.nombre.toUpperCase()}
+            </div>
+         </div>`;
+      } else {
+         const match = horarios.find(h => h.dia_semana === diaSemana && h.bloque_id === b.id);
+         if(match) {
+           const nombreM = mapMaterias[match.materia_id] || 'Materia';
+           const color = getColorMateria(nombreM);
+           html += `
+           <div style="display:flex; align-items:center; padding:12px; border-radius:8px; background:white; border:1px solid var(--border); box-shadow:var(--shadow-sm); cursor:pointer; transition:transform 0.2s;" onclick="window.location.href='actividades.html?materia_id=${match.materia_id}'">
+              <div style="width:100px; color:var(--text-secondary); font-weight:600; font-size:13px;">
+                ${b.hora_inicio}<br><span style="font-size:11px; font-weight:normal; color:var(--muted);">${b.hora_fin}</span>
+              </div>
+              <div style="width:4px; height:35px; background:${color}; border-radius:4px; margin-right:15px;"></div>
+              <div style="flex:1;">
+                <div style="font-weight:700; color:var(--text); font-size:15px;">${nombreM}</div>
+                <div style="font-size:12px; color:var(--text-secondary);">${b.nombre}</div>
+              </div>
+              <div><i data-lucide="chevron-right" style="color:var(--muted); width:20px; height:20px;"></i></div>
+           </div>`;
+         } else {
+           // Hora libre
+           html += `
+           <div style="display:flex; align-items:center; padding:12px; border-radius:8px; background:#fafafa; border:1px dashed var(--border);">
+              <div style="width:100px; color:var(--muted); font-weight:600; font-size:13px;">
+                ${b.hora_inicio}<br><span style="font-size:11px; font-weight:normal;">${b.hora_fin}</span>
+              </div>
+              <div style="flex:1; font-weight:600; color:var(--muted); font-size:13px; font-style:italic;">Hora libre</div>
+           </div>`;
+         }
+      }
+    });
+    html += '</div>';
+  }
+  
+  area.innerHTML = html;
+  if(window.lucide) window.lucide.createIcons();
+}
+
+function cambiarMesCalendario(delta) {
+  fechaCalendarioActivo.setMonth(fechaCalendarioActivo.getMonth() + delta);
+  generarCalendario(tareasGlobal);
+}
+
+function generarCalendario(tareas) {
+  const hoyReal = new Date();
+  const mes = fechaCalendarioActivo.getMonth();
+  const anio = fechaCalendarioActivo.getFullYear();
+  
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+  
+  const fechasTareas = new Set(tareas.map(t => t.fecha_vencimiento));
+  
+  const nombresDias = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  const mesNombre = fechaCalendarioActivo.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  
+  let html = `<div class="cal-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <button onclick="cambiarMesCalendario(-1)" style="background: none; border: none; color: white; cursor: pointer; padding: 0 5px;" title="Mes anterior"><i data-lucide="chevron-left" style="width:18px;height:18px;"></i></button>
+      <span>${mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1)}</span>
+      <button onclick="cambiarMesCalendario(1)" style="background: none; border: none; color: white; cursor: pointer; padding: 0 5px;" title="Mes siguiente"><i data-lucide="chevron-right" style="width:18px;height:18px;"></i></button>
+    </div><div class="cal-grid">`;
+  nombresDias.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
+  
+  // Espacios vacíos antes del primer día
+  for(let i=0; i < primerDia; i++) html += `<div class="cal-day muted"></div>`;
+  
+  // Días del mes
+  for(let i=1; i <= diasEnMes; i++) {
+    const fechaISO = `${anio}-${String(mes+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    const esHoy = (anio === hoyReal.getFullYear() && mes === hoyReal.getMonth() && i === hoyReal.getDate()) ? 'today' : '';
+    const tieneTarea = fechasTareas.has(fechaISO) ? 'has-task' : '';
+    html += `<div class="cal-day ${esHoy} ${tieneTarea}" title="${tieneTarea ? 'Ver actividades' : ''}" ${tieneTarea ? `onclick="mostrarDetalleDia('${fechaISO}')"` : ''}>${i}</div>`;
+  }
+  
+  html += `</div>`;
+  document.getElementById('mini-calendario').innerHTML = html;
+  if(window.lucide) window.lucide.createIcons();
+}
+
+function abrirModalTareasClasificadas(tipo) {
+  const lista = window.tareasClasificadas[tipo] || [];
+  const titulos = { pendientes: "Tareas Pendientes (Futuras/Hoy)", vencidas: "Tareas Vencidas (Falta calificar)", cumplidas: "Tareas Completadas (100% Calificadas)" };
+  document.getElementById('mtc-titulo').textContent = titulos[tipo];
+  
+  const contenedor = document.getElementById('mtc-lista');
+  contenedor.innerHTML = '';
+  
+  if(lista.length === 0) {
+    contenedor.innerHTML = '<div class="empty">No hay tareas en esta categoría.</div>';
+  } else {
+    lista.forEach(t => {
+      const mat = t.materias?.nombre_materia || 'General';
+      const div = document.createElement('div');
+      div.className = 'task-item-clickable';
+      div.style.cssText = 'padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;';
+      div.innerHTML = `
+        <div style="flex:1; min-width: 150px;">
+          <div style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+            <div><i data-lucide="book-open" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>${mat} · Per. ${t.periodo}</div>
+            <div style="background: var(--primary-soft); color: var(--primary-dark); padding: 2px 6px; border-radius: 4px; font-size: 10px;">${t.categorias_actividades?.nombre || 'Sin categoría'}</div>
+          </div>
+          <div style="font-weight:600; font-size:14px; color:var(--text);">${t.titulo}</div>
+        </div>
+        <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-align:right;">
+          <i data-lucide="calendar-days" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i>${formatearFechaCorta(t.fecha_vencimiento)}
+        </div>
+      `;
+      div.onclick = () => {
+        window.location.href = `calificaciones.html?materia_id=${t.materia_id}&periodo=${t.periodo}&tarea_id=${t.id}`;
+      };
+      contenedor.appendChild(div);
+    });
+  }
+  
+  document.getElementById('modal-tareas-clasificadas').classList.add('open');
+  if(window.lucide) window.lucide.createIcons();
 }
 
 cargarDatosIniciales();
 </script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

@@ -7,40 +7,102 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
 <nav class="navbar">
-  <div class="brand"><div class="brand-mark">🎓</div><div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Reportes docentes</div></div></div>
-  <div class="nav-actions"><div class="menu-wrap" id="menuWrap"><button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>      <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
-      </div></div></div>
-</nav>
+  <div class="brand">
+    <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Reportes docentes</div></div>
+  </div>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
+
 <main class="page">
-  <section class="hero"><div><div class="eyebrow">● Consulta académica</div><h1>Reportes y filtros</h1><p>Consulta el historial de calificaciones y asistencia de tu grupo.</p></div><div class="date-pill">📅 <span id="fecha-reporte"></span></div></section>
-  <section class="card report-panel">
-    <div class="report-tabs"><button class="report-tab active" data-reporte="calificaciones">📝 Calificaciones</button><button class="report-tab" data-reporte="asistencia">📋 Asistencia</button></div>
-    <div class="filter-grid">
-      <div class="form-group"><label for="filtro-periodo">Periodo académico</label><select class="form-control" id="filtro-periodo"></select></div>
-      <div class="form-group"><label for="filtro-materia">Materia</label><select class="form-control" id="filtro-materia"><option value="">Todas las materias</option></select></div>
-      <div class="form-group"><label for="filtro-alumno">Alumno</label><select class="form-control" id="filtro-alumno"><option value="">Todos los alumnos</option></select></div>
-      <div class="form-group attendance-only"><label for="filtro-estado">Estado</label><select class="form-control" id="filtro-estado"><option value="">Todos</option><option value="PRESENTE">Presente</option><option value="EXCUSA">Excusa</option><option value="TARDANZA">Tardanza</option><option value="AUSENTE">Ausente</option></select></div>
-      <div class="filter-actions"><button class="primary-btn" id="btn-aplicar">🔎 Aplicar filtros</button><button class="secondary-btn" id="btn-limpiar">Limpiar</button></div>
+  <section class="hero">
+    <div>
+      <div class="eyebrow">● Consulta académica</div>
+      <h1>Reportes y filtros</h1>
+      <p>Consulta el historial de calificaciones y asistencia de tu grupo.</p>
+    </div>
+    <div class="date-pill">
+      <i data-lucide="calendar-days" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>
+      <span id="fecha-reporte"></span>
     </div>
   </section>
-  <section class="card" style="padding:0"><div class="toolbar"><div><div class="toolbar-title" id="titulo-tabla">Calificaciones encontradas</div><div class="toolbar-meta" id="meta-tabla">Cargando...</div></div><button class="secondary-btn" id="btn-exportar">⬇ Exportar CSV</button></div><div class="table-container"><table><thead id="reporte-head"></thead><tbody id="reporte-body"><tr><td class="loading">Cargando información...</td></tr></tbody></table></div></section>
-</main><div class="toast" id="toast"></div>
+
+  <section class="card report-panel">
+    <div class="report-tabs">
+      <button class="report-tab active" data-reporte="calificaciones"><i data-lucide="edit" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Calificaciones</button>
+      <button class="report-tab" data-reporte="asistencia"><i data-lucide="clipboard-list" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Asistencia</button>
+    </div>
+    <div class="filter-grid">
+      <div class="form-group">
+        <label for="filtro-periodo">Periodo académico</label>
+        <select class="form-control" id="filtro-periodo"></select>
+      </div>
+      <div class="form-group">
+        <label for="filtro-materia">Materia</label>
+        <select class="form-control" id="filtro-materia">
+          <option value="">Todas las materias</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="filtro-alumno">Alumno</label>
+        <select class="form-control" id="filtro-alumno">
+          <option value="">Todos los alumnos</option>
+        </select>
+      </div>
+      <div class="form-group grades-only">
+        <label for="filtro-actividad">Actividad</label>
+        <select class="form-control" id="filtro-actividad">
+          <option value="">Todas las actividades</option>
+        </select>
+      </div>
+      <div class="form-group attendance-only">
+        <label for="filtro-fecha">Fecha exacta</label>
+        <input type="date" class="form-control" id="filtro-fecha">
+      </div>
+      <div class="form-group attendance-only">
+        <label for="filtro-estado">Estado</label>
+        <select class="form-control" id="filtro-estado">
+          <option value="">Todos</option>
+          <option value="PRESENTE">Presente</option>
+          <option value="EXCUSA">Excusa</option>
+          <option value="TARDANZA">Tardanza</option>
+          <option value="AUSENTE">Ausente</option>
+        </select>
+      </div>
+      <div class="filter-actions" style="display: flex; gap: 10px; align-items: center;">
+        <button class="primary-btn" id="btn-aplicar" title="Aplicar filtros" style="padding: 10px; min-width: auto;"><i data-lucide="search" style="width: 18px; height: 18px; display: block;"></i></button>
+        <button class="secondary-btn" id="btn-limpiar" title="Limpiar filtros" style="padding: 10px; min-width: auto;"><i data-lucide="brush" style="width: 18px; height: 18px; display: block;"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="padding:0">
+    <div class="toolbar">
+      <div>
+        <div class="toolbar-title" id="titulo-tabla">Calificaciones encontradas</div>
+        <div class="toolbar-meta" id="meta-tabla">Cargando...</div>
+      </div>
+      <button class="secondary-btn" id="btn-exportar" style="white-space:nowrap;"><i data-lucide="download" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Exportar CSV</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead id="reporte-head"></thead>
+        <tbody id="reporte-body"><tr><td class="loading">Cargando información...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
 </div>
+
 <script>
 const supabaseReportes = window.clienteSupabaseCompartido;
-const estado = { tipo: 'calificaciones', calificaciones: [], asistencias: [], materias: [], estudiantes: [], marcos: [], periodoActual: 1, totalPeriodos: 3 };
+const estado = { tipo: 'calificaciones', calificaciones: [], asistencias: [], materias: [], estudiantes: [], marcos: [], tareas: [], promedios: [], periodoActual: 1, totalPeriodos: 3 };
 const hoy = fechaLocalISO();
 document.getElementById('fecha-reporte').textContent = formatearFechaCorta(hoy);
 document.querySelectorAll('.attendance-only').forEach(item => { item.hidden = true; });
@@ -50,6 +112,19 @@ function poblarSelectores() {
   const alumno = document.getElementById('filtro-alumno');
   materia.innerHTML = '<option value="">Todas las materias</option>' + estado.materias.map(item => `<option value="${item.id}">${item.nombre_materia}</option>`).join('');
   alumno.innerHTML = '<option value="">Todos los alumnos</option>' + estado.estudiantes.map(item => `<option value="${item.id}">${item.nombre_completo}</option>`).join('');
+  actualizarSelectorActividad();
+}
+function actualizarSelectorActividad() {
+  const materiaId = document.getElementById('filtro-materia').value;
+  const actividad = document.getElementById('filtro-actividad');
+  const actividadesFiltradas = materiaId ? estado.tareas.filter(t => String(t.materia_id) === String(materiaId)) : estado.tareas;
+  if (actividadesFiltradas.length === 0) {
+    actividad.innerHTML = '<option value="">No hay actividades</option>';
+    actividad.disabled = true;
+  } else {
+    actividad.innerHTML = '<option value="">Todas las actividades</option>' + actividadesFiltradas.map(item => `<option value="${item.id}">${item.titulo}</option>`).join('');
+    actividad.disabled = false;
+  }
 }
 function fechaCalificacion(item) { return String(item.fecha_registro || '').slice(0, 10); }
 function fechaAsistencia(item) { return String(item.fecha || '').slice(0, 10); }
@@ -57,13 +132,17 @@ function registrosFiltrados() {
   const periodo = document.getElementById('filtro-periodo').value;
   const materia = document.getElementById('filtro-materia').value;
   const alumno = document.getElementById('filtro-alumno').value;
+  const actividad = document.getElementById('filtro-actividad').value;
   const estadoAsistencia = document.getElementById('filtro-estado').value;
+  const fechaExacta = document.getElementById('filtro-fecha').value;
   const origen = estado.tipo === 'calificaciones' ? estado.calificaciones : estado.asistencias;
   const marco = estado.marcos.find(item => String(item.periodo) === periodo);
   return origen.filter(item => {
     const fecha = estado.tipo === 'calificaciones' ? fechaCalificacion(item) : fechaAsistencia(item);
     const coincidePeriodo = estado.tipo === 'calificaciones' ? String(item.periodo) === periodo : (!marco || (fecha >= marco.fecha_inicio && fecha <= marco.fecha_fin));
-    return coincidePeriodo && (!materia || String(item.materia_id) === materia) && (!alumno || String(item.estudiante_id) === alumno) && (!estadoAsistencia || item.estado === estadoAsistencia);
+    const coincideFechaExacta = (estado.tipo === 'asistencia' && fechaExacta) ? (fecha === fechaExacta) : true;
+    const coincideActividad = (estado.tipo === 'calificaciones' && actividad) ? (String(item.tarea_id) === actividad) : true;
+    return coincidePeriodo && (!materia || String(item.materia_id) === materia) && (!alumno || String(item.estudiante_id) === alumno) && (!estadoAsistencia || item.estado === estadoAsistencia) && coincideFechaExacta && coincideActividad;
   });
 }
 function dibujarReporte() {
@@ -73,22 +152,44 @@ function dibujarReporte() {
   const esCalificaciones = estado.tipo === 'calificaciones';
   document.getElementById('titulo-tabla').textContent = esCalificaciones ? 'Calificaciones encontradas' : 'Asistencia encontrada';
   document.getElementById('meta-tabla').textContent = `${filas.length} registro${filas.length === 1 ? '' : 's'} con los filtros actuales`;
-  head.innerHTML = esCalificaciones ? '<tr><th>Fecha</th><th>Alumno</th><th>Materia</th><th>Periodo</th><th>Nota</th></tr>' : '<tr><th>Fecha</th><th>Alumno</th><th>Estado</th></tr>';
-  if (!filas.length) { body.innerHTML = `<tr><td colspan="5" class="empty">No hay registros para los filtros seleccionados.</td></tr>`; return; }
-  body.innerHTML = filas.map(item => esCalificaciones ? `<tr><td>${formatearFechaCorta(fechaCalificacion(item))}</td><td class="text-left">${item.estudiantes?.nombre_completo || nombreEstudiante(item.estudiante_id)}</td><td>${item.materias?.nombre_materia || nombreMateria(item.materia_id)}</td><td>${item.periodo || '-'}</td><td class="nota-destacada">${item.nota}</td></tr>` : `<tr><td>${formatearFechaCorta(fechaAsistencia(item))}</td><td class="text-left">${nombreEstudiante(item.estudiante_id)}</td><td><span class="estado-badge estado-${String(item.estado || '').toLowerCase()}">${item.estado || '-'}</span></td></tr>`).join('');
+  head.innerHTML = esCalificaciones ? '<tr><th>Fecha</th><th>Alumno</th><th>Materia</th><th>Actividad</th><th>Nota</th><th>Promedio</th></tr>' : '<tr><th>Fecha</th><th>Alumno</th><th>Estado</th></tr>';
+  if (!filas.length) { body.innerHTML = `<tr><td colspan="6" class="empty">No hay registros para los filtros seleccionados.</td></tr>`; return; }
+  body.innerHTML = filas.map(item => {
+    if (esCalificaciones) {
+      const promedio = estado.promedios.find(p => String(p.estudiante_id) === String(item.estudiante_id) && String(p.materia_id) === String(item.materia_id) && String(p.periodo) === String(item.periodo))?.promedio_definitivo || '-';
+      return `<tr><td>${formatearFechaCorta(fechaCalificacion(item))}</td><td class="text-left">${item.estudiantes?.nombre_completo || nombreEstudiante(item.estudiante_id)}</td><td>${item.materias?.nombre_materia || nombreMateria(item.materia_id)}</td><td>${item.tareas?.titulo || 'Actividad #' + item.tarea_id}</td><td class="nota-destacada">${item.nota}</td><td class="promedio-col">${promedio}</td></tr>`;
+    } else {
+      return `<tr><td>${formatearFechaCorta(fechaAsistencia(item))}</td><td class="text-left">${nombreEstudiante(item.estudiante_id)}</td><td><span class="estado-badge estado-${String(item.estado || '').toLowerCase()}">${item.estado || '-'}</span></td></tr>`;
+    }
+  }).join('');
 }
 function nombreEstudiante(id) { return estado.estudiantes.find(item => String(item.id) === String(id))?.nombre_completo || `Alumno #${id}`; }
 function nombreMateria(id) { return estado.materias.find(item => String(item.id) === String(id))?.nombre_materia || `Materia #${id}`; }
 async function cargarDatos() {
-  const [configuracion, marcos, estudiantes, materias, calificaciones, asistencias] = await Promise.all([
+  const body = document.getElementById('reporte-body');
+  if (body) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--muted);"><i data-lucide="loader" class="lucide-spin" style="width:20px;height:20px;margin-bottom:8px;"></i><div>Cargando datos del reporte...</div></td></tr>';
+    if (window.lucide) lucide.createIcons();
+  }
+
+  const [configuracion, marcos, estudiantes, materias, calificaciones, asistencias, tareas, promedios] = await Promise.all([
     supabaseReportes.from('configuracion_global').select('cantidad_periodos, periodo_actual').limit(1).maybeSingle(),
     supabaseReportes.from('marcos_periodos').select('periodo, fecha_inicio, fecha_fin').order('periodo'),
     supabaseReportes.from('estudiantes').select('id,nombre_completo').eq('estado','Activo').order('nombre_completo'),
     supabaseReportes.from('materias').select('id,nombre_materia').order('nombre_materia'),
-    supabaseReportes.from('calificaciones').select('*, estudiantes(nombre_completo), materias(nombre_materia)').order('fecha_registro', { ascending: false }),
-    supabaseReportes.from('asistencia').select('*, estudiantes(nombre_completo)').order('fecha', { ascending: false })
+    supabaseReportes.from('calificaciones').select('*, estudiantes(nombre_completo), materias(nombre_materia), tareas(titulo)').order('fecha_registro', { ascending: false }),
+    supabaseReportes.from('asistencia').select('*, estudiantes(nombre_completo)').order('fecha', { ascending: false }),
+    supabaseReportes.from('tareas').select('id,titulo,materia_id').order('fecha_vencimiento', { ascending: false }),
+    supabaseReportes.from('v_promedios_estudiantes').select('*')
   ]);
-  if (estudiantes.error || materias.error) { mostrarToast('No fue posible cargar los filtros'); return; }
+  if (estudiantes.error || materias.error) { 
+    mostrarToast('No fue posible cargar los filtros de reportes'); 
+    if (body) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #b91c1c;"><i data-lucide="alert-circle" style="width:24px;height:24px;margin-bottom:8px;"></i><div>Error al conectar con la base de datos de reportes.</div><button onclick="cargarDatos()" class="btn-primary" style="margin-top:12px;padding:6px 14px;font-size:0.85rem;cursor:pointer;">Reintentar</button></td></tr>';
+      if (window.lucide) lucide.createIcons();
+    }
+    return; 
+  }
   estado.totalPeriodos = Number(configuracion.data?.cantidad_periodos) || 3;
   estado.periodoActual = Number(configuracion.data?.periodo_actual) || 1;
   estado.marcos = marcos.data || [];
@@ -97,16 +198,52 @@ async function cargarDatos() {
   selectorPeriodo.value = String(estado.periodoActual);
   estado.estudiantes = estudiantes.data || [];
   estado.materias = materias.data || [];
+  estado.tareas = tareas.data || [];
+  estado.promedios = promedios.data || [];
   estado.calificaciones = calificaciones.error ? [] : (calificaciones.data || []);
   estado.asistencias = asistencias.error ? [] : (asistencias.data || []);
   poblarSelectores(); dibujarReporte();
   if (calificaciones.error || asistencias.error) mostrarToast('Algunos históricos no están disponibles');
 }
-document.querySelectorAll('.report-tab').forEach(tab => tab.addEventListener('click', () => { document.querySelectorAll('.report-tab').forEach(item => item.classList.remove('active')); tab.classList.add('active'); estado.tipo = tab.dataset.reporte; document.querySelectorAll('.attendance-only').forEach(item => item.hidden = estado.tipo !== 'asistencia'); dibujarReporte(); }));
+document.querySelectorAll('.report-tab').forEach(tab => tab.addEventListener('click', () => { 
+  document.querySelectorAll('.report-tab').forEach(item => item.classList.remove('active')); 
+  tab.classList.add('active'); 
+  estado.tipo = tab.dataset.reporte; 
+  document.querySelectorAll('.attendance-only').forEach(item => item.hidden = estado.tipo !== 'asistencia'); 
+  document.querySelectorAll('.grades-only').forEach(item => item.hidden = estado.tipo !== 'calificaciones'); 
+  dibujarReporte(); 
+}));
 document.getElementById('btn-aplicar').addEventListener('click', dibujarReporte);
 document.getElementById('filtro-periodo').addEventListener('change', dibujarReporte);
-document.getElementById('btn-limpiar').addEventListener('click', () => { ['filtro-materia','filtro-alumno','filtro-estado'].forEach(id => document.getElementById(id).value = ''); document.getElementById('filtro-periodo').value = String(estado.periodoActual); dibujarReporte(); });
+document.getElementById('filtro-materia').addEventListener('change', actualizarSelectorActividad);
+document.getElementById('filtro-fecha').addEventListener('change', dibujarReporte);
+document.getElementById('btn-limpiar').addEventListener('click', () => { 
+  ['filtro-materia','filtro-alumno','filtro-estado', 'filtro-fecha', 'filtro-actividad'].forEach(id => document.getElementById(id).value = ''); 
+  document.getElementById('filtro-periodo').value = String(estado.periodoActual); 
+  actualizarSelectorActividad();
+  dibujarReporte(); 
+});
+document.getElementById('btn-exportar').addEventListener('click', () => {
+  const filas = registrosFiltrados();
+  if (!filas.length) { mostrarToast('No hay registros para exportar.'); return; }
+  const esCalificaciones = estado.tipo === 'calificaciones';
+  const encabezado = esCalificaciones ? ['Fecha','Alumno','Materia','Actividad','Nota','Promedio'] : ['Fecha','Alumno','Estado'];
+  const csvRows = [encabezado.join(',')];
+  filas.forEach(item => {
+    if (esCalificaciones) {
+      const promedio = estado.promedios.find(p => String(p.estudiante_id) === String(item.estudiante_id) && String(p.materia_id) === String(item.materia_id) && String(p.periodo) === String(item.periodo))?.promedio_definitivo || '-';
+      csvRows.push([fechaCalificacion(item), `"${item.estudiantes?.nombre_completo || nombreEstudiante(item.estudiante_id)}"`, `"${item.materias?.nombre_materia || nombreMateria(item.materia_id)}"`, `"${item.tareas?.titulo || 'Actividad #' + item.tarea_id}"`, item.nota, promedio].join(','));
+    } else {
+      csvRows.push([fechaAsistencia(item), `"${nombreEstudiante(item.estudiante_id)}"`, item.estado || ''].join(','));
+    }
+  });
+  const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `reporte_${estado.tipo}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
 cargarDatos();
 </script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

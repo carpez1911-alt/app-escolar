@@ -7,30 +7,21 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+<!-- Botón Flotante de Regreso -->
+<button onclick="window.location.href='dashboard.html'" class="fab-back" title="Regresar al Panel Principal">
+  <i data-lucide="arrow-left" style="width: 24px; height: 24px;"></i>
+</button>
+
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Gestión de Actividades</div></div>
   </div>
-  <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero">
@@ -44,22 +35,19 @@
   <!-- SECCIÓN DE FILTROS -->
   <section class="card">
     <div class="toolbar">
-      <div><div class="toolbar-title">🔍 Filtros de Búsqueda</div></div>
+      <div><div class="toolbar-title"><i data-lucide="search" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Filtros de Búsqueda</div></div>
     </div>
-    <div class="form-content" style="display: flex; gap: 15px; flex-wrap: wrap;">
-      
-      <div class="form-group" style="flex: 1; min-width: 150px;">
+    <div class="filter-grid">
+      <div class="form-group" style="margin:0;">
         <label for="filtro-periodo">Periodo:</label>
         <select id="filtro-periodo" class="form-control" onchange="cargarActividades()"></select>
       </div>
-
-      <div class="form-group" style="flex: 2; min-width: 200px;">
+      <div class="form-group" style="margin:0;">
         <label for="filtro-materia">Materia:</label>
         <select id="filtro-materia" class="form-control" onchange="cargarActividades()">
           <option value="">Todas las materias</option>
         </select>
       </div>
-
     </div>
   </section>
 
@@ -67,7 +55,7 @@
   <section class="card task-card">
     <div class="toolbar">
       <div>
-        <div class="toolbar-title">📌 Actividades Encontradas</div>
+        <div class="toolbar-title"><i data-lucide="pin" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividades Encontradas</div>
         <div class="toolbar-meta" id="contador-actividades">Cargando...</div>
       </div>
     </div>
@@ -79,9 +67,9 @@
 <div class="toast" id="toast"></div>
 
 <!-- MODAL DE EDICIÓN DE ACTIVIDAD -->
-<div id="modal-editar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-  <div class="card" style="width:90%; max-width:400px; padding:20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-    <h3 style="margin-top:0;">Editar Actividad</h3>
+<div id="modal-editar" class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-top:0; font-size:18px;">Editar Actividad</h3>
     
     <div class="form-group">
       <label>Título:</label>
@@ -106,9 +94,9 @@
     
     <input type="hidden" id="edit-id">
     
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-      <button class="secondary-btn" onclick="cerrarModalEditar()">Cancelar</button>
-      <button class="primary-btn" onclick="guardarEdicionActividad()">Guardar Cambios</button>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; flex-wrap:wrap;">
+      <button class="secondary-btn" onclick="cerrarModalEditar()" style="flex:1; min-width:100px;">Cancelar</button>
+      <button class="primary-btn" onclick="guardarEdicionActividad()" style="flex:2; min-width:160px;">Guardar Cambios</button>
     </div>
   </div>
 </div>
@@ -161,6 +149,13 @@ async function inicializarFiltros() {
     resMat.data.forEach(m => {
       selectMateria.innerHTML += `<option value="${m.id}">${m.nombre_materia}</option>`;
     });
+    
+    // Auto-seleccionar materia si viene en la URL (ej. desde el horario del dashboard)
+    const params = new URLSearchParams(window.location.search);
+    const materiaIdUrl = params.get('materia_id');
+    if (materiaIdUrl) {
+      selectMateria.value = materiaIdUrl;
+    }
   }
 
   cargarActividades();
@@ -175,10 +170,8 @@ async function cargarActividades() {
 
   contenedor.innerHTML = '<div class="loading">Buscando actividades...</div>';
 
-  // Construir la consulta paso a paso
   let consulta = clienteSupabase.from('tareas').select('*, materias(nombre_materia), categorias_actividades(nombre, porcentaje)').order('fecha_vencimiento', { ascending: false });
 
-  // Aplicar filtros solo si el usuario seleccionó algo
   if (periodoFiltro !== "") {
     consulta = consulta.eq('periodo', periodoFiltro);
   }
@@ -186,10 +179,17 @@ async function cargarActividades() {
     consulta = consulta.eq('materia_id', materiaFiltro);
   }
 
-  const { data, error } = await consulta;
+  const [resTareas, resEstudiantes, resCalificaciones] = await Promise.all([
+    consulta,
+    clienteSupabase.from('estudiantes').select('id', { count: 'exact', head: true }).eq('estado', 'Activo'),
+    clienteSupabase.from('calificaciones').select('tarea_id').not('nota', 'is', null)
+  ]);
+
+  const data = resTareas.data;
+  const error = resTareas.error;
 
   if (error) {
-    contenedor.innerHTML = '<div class="empty"><div class="empty-icon">❌</div>Error al cargar las actividades.</div>';
+    contenedor.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="x-circle" style="width: 32px; height: 32px; display: inline-block; vertical-align: middle;"></i></div>Error al cargar las actividades.</div>';
     return;
   }
 
@@ -197,32 +197,77 @@ async function cargarActividades() {
   actividadesCargadas = data;
 
   if (data.length === 0) {
-    contenedor.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>No hay actividades registradas para estos filtros.</div>';
+    contenedor.innerHTML = '<div class="empty"><div class="empty-icon"><i data-lucide="inbox" style="width: 32px; height: 32px; display: inline-block; vertical-align: middle;"></i></div>No hay actividades registradas para estos filtros.</div>';
     return;
   }
 
-  // Dibujar cada actividad en la pantalla
   contenedor.innerHTML = '';
+  
+  const totalActivos = resEstudiantes.count || 0;
+  const notasPorTarea = {};
+  if (resCalificaciones.data) {
+    resCalificaciones.data.forEach(c => {
+      notasPorTarea[c.tarea_id] = (notasPorTarea[c.tarea_id] || 0) + 1;
+    });
+  }
+
+  const pendientes = [];
+  const completadas = [];
+
   data.forEach(tarea => {
+    const calificados = notasPorTarea[tarea.id] || 0;
+    tarea.completada = (totalActivos > 0 && calificados >= totalActivos);
+    if (tarea.completada) completadas.push(tarea);
+    else pendientes.push(tarea);
+  });
+
+  const renderizarTarea = (tarea, esCompletada) => {
     const nombreMateria = tarea.materias ? tarea.materias.nombre_materia : 'General';
     const nombreCat = tarea.categorias_actividades ? `${tarea.categorias_actividades.nombre} (${tarea.categorias_actividades.porcentaje}%)` : 'Sin categoría';
-    const html = `
-      <div class="task" style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="datos-tarea">
-          <span style="display: inline-block; background-color: var(--warning); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
-          <span style="display: inline-block; background-color: var(--primary); color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
-          <div style="font-weight: 750;">${tarea.titulo}</div>
-          <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
+    const color = getColorMateria(nombreMateria);
+    
+    const div = document.createElement('div');
+    div.className = 'task';
+    div.style.cssText = 'display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;';
+    
+    if (esCompletada) {
+      div.style.opacity = '0.7';
+      div.style.background = '#f8fafc';
+      div.innerHTML = `
+        <div class="datos-tarea" style="flex:1; min-width:0; text-decoration: line-through; color: var(--muted);">
+          <span style="display: inline-block; background-color: #cbd5e1; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
+          <span style="display: inline-block; background-color: #cbd5e1; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
+          <div style="font-weight: 700; color: var(--muted);">${tarea.titulo} <span style="font-size:11px; font-weight:normal; margin-left:8px;"><i data-lucide="check-circle" style="width:12px;height:12px;vertical-align:middle;"></i> 100% Calificada</span></div>
+          <div style="font-size: 13px; margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
+          <div style="font-size: 12px; font-weight: 800; margin-top: 4px;">Lista</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap;">
+          <button class="secondary-btn" onclick="editarActividad(${tarea.id})" style="min-width:80px;"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Editar</button>
+          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5; min-width:90px;" onclick="eliminarActividad(${tarea.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Eliminar</button>
+        </div>
+      `;
+    } else {
+      div.innerHTML = `
+        <div class="datos-tarea" style="flex:1; min-width:0;">
+          <span style="display: inline-block; background-color: ${color}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 5px;">${nombreMateria} - Periodo ${tarea.periodo}</span>
+          <span style="display: inline-block; border: 1px solid ${color}40; background-color: ${color}10; color: ${color}; padding: 2px 7px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-bottom: 5px; margin-left: 5px;">${nombreCat}</span>
+          <div style="font-weight: 700;">${tarea.titulo}</div>
+          <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">${tarea.descripcion || 'Sin descripción'}</div>
           <div style="font-size: 12px; font-weight: 800; color: var(--primary); margin-top: 4px;">Vence: ${formatearFechaCorta(tarea.fecha_vencimiento)}</div>
         </div>
-        <div>
-          <button class="secondary-btn" onclick="editarActividad(${tarea.id})">✏️ Editar</button>
-          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5;" onclick="eliminarActividad(${tarea.id})">🗑️ Eliminar</button>
+        <div style="display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap;">
+          <button class="secondary-btn" onclick="editarActividad(${tarea.id})" style="min-width:80px;"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Editar</button>
+          <button class="secondary-btn" style="color: var(--danger); border-color: #fca5a5; min-width:90px;" onclick="eliminarActividad(${tarea.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Eliminar</button>
         </div>
-      </div>
-    `;
-    contenedor.innerHTML += html;
-  });
+      `;
+    }
+    contenedor.appendChild(div);
+  };
+
+  pendientes.forEach(t => renderizarTarea(t, false));
+  completadas.forEach(t => renderizarTarea(t, true));
+  
+  if(window.lucide) window.lucide.createIcons();
 }
 
 // 3. ELIMINAR ACTIVIDAD
@@ -236,23 +281,37 @@ async function eliminarActividad(id) {
     toast('No se puede comprobar el historial; la actividad no fue eliminada.');
     return;
   }
+  
+  let confirmarEliminar = false;
   if ((cantidadCalificaciones || 0) > 0 || (cantidadEntregas || 0) > 0) {
-    toast('No se puede eliminar: la actividad tiene calificaciones o entregas asociadas.');
-    return;
+    if (confirm('⚠️ Esta actividad ya tiene calificaciones asignadas.\n\n¿Estás seguro de que deseas eliminar la actividad junto con TODAS sus notas? Esta acción NO se puede deshacer.')) {
+      const { error: errCal } = await clienteSupabase.from('calificaciones').delete().eq('tarea_id', id);
+      const { error: errEnt } = await clienteSupabase.from('entregas_tareas').delete().eq('tarea_id', id);
+      if (errCal || errEnt) {
+        toast('Error al limpiar el historial de notas. Operación cancelada.');
+        return;
+      }
+      confirmarEliminar = true;
+    } else {
+      return;
+    }
+  } else {
+    confirmarEliminar = confirm('¿Estás seguro de que deseas eliminar esta actividad?');
   }
-  if (confirm('¿Estás seguro de que deseas eliminar esta actividad?')) {
+  
+  if (confirmarEliminar) {
     const { error } = await clienteSupabase.from('tareas').delete().eq('id', id);
     if(error) {
       toast(`Error al eliminar: ${error.message}`);
     } else {
-      toast('🗑️ Actividad eliminada correctamente.');
+      toast('<i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Actividad eliminada correctamente.');
       cargarActividades();
     }
   }
 }
 
 function cerrarModalEditar() {
-  document.getElementById('modal-editar').style.display = 'none';
+  document.getElementById('modal-editar').classList.remove('open');
 }
 
 function editarActividad(id) {
@@ -281,7 +340,7 @@ function editarActividad(id) {
   });
   selectCat.value = actividad.categoria_id || '';
 
-  document.getElementById('modal-editar').style.display = 'flex';
+  document.getElementById('modal-editar').classList.add('open');
 }
 
 async function guardarEdicionActividad() {
@@ -325,12 +384,13 @@ async function guardarEdicionActividad() {
   }
   
   cerrarModalEditar();
-  toast('✓ Actividad actualizada correctamente.');
+  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Actividad actualizada correctamente.');
   cargarActividades();
 }
 
 // Iniciar la pantalla
 inicializarFiltros();
 </script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

@@ -14,46 +14,86 @@
   th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2;}
   td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
   th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; }
-  .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
+  .promedio-col { font-weight: bold; }
+  
+  @media print {
+    .no-print, .navbar, .fab-back, .hero, .toast, button, .eyebrow { display: none !important; }
+    body { background: white !important; color: black !important; }
+    .page { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .card { border: none !important; box-shadow: none !important; margin: 0 !important; }
+    .table-container { overflow: visible !important; }
+    table { width: 100% !important; border: 1px solid #000 !important; font-size: 11px !important; }
+    th, td { border: 1px solid #666 !important; padding: 6px 8px !important; }
+    th { background-color: #e2e8f0 !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .print-header { display: block !important; text-align: center; margin-bottom: 15px; }
+  }
+  .print-header { display: none; }
 </style>
+
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+<!-- Botón Flotante de Regreso -->
+<button onclick="window.location.href='dashboard.html'" class="fab-back no-print" title="Regresar al Panel Principal">
+  <i data-lucide="arrow-left" style="width: 24px; height: 24px;"></i>
+</button>
+
 <div class="app-shell">
-<nav class="navbar">
+<nav class="navbar no-print">
   <div class="brand">
-    <div class="brand-mark">🎓</div>
+    <div class="brand-mark"><i data-lucide="graduation-cap" style="width: 32px; height: 32px;"></i></div>
     <div><div class="brand-title">Mi Clase</div><div class="brand-subtitle">Consolidado General</div></div>
   </div>
-  <div class="nav-actions">
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
-      </div>
-    </div>
-  </div>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
 </nav>
 
 <main class="page">
-  <section class="hero" style="margin-bottom: 15px;">
+  <div class="print-header">
+    <h2>Institución Educativa Nuestra Señora del Pilar</h2>
+    <p id="print-subtitulo">Consolidado Oficial de Calificaciones · Periodo Académico</p>
+  </div>
+
+  <section class="hero no-print" style="margin-bottom: 15px;">
     <div>
       <div class="eyebrow">● Rendimiento Académico</div>
       <h1>Consolidado por Periodo</h1>
       <p>Consulta el consolidado general de notas definitivas de cada materia en el periodo seleccionado.</p>
     </div>
-    
-    <div style="display: flex; gap: 10px; align-items: center;">
-        <label for="filtro-periodo" style="font-weight: bold; font-size: 14px;">Periodo:</label>
-        <select id="filtro-periodo" class="form-control" style="width: 120px;" onchange="cargarConsolidado()">
+  </section>
+
+  <!-- FILTRO PERIODO EN CARD RESPONSIVE -->
+  <section class="card no-print" style="padding: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;">
+      <div class="form-group" style="margin: 0; min-width: 220px;">
+        <label for="filtro-periodo" style="font-weight: 700; font-size: 12px; margin-bottom: 5px; display: block;">Periodo académico</label>
+        <select id="filtro-periodo" class="form-control" onchange="cargarConsolidado()" style="height: 38px; border-radius: 8px;">
             <option value="">Cargando...</option>
         </select>
+      </div>
+
+      <!-- Grupo Limpio de Exportación -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <button class="primary-btn" id="btn-exportar-pdf" style="background-color: var(--primary, #1e40af); border-color: var(--primary, #1e40af); color: white; height: 38px; padding: 0 14px; font-size: 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;" onclick="imprimirConsolidadoPDF()">
+          <i data-lucide="printer" style="width: 15px; height: 15px;"></i> Imprimir / PDF
+        </button>
+        <div style="display: inline-flex; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: white; height: 38px;">
+          <button class="secondary-btn" id="btn-descarga-general" onclick="descargarPlantillaGeneral()" style="border: none; background: white; color: #334155; padding: 0 12px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: background 0.2s;" title="Descargar consolidado general en CSV">
+            <i data-lucide="download" style="width: 14px; height: 14px;"></i> CSV General
+          </button>
+          <button class="secondary-btn" id="btn-descarga-individual" onclick="descargarPlantillaIndividual()" style="border: none; border-left: 1px solid #e2e8f0; background: white; color: #334155; padding: 0 12px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: background 0.2s;" title="Descargar reporte por estudiante en CSV">
+            <i data-lucide="file-spreadsheet" style="width: 14px; height: 14px;"></i> CSV Individual
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Leyenda sobria y elegante -->
+    <div class="legend no-print" style="margin-top: 14px; padding: 8px 14px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); display: flex; gap: 18px; flex-wrap: wrap; font-size: 11.5px; align-items: center;">
+      <span style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.5px;">Desempeño (Aprobación ≥ 6.0):</span>
+      <span style="display:inline-flex; align-items:center; gap:5px; color:#15803d; font-weight:600;"><span style="width:9px; height:9px; border-radius:50%; background:#16a34a; display:inline-block;"></span> Aprobado (6.0 - 10.0)</span>
+      <span style="display:inline-flex; align-items:center; gap:5px; color:#c2410c; font-weight:600;"><span style="width:9px; height:9px; border-radius:50%; background:#f97316; display:inline-block;"></span> En Riesgo (5.0 - 5.9)</span>
+      <span style="display:inline-flex; align-items:center; gap:5px; color:#dc2626; font-weight:600;"><span style="width:9px; height:9px; border-radius:50%; background:#ef4444; display:inline-block;"></span> Reprobado (&lt; 5.0)</span>
     </div>
   </section>
 
@@ -85,6 +125,58 @@ function crearCelda(tag, texto, clase = '') {
   celda.textContent = texto;
   if (clase) celda.className = clase;
   return celda;
+}
+
+function obtenerEstiloNota(nota) {
+  if (nota === null || nota === undefined || isNaN(nota)) {
+    return { texto: '-', bg: 'transparent', color: 'inherit' };
+  }
+  const val = Number(nota);
+  if (val >= 9.0) return { texto: val.toFixed(2), bg: '#dcfce7', color: '#15803d' };
+  if (val >= 7.5) return { texto: val.toFixed(2), bg: '#e6f4ea', color: '#137333' };
+  if (val >= 6.0) return { texto: val.toFixed(2), bg: '#f0fdf4', color: '#166534' };
+  if (val >= 5.0) return { texto: val.toFixed(2), bg: '#fff7ed', color: '#c2410c' };
+  if (val >= 4.0) return { texto: val.toFixed(2), bg: '#fee2e2', color: '#dc2626' };
+  return { texto: val.toFixed(2), bg: '#fca5a5', color: '#7f1d1d' };
+}
+
+function imprimirConsolidadoPDF() {
+  const periodo = document.getElementById('filtro-periodo').value;
+  document.getElementById('print-subtitulo').textContent = `Consolidado de Notas — Periodo ${periodo}`;
+  window.print();
+}
+
+function descargarCSV(nombreArchivo, filas) {
+  const csvRows = filas.map(f => f.join(','));
+  const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = nombreArchivo;
+  a.click();
+}
+
+function descargarPlantillaGeneral() {
+  const periodo = document.getElementById('filtro-periodo').value;
+  const thead = document.querySelectorAll('#cabecera-materias th');
+  const tbody = document.querySelectorAll('#cuerpo-planilla tr');
+  
+  if (!periodo || (tbody.length > 0 && (tbody[0].querySelector('.loading') || tbody[0].querySelector('.empty')))) {
+    toast('No hay datos para exportar.');
+    return;
+  }
+  
+  const cabeceras = Array.from(thead).map(th => `"${th.textContent}"`);
+  const filas = [cabeceras];
+  
+  tbody.forEach(tr => {
+    const celdas = Array.from(tr.querySelectorAll('td')).map(td => `"${td.textContent}"`);
+    filas.push(celdas);
+  });
+  
+  descargarCSV(`Consolidado_General_P${periodo}.csv`, filas);
+}
+
+function descargarPlantillaIndividual() {
+  descargarPlantillaGeneral();
 }
 
 function configurarPeriodos(cantidadPeriodos) {
@@ -151,7 +243,6 @@ async function cargarConsolidado() {
       for (const [catId, valores] of Object.entries(notasPorCat)) {
         if (valores.length > 0) {
           const promCat = valores.reduce((a, b) => a + b, 0) / valores.length;
-          // Si una tarea no tiene categoría o la categoría fue borrada, asume un peso neutro o 0.
           const peso = categoriasMap[catId] ? Number(categoriasMap[catId]) : 0; 
           sumaPonderada += (promCat * peso);
           pesoTotalAlineado += peso;
@@ -160,18 +251,34 @@ async function cargarConsolidado() {
 
       let promedio = null;
       if (pesoTotalAlineado > 0) {
-        // Renormalizar si las categorías evaluadas no suman 100%
         promedio = sumaPonderada / pesoTotalAlineado;
       }
 
-      fila.appendChild(crearCelda('td', promedio === null ? '-' : promedio.toFixed(2), 'promedio-col'));
+      const estilo = obtenerEstiloNota(promedio);
+      const celdaMat = crearCelda('td', estilo.texto);
+      if (promedio !== null) {
+        celdaMat.style.backgroundColor = estilo.bg;
+        celdaMat.style.color = estilo.color;
+        celdaMat.style.fontWeight = 'bold';
+      }
+      fila.appendChild(celdaMat);
       if (promedio !== null) promedios.push(promedio);
     });
-    fila.appendChild(crearCelda('td', promedios.length ? (promedios.reduce((suma, valor) => suma + valor, 0) / promedios.length).toFixed(2) : '-', 'promedio-col'));
+
+    const promGeneral = promedios.length ? (promedios.reduce((suma, valor) => suma + valor, 0) / promedios.length) : null;
+    const estiloGen = obtenerEstiloNota(promGeneral);
+    const celdaGen = crearCelda('td', estiloGen.texto, 'promedio-col');
+    if (promGeneral !== null) {
+      celdaGen.style.backgroundColor = estiloGen.bg;
+      celdaGen.style.color = estiloGen.color;
+      celdaGen.style.fontWeight = '800';
+    }
+    fila.appendChild(celdaGen);
     tbody.appendChild(fila);
   });
   
-  if (!materiasConNotas.length) tbody.innerHTML = '<tr><td colspan="15" class="empty"><div class="empty-icon">📚</div>No hay calificaciones registradas para este periodo.</td></tr>';
+  if (!materiasConNotas.length) tbody.innerHTML = '<tr><td colspan="15" class="empty"><div class="empty-icon"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No hay calificaciones registradas para este periodo.</td></tr>';
+  if (window.lucide) lucide.createIcons();
 }
 
 async function inicializarPlanilla() {
@@ -188,5 +295,6 @@ async function inicializarPlanilla() {
 
 inicializarPlanilla();
 </script>
+<script>if(window.lucide){lucide.createIcons();}</script>
 </body>
 </html>

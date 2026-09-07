@@ -8,69 +8,133 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 <style>
-  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; white-space: nowrap; }
-  th, td { padding: 12px 10px; border: 1px solid var(--border); }
-  th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2;}
-  td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05);}
-  th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; }
+  /* Tabla de calificaciones */
+  #tabla-notas { font-size: 13px; text-align: center; white-space: nowrap; }
+  #tabla-notas th, #tabla-notas td { padding: 12px 10px; border: 1px solid var(--border); }
+  #tabla-notas th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; position: sticky; top: 0; z-index: 2; white-space: normal; min-width: 80px; max-width: 140px; line-height: 1.2; word-wrap: break-word; }
+  #tabla-notas td.text-left { text-align: left; font-weight: 600; color: var(--text); position: sticky; left: 0; background: white; z-index: 3; box-shadow: 2px 0 5px rgba(0,0,0,0.05); min-width: 140px; max-width: 200px; white-space: normal; }
+  #tabla-notas th.text-left { text-align: left; position: sticky; left: 0; z-index: 4; background-color: var(--primary-soft); }
   .promedio-col { background-color: #dcfce7; font-weight: bold; color: #15803d; }
   
-  /* ESTILOS PARA CELDAS EDITABLES (TIPO EXCEL) */
-  .celda-nota { background-color: #f8fafc; transition: 0.2s; cursor: text; min-width: 50px; font-weight: bold;}
-  .celda-nota:focus { background-color: #e0f2fe; outline: 2px solid var(--primary); outline-offset: -2px; }
-  .celda-nota:hover { background-color: #f1f5f9; }
-
-  .btn-wa { background-color: #25D366; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+  /* Celdas editables (tipo Excel) */
+  .celda-nota { background-color: #f8fafc; transition: 0.2s; cursor: text; min-width: 60px; font-weight: bold; }
+  .celda-nota:hover { background-color: #e2e8f0; outline: 2px solid var(--primary); }
+  .celda-nota:focus { background-color: #fff; outline: 2px solid var(--primary); outline-offset: -2px; }
+  
+  .btn-wa { background-color: #25D366; color: white; border-radius: 4px; padding: 6px 12px; font-weight: 600; font-size: 13px; box-shadow: 0 2px 4px rgba(37,211,102,0.3); transition: 0.2s; border: none; cursor: pointer; }
   .btn-wa:hover { background-color: #128C7E; transform: translateY(-1px); }
+  
+  @media (max-width: 768px) {
+    .btn-wa { font-size: 0; padding: 10px; border-radius: 50%; min-width: 44px; display: inline-flex; justify-content: center; align-items: center; }
+    .btn-wa i { margin-right: 0 !important; }
+    #tabla-notas td.text-left { min-width: 120px; max-width: 140px; }
+  }
+
+  /* Modal de confirmación elegante */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+  .modal-overlay.open { opacity: 1; visibility: visible; }
+  .modal-box {
+    background: white;
+    border-radius: 16px;
+    padding: 32px 28px 24px;
+    max-width: 400px; width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    transform: translateY(20px) scale(0.96);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    text-align: center;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+  .modal-icon { width: 56px; height: 56px; border-radius: 50%; background: #fef3c7; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .modal-icon svg { width: 28px; height: 28px; color: #d97706; }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .modal-msg { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: center; }
+  .modal-btn { padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; min-width: 110px; }
+  .modal-btn-cancel { background: #f1f5f9; color: var(--text-secondary); }
+  .modal-btn-cancel:hover { background: #e2e8f0; }
+  .modal-btn-confirm { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(26,115,232,0.3); }
+  .modal-btn-confirm:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(26,115,232,0.4); }
 </style>
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+<!-- Botón Flotante de Regreso -->
+<button onclick="window.location.href='dashboard.html'" class="fab-back" title="Regresar al Panel Principal">
+  <i data-lucide="arrow-left" style="width: 24px; height: 24px;"></i>
+</button>
+
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <div class="brand-mark">🎓</div>
-    <div><div class="brand-title">Mi Clase</div><div class="brand-subtitle">Consolidado de Notas</div></div>
+    <i data-lucide="graduation-cap" class="brand-mark" style="color: var(--primary); width: 32px; height: 32px;"></i>
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Planilla de Calificaciones</div></div>
   </div>
-  <div class="nav-actions">
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-            <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero" style="margin-bottom: 15px;">
     <div>
       <div class="eyebrow">● Rendimiento Académico</div>
       <h1>Calificar Actividades</h1>
-      <p>Asigna notas a los estudiantes según la materia y actividad seleccionada.</p>
+      <p>Asigna y gestiona las calificaciones de los estudiantes por materia y actividad.</p>
     </div>
-    
-    <div style="display: flex; gap: 10px; align-items: center;">
-        <label for="filtro-periodo" style="font-weight: bold; font-size: 14px;">Periodo:</label>
-        <select id="filtro-periodo" class="form-control" style="width: 120px;" onchange="cargarPlanilla()">
+  </section>
+
+  <!-- FILTROS EN CARD RESPONSIVE -->
+  <section class="card" style="padding: 0;">
+    <div class="toolbar">
+      <div><div class="toolbar-title">Filtros y Acciones</div></div>
+    </div>
+    <div class="filter-grid">
+      <div class="form-group" style="margin:0;">
+        <label for="filtro-periodo">Periodo</label>
+        <select id="filtro-periodo" class="form-control" onchange="cargarPlanilla()">
             <option value="">Cargando...</option>
         </select>
-        <label for="filtro-materia" id="label-materia" style="font-weight: bold; font-size: 14px;">Materia:</label>
-        <select id="filtro-materia" class="form-control" style="width: 200px;" onchange="cargarPlanilla()">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label for="filtro-materia" id="label-materia">Materia</label>
+        <select id="filtro-materia" class="form-control" onchange="cargarPlanilla()">
           <option value="">Selecciona una materia...</option>
         </select>
-        <label for="filtro-actividad" id="label-actividad" style="font-weight: bold; font-size: 14px;">Actividad:</label>
-        <select id="filtro-actividad" class="form-control" style="width: 200px;" onchange="renderizarPlanillaCalificar()">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label for="filtro-actividad" id="label-actividad">Actividad</label>
+        <select id="filtro-actividad" class="form-control" onchange="renderizarPlanillaCalificar()">
           <option value="">Cargando...</option>
         </select>
-        <button class="secondary-btn" id="btn-guardar-notas" type="button" onclick="guardarNotas()">💾 Guardar notas</button>
+      </div>
+      <div class="filter-actions" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+        <div style="display: inline-flex; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 38px;">
+          <button class="btn-icon-compact" id="btn-guardar-notas" type="button" title="Guardar calificaciones" onclick="guardarNotas()" style="border: none; background: var(--primary, #1e40af); color: white; padding: 0 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+            <i data-lucide="save" style="width: 17px; height: 17px;"></i>
+          </button>
+          <button class="btn-icon-compact" id="btn-copiar-columna" type="button" title="Copiar columna de calificaciones" onclick="copiarColumna()" style="border: none; border-left: 1px solid #e2e8f0; background: #f8fafc; color: #334155; padding: 0 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+            <i data-lucide="copy" style="width: 16px; height: 16px;"></i>
+          </button>
+          <button class="btn-icon-compact" id="btn-rellenar-uno" type="button" title="Rellenar celdas vacías con 1.0" onclick="rellenarConUno()" style="border: none; border-left: 1px solid #e2e8f0; background: #f8fafc; color: #334155; padding: 0 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+            <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+
+        <div style="display: inline-flex; align-items: center; gap: 8px;">
+          <select id="tipo-reporte" class="form-control" style="width: auto; height: 38px; font-size: 12.5px; padding: 4px 10px; border-radius: 8px; margin: 0;">
+            <option value="general">Reporte General (Promedios)</option>
+            <option value="actividad">Reporte de Actividad Seleccionada</option>
+          </select>
+          <button class="primary-btn" id="btn-reporte-general" type="button" style="background-color: #16a34a; border-color: #16a34a; color: white; height: 38px; padding: 0 12px; font-size: 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;" onclick="enviarReporteGeneralCalificaciones()">
+            <i data-lucide="send" style="width: 14px; height: 14px;"></i> Enviar Reporte
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -105,6 +169,7 @@ let listaTareas = [];
 let listaEstudiantes = [];
 let listaMaterias = [];
 let notasCargadas = [];
+let promediosCargados = [];
 
 function crearCelda(tag, texto, clase = '') {
   const celda = document.createElement(tag);
@@ -129,50 +194,116 @@ function configurarMaterias(materias) {
 }
 
 function promedioDeFila(fila) {
-  return fila.querySelector('.promedio-general')?.textContent || '-';
+  return fila.querySelector('.promedio-materia')?.textContent || '-';
 }
 
 function enviarWhatsApp(nombre, promedio, periodo) {
-  if (promedio === '-') {
-    mostrarToast('El estudiante todavía no tiene calificaciones.');
+  const tipoReporte = document.getElementById('tipo-reporte')?.value || 'general';
+  const materia = document.getElementById('filtro-materia').selectedOptions[0]?.textContent || '';
+  const hoy = typeof fechaLocalISO === 'function' ? fechaLocalISO() : new Date().toISOString().slice(0, 10);
+  const fechaHoy = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(hoy) : hoy;
+
+  if (tipoReporte === 'general') {
+    if (promedio === '-') {
+      mostrarToast('El estudiante todavía no tiene calificaciones.');
+      return;
+    }
+    const mensaje = ` *Reporte de Calificaciones*\n Estudiante: ${nombre}\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n🗓️ Fecha: ${fechaHoy}\n\n📊 *Promedio Definitivo:* ${promedio}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+  } else {
+    const actividadSelect = document.getElementById('filtro-actividad');
+    const actividadId = actividadSelect.value;
+    if (!actividadId || actividadId === 'todas') {
+      mostrarToast('Selecciona una actividad específica para enviar su reporte.');
+      return;
+    }
+    const actividadNombre = actividadSelect.selectedOptions[0]?.textContent?.replace(' (Calificada)', '')?.trim();
+    
+    const estudiante = listaEstudiantes.find(e => e.nombre_completo === nombre);
+    const notaObj = notasCargadas.find(n => String(n.estudiante_id) === String(estudiante.id) && String(n.tarea_id) === String(actividadId));
+    const nota = (notaObj && notaObj.nota !== null) ? notaObj.nota : 'Sin calificar';
+    
+    const tarea = listaTareas.find(t => String(t.id) === String(actividadId));
+    let strFechaActividad = '';
+    if (notaObj && notaObj.fecha_registro) {
+      strFechaActividad = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(notaObj.fecha_registro) : notaObj.fecha_registro.slice(0, 10);
+    } else if (tarea && tarea.fecha_vencimiento) {
+      strFechaActividad = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(tarea.fecha_vencimiento) : tarea.fecha_vencimiento.slice(0, 10);
+    } else {
+      strFechaActividad = fechaHoy;
+    }
+    const infoFecha = strFechaActividad ? `\n🗓️ Fecha: ${strFechaActividad}` : '';
+
+    const mensaje = ` *Reporte de Actividad*\n Estudiante: ${nombre}\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n📝 Actividad: ${actividadNombre}${infoFecha}\n\n📊 *Nota:* ${nota}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+  }
+}
+
+function enviarReporteGeneralCalificaciones() {
+  const materiaSelect = document.getElementById('filtro-materia');
+  const materia = materiaSelect.selectedOptions[0]?.textContent;
+  const periodo = document.getElementById('filtro-periodo').value;
+  const tipoReporte = document.getElementById('tipo-reporte')?.value || 'general';
+
+  if (!materiaSelect.value || !periodo) {
+    toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Selecciona una materia para generar el reporte general.');
     return;
   }
-  const mensaje = `Hola, cordial saludo. Le comparto el reporte de calificaciones de *${nombre}* en el *Periodo ${periodo}*. Su promedio general es: *${promedio}*.`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+  if (!listaEstudiantes || listaEstudiantes.length === 0) {
+    toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ No hay estudiantes cargados.');
+    return;
+  }
+
+  const hoy = typeof fechaLocalISO === 'function' ? fechaLocalISO() : new Date().toISOString().slice(0, 10);
+  const fechaHoy = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(hoy) : hoy;
+
+  if (tipoReporte === 'general') {
+    let msj = ` *Reporte Consolidado de Notas*\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n🗓️ Fecha: ${fechaHoy}\n\n`;
+    
+    listaEstudiantes.forEach(est => {
+      const pro = promediosCargados.find(p => String(p.estudiante_id) === String(est.id));
+      const promedio = (pro && pro.promedio_definitivo !== null) ? pro.promedio_definitivo : 'Sin notas';
+      msj += `* ${est.nombre_completo}: *${promedio}*\n`;
+    });
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`, '_blank');
+  } else {
+    const actividadSelect = document.getElementById('filtro-actividad');
+    const actividadId = actividadSelect.value;
+    if (!actividadId || actividadId === 'todas') {
+      toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Selecciona una actividad específica para enviar su reporte.');
+      return;
+    }
+    const actividadNombre = actividadSelect.selectedOptions[0]?.textContent?.replace(' (Calificada)', '')?.trim();
+    const tarea = listaTareas.find(t => String(t.id) === String(actividadId));
+    let strFechaAct = '';
+    if (tarea && tarea.fecha_vencimiento) {
+      strFechaAct = typeof formatearFechaCorta === 'function' ? formatearFechaCorta(tarea.fecha_vencimiento) : tarea.fecha_vencimiento.slice(0, 10);
+    } else {
+      strFechaAct = fechaHoy;
+    }
+    const infoFecha = strFechaAct ? `\n🗓️ Fecha de actividad: ${strFechaAct}` : '';
+
+    let msj = ` *Reporte de Actividad*\n📖 Materia: ${materia}\n📅 Periodo: ${periodo}\n📝 Actividad: ${actividadNombre}${infoFecha}\n\n`;
+    
+    listaEstudiantes.forEach(est => {
+      const notaObj = notasCargadas.find(n => String(n.estudiante_id) === String(est.id) && String(n.tarea_id) === String(actividadId));
+      const nota = (notaObj && notaObj.nota !== null) ? notaObj.nota : 'Sin calificar';
+      msj += `* ${est.nombre_completo}: *${nota}*\n`;
+    });
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`, '_blank');
+  }
 }
 
 function actualizarPromedios(fila) {
-  const celdaEditada = fila.querySelector('.celda-nota');
-  if (!celdaEditada) return;
-  
-  const materiaId = celdaEditada.dataset.materia;
-  const estudianteId = celdaEditada.dataset.estudiante;
-  const tareaId = celdaEditada.dataset.tarea;
-  
-  let notasDelEstudiante = notasCargadas.filter(n => String(n.estudiante_id) === String(estudianteId) && String(n.materia_id) === String(materiaId));
-  
-  const notasPorTarea = {};
-  notasDelEstudiante.forEach(n => { notasPorTarea[n.tarea_id] = Number(n.nota); });
-  
-  const notaEditada = Number.parseFloat(celdaEditada.textContent.trim().replace(',', '.'));
-  if (!Number.isNaN(notaEditada)) {
-      notasPorTarea[tareaId] = notaEditada;
-  } else {
-      delete notasPorTarea[tareaId];
-  }
-  
-  const valores = Object.values(notasPorTarea);
-  const promedio = valores.length ? (valores.reduce((a,b) => a+b, 0) / valores.length).toFixed(2) : '-';
-  
-  fila.querySelectorAll('.promedio-materia').forEach(celda => celda.textContent = promedio);
-  const celdaGeneral = fila.querySelector('.promedio-general');
-  if (celdaGeneral) celdaGeneral.textContent = promedio;
+  // El cálculo se movió a la vista en BD. Solo recargar al guardar.
 }
 
 function mostrarSinActividades() {
   document.getElementById('cabecera-materias').innerHTML = '<th class="text-left">Estudiante</th><th class="promedio-col">Definitiva</th><th>Reporte</th>';
   document.getElementById('cabecera-actividades').hidden = true;
-  document.getElementById('cuerpo-planilla').innerHTML = '<tr><td colspan="3" class="empty"><div class="empty-icon">📚</div>No hay actividades creadas para este periodo.<br>Primero crea tareas desde el Panel Principal.</td></tr>';
+  document.getElementById('cuerpo-planilla').innerHTML = '<tr><td colspan="3" class="empty"><div class="empty-icon"><i data-lucide="book" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>No hay actividades creadas para este periodo.<br>Primero crea tareas desde el Panel Principal.</td></tr>';
 }
 
 // FUNCIÓN 1: DIBUJAR LA PLANILLA
@@ -192,16 +323,25 @@ async function cargarPlanilla() {
     return;
   }
   tbody.innerHTML = `<tr><td colspan="15" class="loading">Cargando actividades del Periodo ${periodo}...</td></tr>`;
-  const [resEst, resTareas, resNotas] = await Promise.all([
+  const [resEst, resTareas, resNotas, resPromedios] = await Promise.all([
     clienteSupabase.from('estudiantes').select('id, nombre_completo').eq('estado', 'Activo').order('id'),
-    clienteSupabase.from('tareas').select('id, titulo, materia_id, periodo').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
-    clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota').eq('materia_id', materiaId).eq('periodo', periodo)
+    clienteSupabase.from('tareas').select('id, titulo, descripcion, materia_id, periodo, fecha_vencimiento, categorias_actividades(nombre)').eq('materia_id', materiaId).eq('periodo', periodo).order('fecha_vencimiento'),
+    clienteSupabase.from('calificaciones').select('id, estudiante_id, materia_id, tarea_id, periodo, nota, fecha_registro').eq('materia_id', materiaId).eq('periodo', periodo),
+    clienteSupabase.from('v_promedios_estudiantes').select('estudiante_id, promedio_definitivo').eq('materia_id', materiaId).eq('periodo', periodo)
   ]);
-  if (resEst.error || resTareas.error || resNotas.error) { toast('Error al cargar la planilla'); return; }
+  if (resEst.error || resTareas.error || resNotas.error || resPromedios?.error) { 
+    console.error('Error est:', resEst.error);
+    console.error('Error tareas:', resTareas.error);
+    console.error('Error notas:', resNotas.error);
+    console.error('Error promedios:', resPromedios?.error);
+    toast('Error al cargar la planilla'); 
+    return; 
+  }
   
   listaEstudiantes = resEst.data || [];
   listaTareas = resTareas.data || [];
   notasCargadas = resNotas.data || [];
+  promediosCargados = resPromedios?.data || [];
   
   if (!listaTareas.length) { 
     mostrarSinActividades(); 
@@ -211,12 +351,23 @@ async function cargarPlanilla() {
 
   const selectedTareaId = selectorActividad.value;
   selectorActividad.innerHTML = '<option value="">Selecciona una actividad...</option>';
-  listaTareas.forEach(tarea => {
-    selectorActividad.innerHTML += `<option value="${tarea.id}">${tarea.titulo}</option>`;
-  });
+  
+  if (listaTareas.length === 0) {
+    selectorActividad.innerHTML = '<option value="">Sin actividades</option>';
+  } else {
+    selectorActividad.innerHTML += '<option value="todas">Todas las actividades</option>';
+    listaTareas.forEach(tarea => {
+      const notasDeTarea = notasCargadas.filter(n => String(n.tarea_id) === String(tarea.id) && n.nota !== null && n.nota !== undefined);
+      const completada = (notasDeTarea.length >= listaEstudiantes.length) && (listaEstudiantes.length > 0);
+      const estado = completada ? ' <i data-lucide="check-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> (Calificada)' : '';
+      selectorActividad.innerHTML += `<option value="${tarea.id}">${tarea.titulo}${estado}</option>`;
+    });
+  }
   
   if (listaTareas.some(t => String(t.id) === selectedTareaId)) {
     selectorActividad.value = selectedTareaId;
+  } else {
+    selectorActividad.value = "";
   }
 
   renderizarPlanillaCalificar();
@@ -237,15 +388,25 @@ function renderizarPlanillaCalificar() {
     return;
   }
 
-  const tarea = listaTareas.find(t => String(t.id) === tareaSeleccionadaId);
+  let tareasARenderizar = [];
+  if (tareaSeleccionadaId === 'todas') {
+    tareasARenderizar = listaTareas;
+  } else {
+    const tarea = listaTareas.find(t => String(t.id) === tareaSeleccionadaId);
+    if(tarea) tareasARenderizar.push(tarea);
+  }
 
   thead.innerHTML = '<th class="text-left">Estudiante</th>';
   subthead.innerHTML = '';
   subthead.hidden = true;
   
-  const encabezado = crearCelda('th', tarea.titulo || 'Actividad');
-  encabezado.title = tarea.titulo || 'Actividad';
-  thead.appendChild(encabezado);
+  tareasARenderizar.forEach(tarea => {
+     const nombreCat = tarea.categorias_actividades ? tarea.categorias_actividades.nombre : 'Sin categoría';
+     const encabezado = crearCelda('th', '');
+     encabezado.innerHTML = `<div style="font-size:10px; color:var(--primary); font-weight:800; text-transform:uppercase; margin-bottom:2px;">${nombreCat}</div><div>${tarea.titulo || 'Actividad'}</div>`;
+     encabezado.title = tarea.descripcion ? `[${nombreCat}] ${tarea.titulo}\n\n${tarea.descripcion}` : `[${nombreCat}] ${tarea.titulo || 'Actividad'}`;
+     thead.appendChild(encabezado);
+  });
 
   thead.insertAdjacentHTML('beforeend', '<th class="promedio-col">Definitiva</th><th>Reporte</th>');
   tbody.innerHTML = '';
@@ -254,22 +415,67 @@ function renderizarPlanillaCalificar() {
     const fila = document.createElement('tr');
     fila.appendChild(crearCelda('td', estudiante.nombre_completo, 'text-left'));
     
-    // Celda de la actividad seleccionada
-    const nota = notasCargadas.find(item => item.estudiante_id === estudiante.id && item.tarea_id === tarea.id);
-    const celda = crearCelda('td', nota?.nota ?? '', 'celda-nota');
-    celda.contentEditable = 'true';
-    celda.dataset.estudiante = estudiante.id;
-    celda.dataset.materia = materiaId;
-    celda.dataset.tarea = tarea.id;
-    celda.addEventListener('input', () => actualizarPromedios(fila));
-    fila.appendChild(celda);
+    tareasARenderizar.forEach(tarea => {
+      const nota = notasCargadas.find(item => String(item.estudiante_id) === String(estudiante.id) && String(item.tarea_id) === String(tarea.id));
+      const celda = crearCelda('td', nota?.nota ?? '', 'celda-nota');
+      celda.contentEditable = 'true';
+      celda.dataset.estudiante = estudiante.id;
+      celda.dataset.materia = materiaId;
+      celda.dataset.tarea = tarea.id;
+      
+      celda.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const nextRow = e.target.closest('tr').nextElementSibling;
+          if (nextRow) {
+            const cellIndex = Array.from(e.target.closest('tr').children).indexOf(e.target);
+            const nextCell = nextRow.children[cellIndex];
+            if (nextCell && nextCell.classList.contains('celda-nota')) {
+              nextCell.focus();
+              const selection = window.getSelection();
+              const range = document.createRange();
+              range.selectNodeContents(nextCell);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          }
+        }
+      });
 
-    const promedioMateria = crearCelda('td', '-', 'promedio-col promedio-materia');
+      celda.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+        const lines = pasteData.split(/\r?\n/).filter(l => l.trim() !== '');
+        const cellIndex = Array.from(e.target.closest('tr').children).indexOf(e.target);
+        if (lines.length > 1) {
+          let currentRow = e.target.closest('tr');
+          for (let i = 0; i < lines.length; i++) {
+            if (!currentRow) break;
+            const currentCell = currentRow.children[cellIndex];
+            if (currentCell && currentCell.classList.contains('celda-nota')) {
+               let val = lines[i].trim().replace(',', '.');
+               if(!isNaN(Number(val)) && val !== '') currentCell.textContent = val;
+            }
+            currentRow = currentRow.nextElementSibling;
+          }
+        } else if (lines.length === 1) {
+          let val = lines[0].trim().replace(',', '.');
+          if(!isNaN(Number(val)) && val !== '') e.target.textContent = val;
+        }
+      });
+
+      fila.appendChild(celda);
+    });
+
+    const pro = promediosCargados.find(p => String(p.estudiante_id) === String(estudiante.id));
+    const promedioMateria = crearCelda('td', pro ? pro.promedio_definitivo : '-', 'promedio-col promedio-materia');
     promedioMateria.dataset.materia = materiaId;
     fila.appendChild(promedioMateria);
-    fila.appendChild(crearCelda('td', '-', 'promedio-col promedio-general'));
+
     const acciones = crearCelda('td', '', 'acciones-celda');
-    const botonReporte = crearCelda('button', '💬 Enviar', 'btn-wa');
+    const botonReporte = document.createElement('button');
+    botonReporte.className = 'btn-wa';
+    botonReporte.innerHTML = '<i data-lucide="smartphone" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Enviar';
     botonReporte.type = 'button';
     const nombreMateria = document.getElementById('filtro-materia').selectedOptions[0]?.textContent || 'la materia';
     botonReporte.addEventListener('click', () => enviarWhatsApp(estudiante.nombre_completo, promedioDeFila(fila), periodo, nombreMateria));
@@ -293,51 +499,93 @@ async function guardarNotas() {
     const periodo = document.getElementById('filtro-periodo').value;
     const celdas = document.querySelectorAll('.celda-nota');
     let datosAGuardar = [];
+    let notasAEliminar = [];
 
     // Recorremos todas las celdas de la tabla para ver si tienen texto
     celdas.forEach(celda => {
         let texto = celda.textContent.trim();
-        // Cambiamos comas por puntos por si el teclado está en español (ej. 8,5 -> 8.5)
-        texto = texto.replace(',', '.'); 
-        
+        texto = texto.replace(',', '.');
+
+        // Convertir IDs a entero estricto — omitir celda si algún ID no es un número entero válido
+        const estId = parseInt(celda.dataset.estudiante, 10);
+        const matId = parseInt(celda.dataset.materia, 10);
+        const tarId = parseInt(celda.dataset.tarea, 10);
+        const perId = parseInt(periodo, 10);
+
+        if (isNaN(estId) || isNaN(matId) || isNaN(tarId) || isNaN(perId)) return;
+
+        const notaAnterior = notasCargadas.find(n =>
+            parseInt(n.estudiante_id, 10) === estId && parseInt(n.tarea_id, 10) === tarId
+        );
+
         if (texto !== '') {
-            let notaNumerica = Number(texto);
-            // Si lo que escribieron es un número válido, lo preparamos para guardar
-            if (!isNaN(notaNumerica)) {
-                if (notaNumerica < 0 || notaNumerica > 10) return;
+            const notaNumerica = Number(texto);
+            if (!isNaN(notaNumerica) && notaNumerica >= 0 && notaNumerica <= 10) {
+                // NUNCA enviamos el id — el onConflict resuelve por clave de negocio
                 datosAGuardar.push({
-                    estudiante_id: Number(celda.dataset.estudiante),
-                    materia_id: Number(celda.dataset.materia),
-                    tarea_id: Number(celda.dataset.tarea),
-                    periodo: parseInt(periodo),
+                    estudiante_id: estId,
+                    materia_id: matId,
+                    tarea_id: tarId,
+                    periodo: perId,
                     nota: notaNumerica
+                });
+            }
+        } else {
+            // Celda vacía: si tenía nota antes, eliminarla de la BD por clave de negocio
+            if (notaAnterior) {
+                notasAEliminar.push({
+                    estudiante_id: estId,
+                    materia_id: matId,
+                    tarea_id: tarId,
+                    periodo: perId
                 });
             }
         }
     });
 
-    if (datosAGuardar.length === 0) {
-      toast('⚠️ Escribe notas válidas entre 0 y 10.');
+    if (datosAGuardar.length === 0 && notasAEliminar.length === 0) {
+        toast('️ No hay cambios nuevos para guardar.');
         botonGuardar.disabled = false;
         return;
     }
 
-    // El comando UPSERT inserta la nota nueva o actualiza la vieja automáticamente
-    let { error } = await clienteSupabase
-      .from('calificaciones')
-      .upsert(datosAGuardar, { onConflict: 'estudiante_id, materia_id, periodo, tarea_id' });
+    let errorOcurrido = null;
 
-    if (error) {
-        console.error('Error al guardar calificaciones:', error);
-        toast('No fue posible guardar las calificaciones.');
+    // 1. Eliminar notas borradas (celdas vaciadas) usando clave de negocio
+    for (const clave of notasAEliminar) {
+        if (errorOcurrido) break;
+        const { error } = await clienteSupabase.from('calificaciones').delete()
+            .eq('estudiante_id', clave.estudiante_id)
+            .eq('materia_id',    clave.materia_id)
+            .eq('tarea_id',      clave.tarea_id)
+            .eq('periodo',       clave.periodo);
+        if (error) errorOcurrido = error;
+    }
+
+    // 2. Guardar notas con upsert puro por clave de negocio (sin enviar el campo id)
+    if (datosAGuardar.length > 0 && !errorOcurrido) {
+        const { error } = await clienteSupabase
+            .from('calificaciones')
+            .upsert(datosAGuardar, { onConflict: 'estudiante_id,materia_id,periodo,tarea_id' });
+        if (error) errorOcurrido = error;
+    }
+
+    if (errorOcurrido) {
+        console.error('Error al guardar calificaciones:', errorOcurrido);
+        toast('Error DB: ' + (errorOcurrido.message || 'No fue posible guardar las calificaciones.'));
     } else {
-        toast('✓ Calificaciones guardadas correctamente.');
+        toast('Calificaciones guardadas correctamente.');
         await cargarPlanilla();
     }
-      botonGuardar.disabled = false;
+    botonGuardar.disabled = false;
 }
 
 async function inicializarPlanilla() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramMateria = urlParams.get('materia_id');
+  const paramPeriodo = urlParams.get('periodo');
+  const paramTarea = urlParams.get('tarea_id');
+
   const [resConfig, resMaterias] = await Promise.all([
     clienteSupabase.from('configuracion_global').select('cantidad_periodos, periodo_actual').limit(1).single(),
     clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
@@ -350,11 +598,115 @@ async function inicializarPlanilla() {
   listaMaterias = resMaterias.data || [];
   configurarPeriodos(resConfig.data?.cantidad_periodos);
   configurarMaterias(listaMaterias);
-  if (resConfig.data?.periodo_actual) document.getElementById('filtro-periodo').value = String(resConfig.data.periodo_actual);
+
+  if (paramPeriodo) document.getElementById('filtro-periodo').value = paramPeriodo;
+  else if (resConfig.data?.periodo_actual) document.getElementById('filtro-periodo').value = String(resConfig.data.periodo_actual);
+
+  if (paramMateria) document.getElementById('filtro-materia').value = paramMateria;
+
+  if (paramTarea) {
+    const selectorActividad = document.getElementById('filtro-actividad');
+    selectorActividad.innerHTML = `<option value="${paramTarea}">Cargando...</option>`;
+    selectorActividad.value = paramTarea;
+  }
+
   await cargarPlanilla();
+
+  if (paramMateria || paramPeriodo || paramTarea) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+function rellenarConUno() {
+  const tareaId = document.getElementById('filtro-actividad').value;
+  if (!tareaId) {
+    toast('Selecciona una actividad para rellenar.');
+    return;
+  }
+  mostrarModalConfirm(
+    'Rellenar con nota mínima',
+    'Se asignará <strong>1.0</strong> a todos los estudiantes que aún no tengan nota en esta actividad. Podrás cambiar los valores antes de guardar.',
+    'Sí, rellenar',
+    () => _ejecutarRellenarConUno(tareaId)
+  );
+}
+
+function _ejecutarRellenarConUno(tareaId) {
+  const celdas = document.querySelectorAll('.celda-nota');
+  let cambiadas = 0;
+  celdas.forEach(celda => {
+    if (celda.dataset.tarea === String(tareaId)) {
+      if (celda.textContent.trim() === '') {
+        celda.textContent = '1.0';
+        cambiadas++;
+      }
+    }
+  });
+  if (cambiadas > 0) {
+    toast(`Se rellenaron ${cambiadas} notas con 1.0. No olvides guardar.`);
+  } else {
+    toast('No había celdas vacías para rellenar.');
+  }
+}
+
+// ─── Modal de confirmación elegante ───────────────────────────────────────────
+let _modalCallback = null;
+
+function mostrarModalConfirm(titulo, mensaje, textoConfirmar, callback) {
+  _modalCallback = callback;
+  document.getElementById('modal-confirm-titulo').textContent = titulo;
+  document.getElementById('modal-confirm-msg').innerHTML = mensaje;
+  document.getElementById('modal-btn-ok').textContent = textoConfirmar || 'Confirmar';
+  document.getElementById('modal-confirm-overlay').classList.add('open');
+}
+
+function cerrarModal() {
+  document.getElementById('modal-confirm-overlay').classList.remove('open');
+  _modalCallback = null;
+}
+
+function confirmarModal() {
+  cerrarModal();
+  if (typeof _modalCallback === 'function') _modalCallback();
+}
+
+function copiarColumna() {
+  const celdas = document.querySelectorAll('.celda-nota');
+  if (celdas.length === 0) {
+    toast('No hay notas para copiar.');
+    return;
+  }
+  let texto = '';
+  celdas.forEach(celda => {
+    texto += celda.textContent.trim() + '\n';
+  });
+  navigator.clipboard.writeText(texto).then(() => {
+    toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Columna copiada al portapapeles.');
+    lucide.createIcons();
+  }).catch(err => {
+    toast('Error al copiar al portapapeles.');
+  });
 }
 
 inicializarPlanilla();
 </script>
+<script>lucide.createIcons();</script>
+
+<!-- ─── Modal de confirmación elegante ─────────────────────────────────── -->
+<div id="modal-confirm-overlay" class="modal-overlay" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-titulo">
+    <div class="modal-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+      </svg>
+    </div>
+    <div class="modal-title" id="modal-confirm-titulo">Confirmar acción</div>
+    <div class="modal-msg" id="modal-confirm-msg"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="modal-btn modal-btn-confirm" id="modal-btn-ok" onclick="confirmarModal()">Confirmar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Observador del Estudiante Inteligente — I.E. Nuestra Señora del Pilar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-dark: #172554;
+      --text-main: #0f172a;
+      --border-color: #cbd5e1;
+      --bg-panel: #ffffff;
+    }
+    
+    
+    .top-action-bar { max-width: 950px; margin: 0 auto 15px auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .app-title-tag { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--primary); }
+    .btn { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; transition: all 0.15s; }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-success { background-color: #059669; color: white; }
+    .btn-outline { background-color: white; border-color: #cbd5e1; color: #334155; }
+    .control-panel { max-width: 950px; margin: 0 auto 25px auto; background: var(--bg-panel); border-radius: 14px; padding: 22px 26px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 18px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    label { font-size: 11.5px; font-weight: 600; color: #334155; display: flex; justify-content: space-between; }
+    input, select, textarea { width: 100%; padding: 8px 11px; border-radius: 7px; border: 1px solid #cbd5e1; font-size: 12.5px; }
+    .competence-banner { background: #f8fafc; border-left: 4px solid var(--primary); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 11.5px; margin: 12px 0 16px 0; }
+    .teacher-action-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px; margin-top: 10px; }
+    .teacher-action-card.t2 { background: #fffbeb; border-color: #fde68a; }
+    .teacher-action-card.t3 { background: #fef2f2; border-color: #fecaca; }
+    .sheet-wrapper { max-width: 950px; margin: 0 auto; display: flex; justify-content: center; }
+    .print-sheet { width: 216mm; min-height: 279mm; background: #ffffff; padding: 12mm 14mm; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
+    .inst-header { display: flex; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 10px; gap: 14px; }
+    .inst-logo-box { width: 54px; height: 54px; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--primary); background: #f8fafc; flex-shrink: 0; }
+    .inst-title-box { flex-grow: 1; text-align: center; }
+    .inst-title-box h1 { font-family: 'Cinzel', serif; font-size: 14.5px; font-weight: 700; color: var(--primary); }
+    .inst-title-box h2 { font-size: 10px; font-weight: 600; color: #475569; }
+    .inst-title-box .doc-type-title { font-size: 11.5px; font-weight: 800; background: #f1f5f9; display: inline-block; padding: 2px 14px; border-radius: 4px; border: 1px solid #cbd5e1; margin-top: 3px; }
+    .inst-meta-box { text-align: right; font-size: 9px; font-weight: 600; color: #334155; border-left: 1px solid #cbd5e1; padding-left: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px; }
+    .data-table td { border: 1px solid #94a3b8; padding: 4px 6px; }
+    .data-table .label-cell { background-color: #f1f5f9; font-weight: 700; width: 16%; }
+    .data-table .val-cell { font-weight: 500; width: 34%; }
+    .classification-bar { background: #f8fafc; border: 1px solid #94a3b8; border-radius: 4px; padding: 5px 8px; margin-bottom: 8px; display: flex; justify-content: space-between; font-size: 9.5px; font-weight: 600; }
+    .class-item { display: flex; align-items: center; gap: 4px; }
+    .class-checkbox { width: 13px; height: 13px; border: 1.5px solid #475569; border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; background: white; }
+    .class-checkbox.checked { background: var(--primary); color: white; border-color: var(--primary); }
+    .section-block { margin-bottom: 7px; }
+    .section-header { background: #f1f5f9; border: 1px solid #94a3b8; border-bottom: none; padding: 3px 8px; font-size: 9.5px; font-weight: 700; display: flex; justify-content: space-between; }
+    .section-content-box { border: 1px solid #94a3b8; padding: 6px 8px; font-size: 9.8px; line-height: 1.35; min-height: 52px; background: white; text-align: justify; }
+    .section-content-box.hechos-box { min-height: 68px; }
+    .section-content-box.descargos-box { min-height: 50px; font-style: italic; background: #fafafa; }
+    .section-content-box.compromisos-box { min-height: 68px; }
+    .signatures-section { margin-top: 10px; border-top: 1px dashed #94a3b8; padding-top: 8px; }
+    .signatures-title { font-size: 8.5px; font-weight: 700; text-align: center; text-transform: uppercase; color: #475569; margin-bottom: 8px; }
+    .signatures-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .signature-item { text-align: center; }
+    .sig-line { border-bottom: 1px solid #334155; height: 30px; margin-bottom: 4px; }
+    .sig-name { font-size: 8.5px; font-weight: 700; }
+    .sig-role { font-size: 7.5px; color: #64748b; }
+    .print-footer { margin-top: 6px; padding-top: 4px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 8px; color: #64748b; }
+    .btn-info { background-color: #0284c7; color: white; }
+    .inst-logo { max-height: 52px; max-width: 52px; object-fit: contain; }
+    .semaforo-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
+    .badge-t1 { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .badge-t2 { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .badge-t3 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .badge-piar { background: #e0e7ff; color: #3730a3; border: 1px solid #a5b4fc; }
+    .alerta-reincidencia { background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 8px; padding: 12px 14px; margin: 10px 0; color: #78350f; font-size: 12px; }
+    .fullscreen-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.85); z-index: 9999; overflow-y: auto; padding: 30px 15px; display: flex; flex-direction: column; align-items: center; }
+    .history-card { background: white; border-radius: 12px; padding: 18px 22px; border: 1px solid #e2e8f0; margin: 0 auto 20px auto; max-width: 950px; }
+    .history-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 10px; }
+    .history-table th { background: #f8fafc; padding: 8px 10px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #475569; font-weight: 700; }
+    .history-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 16px; }
+    .modal-content { background: white; border-radius: 12px; max-width: 600px; width: 100%; padding: 22px 26px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+    /* Estilos para Pestañas Superiores y Apartado General de Folios */
+    .nav-tabs-wrapper { max-width: 950px; margin: 0 auto 16px auto; display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; border: 1px solid #e2e8f0; gap: 6px; }
+    .tab-btn { flex: 1; padding: 10px 16px; font-size: 13px; font-weight: 700; border: none; background: transparent; color: #64748b; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease; }
+    .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .tab-btn:hover:not(.active) { color: #1e293b; background: rgba(255,255,255,0.5); }
+    .tab-badge { background: #e2e8f0; color: #475569; font-size: 11px; padding: 2px 8px; border-radius: 9999px; font-weight: 800; }
+    .tab-btn.active .tab-badge { background: #dbeafe; color: #1d4ed8; }
+
+    .apartado-container { max-width: 950px; margin: 0 auto 30px auto; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .kpi-card { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 12px; }
+    .kpi-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .kpi-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1; }
+    .kpi-lbl { font-size: 11px; font-weight: 600; color: #64748b; margin-top: 4px; }
+    .search-filter-bar { background: white; border-radius: 12px; padding: 14px 18px; border: 1px solid #e2e8f0; margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+
+    @page { size: letter portrait; margin: 10mm 12mm; }
+    @media print {
+      .no-print, .control-panel, .top-action-bar, .history-card, .fab-back, #modal-justificacion, #modal-edicion, .fullscreen-modal, .toast, #toast, .toast-success, .toast-error, .nav-tabs-wrapper, #apartado-todos-folios, .navbar, .brand {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+      }
+      #seccion-redactar { display: block !important; }
+      .sheet-wrapper { width: 100% !important; margin: 0 !important; padding: 0 !important; display: block !important; }
+      .print-sheet { width: 100% !important; min-height: auto !important; height: auto !important; box-shadow: none !important; padding: 0 !important; }
+    }
+  </style>
+
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<!-- Botón Flotante de Regreso -->
+<button onclick="window.location.href='dashboard.html'" class="fab-back no-print" title="Regresar al Panel Principal">
+  <i data-lucide="arrow-left" style="width: 24px; height: 24px;"></i>
+</button>
+
+<div class="app-shell">
+<nav class="navbar no-print">
+  <div class="brand">
+    <div class="brand-mark"><i data-lucide="file-text" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>
+    <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Observador</div></div>
+  </div>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+</nav>
+<main class="page">
+
+  <!-- Pestañas Superiores de Navegación -->
+  <div class="nav-tabs-wrapper no-print">
+    <button class="tab-btn active" id="tab-btn-redactar" type="button" onclick="cambiarTabObservador('redactar')">
+      <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i> Redactar y Ver Hoja Oficial
+    </button>
+    <button class="tab-btn" id="tab-btn-explorador" type="button" onclick="cambiarTabObservador('explorador')">
+      <i data-lucide="folder-kanban" style="width: 16px; height: 16px;"></i> Expediente de Folios Guardados 
+      <span class="tab-badge" id="badge-total-folios-tab">0</span>
+    </button>
+  </div>
+
+  <div id="seccion-redactar">
+
+  <div class="top-action-bar no-print">
+    <div class="app-title-tag" id="app-title-tag">
+      <i data-lucide="file-check" style="width: 20px; height: 20px;"></i>
+      <span>Observador Estudiantil (Ley 1620)</span>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <button class="btn btn-outline" type="button" onclick="togglePantallaCompleta()" id="btn-fullscreen" title="Ampliar hoja a pantalla completa">
+        <i data-lucide="maximize-2" style="width: 16px; height: 16px;"></i> Ampliar Hoja
+      </button>
+      <button class="btn btn-outline" type="button" onclick="togglePanelHistorial()" id="btn-historial-toggle" title="Ver historial de actas y generar resumen">
+        <i data-lucide="history" style="width: 16px; height: 16px;"></i> Historial y Resumen
+      </button>
+      <button class="btn btn-success" type="button" onclick="guardarYGenerarReporte()" id="btn-guardar-reporte">
+        <i data-lucide="save" style="width: 18px; height: 18px;"></i> Guardar Folio
+      </button>
+      <button class="btn btn-outline" type="button" onclick="window.print()" id="btn-imprimir" style="display:none;">
+        <i data-lucide="printer" style="width: 18px; height: 18px;"></i> Re-imprimir
+      </button>
+    </div>
+  </div>
+
+  <!-- Panel de Historial Convivencial (Ocultable) -->
+  <div class="history-card no-print" id="panel-historial" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h3 style="margin: 0; font-size: 15px; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="folder-clock" style="width: 18px; height: 18px;"></i> Historial Convivencial y Actas Previas
+        </h3>
+        <span style="font-size: 12px; color: #64748b;" id="subtitulo-historial">Selecciona un estudiante para ver sus antecedentes y folios</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-info" type="button" onclick="imprimirResumenConvivencial()" id="btn-resumen-convivencial">
+          <i data-lucide="file-spreadsheet" style="width: 16px; height: 16px;"></i> Imprimir Resumen del Alumno
+        </button>
+        <button class="btn btn-outline" type="button" onclick="togglePanelHistorial()">
+          <i data-lucide="x" style="width: 16px; height: 16px;"></i> Cerrar
+        </button>
+      </div>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Fecha/Hora</th>
+            <th>Estudiante(s)</th>
+            <th>Tipo</th>
+            <th>Situación Tipificada</th>
+            <th>Remisión</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="historial-tabla-body">
+          <tr><td colspan="7" style="text-align:center; padding: 14px; color: #64748b;">No se han cargado registros previos aún.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="control-panel no-print">
+    <div class="panel-header">
+      <h2 style="display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="sliders" style="width: 18px; height: 18px; color: var(--primary);"></i> Configuración y Redacción Asistida del Registro
+      </h2>
+      <span>Docente: <strong id="docente-nombre">Cargando...</strong></span>
+    </div>
+
+    <!-- Selector de Modalidad: 1 Alumno vs Pareja de Alumnos -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+      <span style="font-weight: 700; color: #1e293b; font-size: 12px; display: flex; align-items: center; gap: 5px;">
+        <i data-lucide="users" style="width: 16px; height: 16px; color: var(--primary);"></i> Modalidad:
+      </span>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;">
+        <input type="radio" name="radModalidad" value="individual" checked onchange="onCambioModalidad()">
+        <span>1 Estudiante (Individual)</span>
+      </label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;">
+        <input type="radio" name="radModalidad" value="pares" onchange="onCambioModalidad()">
+        <span>2 Estudiantes (Enfrentamiento / Daño a Pares)</span>
+      </label>
+    </div>
+
+    <!-- Sub-panel de Roles para caso de 2 Estudiantes -->
+    <div id="grid-pares" style="display: none; background: #faf5ff; border: 1.5px solid #d8b4fe; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;">
+      <div style="font-weight: 700; color: #6b21a8; font-size: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <i data-lucide="shield-alert" style="width: 16px; height: 16px;"></i> Tipificación de Roles entre Estudiantes:
+      </div>
+      <div style="display: flex; gap: 16px; margin-bottom: 10px; font-size: 12px; flex-wrap: wrap;">
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <input type="radio" name="radRolPares" value="generador_afectado" checked onchange="onCambioRolPares()">
+          <strong>Estudiante Generador de la falta</strong> vs <strong>Estudiante Afectado (Receptor/Víctima)</strong>
+        </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <input type="radio" name="radRolPares" value="mutua" onchange="onCambioRolPares()">
+          <strong>Falta Mutua / Ambos participaron por igual</strong>
+        </label>
+      </div>
+      <div class="form-grid" style="margin-bottom: 0;">
+        <div class="form-group">
+          <label for="selEstudiante2" id="lblEstudiante2">Segundo Estudiante (Afectado):</label>
+          <select id="selEstudiante2" onchange="onSeleccionarEstudiante2()"></select>
+        </div>
+        <div class="form-group">
+          <label for="txtDocEstudiante2">Doc. Identidad 2:</label>
+          <input type="text" id="txtDocEstudiante2" readonly placeholder="Doc. estudiante 2">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group" style="grid-column: span 2;">
+        <label for="selTipo">1. Tipo de Situación / Proceso:</label>
+        <select id="selTipo" onchange="onCambioTipo()">
+          <option value="T1">Situación Tipo I (Falta Leve / Manejo Pedagógico en Aula)</option>
+          <option value="T2">Situación Tipo II (Falta Grave / Agresión / Remisión Obligatoria)</option>
+          <option value="T3">Situación Tipo III (Falta Gravísima / Presunto Delito / Ruta Externa)</option>
+          <option value="PIAR">Acompañamiento Académico / Socioemocional (PIAR / DUA)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="selEstudiante" id="lblEstudiante1">2. Estudiante Titular / Generador:</label>
+        <select id="selEstudiante" onchange="onSeleccionarEstudiante()"></select>
+        <!-- Semáforo de Faltas del Alumno -->
+        <div id="contenedor-semaforo" style="margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"></div>
+      </div>
+      <div class="form-group">
+        <label for="txtDocEstudiante">Doc. Identidad:</label>
+        <input type="text" id="txtDocEstudiante" value="" placeholder="Ej. T.I. 123456" oninput="actualizarVistaPrevia()">
+      </div>
+    </div>
+
+    <!-- Alerta Dinámica de Reincidencia (Ley 1620) -->
+    <div id="alerta-reincidencia" class="alerta-reincidencia" style="display: none;"></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="selAsignatura">3. Asignatura / Espacio:</label>
+        <select id="selAsignatura" onchange="actualizarVistaPrevia()">
+          <option value="Lengua Castellana">Lengua Castellana</option>
+          <option value="Matemáticas">Matemáticas</option>
+          <option value="Ciencias Naturales">Ciencias Naturales</option>
+          <option value="Ciencias Sociales">Ciencias Sociales</option>
+          <option value="Inglés">Inglés</option>
+          <option value="Educación Física">Educación Física</option>
+          <option value="Tecnología e Informática">Tecnología e Informática</option>
+          <option value="Ética y Valores Humanos">Ética y Valores Humanos</option>
+          <option value="Dirección de Grupo">Dirección de Grupo</option>
+          <option value="Descanso Pedagógico">Descanso Pedagógico</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="txtFecha">4. Fecha:</label>
+        <input type="date" id="txtFecha" onchange="actualizarVistaPrevia()">
+      </div>
+      <div class="form-group">
+        <label for="txtHora">5. Hora:</label>
+        <input type="time" id="txtHora" onchange="actualizarVistaPrevia()">
+      </div>
+    </div>
+    <div class="competence-banner" id="bannerCompetencia">
+      <i data-lucide="scale" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> <span id="textoCompetencia" style="vertical-align: middle;">Docente de Aula / Director de Grupo (Manejo 100% Pedagógico en el Aula)</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label for="selSituacionCatalogo" id="lblSituacionCatalogo">6. Situación Frecuente (10 Tipificadas + Opción Otro):</label>
+        <select id="selSituacionCatalogo" onchange="onCambioSituacion()"></select>
+      </div>
+    </div>
+    <div class="teacher-action-card" id="cardAccionesDocente">
+      <div style="font-weight:700; margin-bottom:6px; display: flex; align-items: center;"><i data-lucide="target" style="width: 16px; height: 16px; margin-right: 6px;"></i> Acciones Pedagógicas y de Manejo del Docente (5 Opciones Sugeridas):</div>
+      <select id="selAccionDocente" onchange="onCambioAccionDocente()"></select>
+    </div>
+    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+      <div class="form-group">
+        <label for="txtHechosEditor" style="display: flex; align-items: center;"><i data-lucide="file-text" style="width: 14px; height: 14px; margin-right: 6px;"></i> 1. Descripción Objetiva de los Hechos (Editable):</label>
+        <textarea id="txtHechosEditor" rows="3" oninput="actualizarVistaPrevia()"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="txtDescargosEditor" style="display: flex; align-items: center;"><i data-lucide="message-circle" style="width: 14px; height: 14px; margin-right: 6px;"></i> 2. Descargos y Versión Libre del Estudiante (Art. 29 C.P.):</label>
+        <textarea id="txtDescargosEditor" rows="2" oninput="actualizarVistaPrevia()"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="txtCompromisosEditor" style="display: flex; align-items: center;"><i data-lucide="handshake" style="width: 14px; height: 14px; margin-right: 6px;"></i> 3. Acciones Pedagógicas y Compromisos Acordados:</label>
+        <textarea id="txtCompromisosEditor" rows="4" oninput="actualizarVistaPrevia()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-wrapper">
+    <div class="print-sheet">
+      <div>
+        <div class="inst-header">
+          <div class="inst-logo-box">
+            <img src="Logo.jpg" alt="Logo Institucional" class="inst-logo" onerror="this.style.display='none'; document.getElementById('logo-fallback-icon').style.display='inline-block';">
+            <i id="logo-fallback-icon" data-lucide="building" style="width: 44px; height: 44px; color: #475569; display: none;"></i>
+          </div>
+          <div class="inst-title-box">
+            <h1>INSTITUCIÓN EDUCATIVA NUESTRA SEÑORA DEL PILAR</h1>
+            <h2>SISTEMA INTEGRADO DE GESTIÓN ESCOLAR — SEGUIMIENTO Y DEBIDO PROCESO</h2>
+            <div class="doc-type-title" id="previewTituloDoc">REGISTRO DE CONVIVENCIA ESCOLAR (LEY 1620 DE 2013)</div>
+          </div>
+          <div class="inst-meta-box">
+            <div>AÑO: <strong>2026</strong></div>
+            <div>FOLIO: <strong style="color:#dc2626;" id="previewFolio">OBS-2026-001</strong></div>
+            <div>JORNADA: <strong>MAÑANA</strong></div>
+          </div>
+        </div>
+        <table class="data-table">
+          <tr id="row-estudiante-1">
+            <td class="label-cell" id="previewLabelEstudiante1">Estudiante:</td>
+            <td class="val-cell"><strong id="previewNombreEstudiante">Andrés Felipe Mendoza Gómez</strong></td>
+            <td class="label-cell">Doc. Identidad:</td>
+            <td class="val-cell" id="previewDocEstudiante">T.I. 1.082.345.123</td>
+          </tr>
+          <tr id="row-estudiante-2" style="display: none;">
+            <td class="label-cell" id="previewLabelEstudiante2">Estudiante 2 (Afectado):</td>
+            <td class="val-cell"><strong id="previewNombreEstudiante2">-</strong></td>
+            <td class="label-cell">Doc. Identidad 2:</td>
+            <td class="val-cell" id="previewDocEstudiante2">-</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Grado / Grupo:</td>
+            <td class="val-cell"><strong>5°02</strong></td>
+            <td class="label-cell">Fecha y Hora:</td>
+            <td class="val-cell"><span id="previewFecha">27/08/2026</span> — <span id="previewHora">09:15 AM</span></td>
+          </tr>
+          <tr>
+            <td class="label-cell">Asignatura:</td>
+            <td class="val-cell" id="previewAsignatura">Lengua Castellana</td>
+            <td class="label-cell">Docente:</td>
+            <td class="val-cell"><strong id="preview-docente-nombre">Cargando...</strong></td>
+          </tr>
+        </table>
+        <div class="classification-bar">
+          <div class="class-item"><span class="class-checkbox" id="chkTipo1">✓</span><span>Tipo I (Leve)</span></div>
+          <div class="class-item"><span class="class-checkbox" id="chkTipo2">&nbsp;</span><span>Tipo II (Grave)</span></div>
+          <div class="class-item"><span class="class-checkbox" id="chkTipo3">&nbsp;</span><span>Tipo III (Gravísima)</span></div>
+          <div class="class-item"><span class="class-checkbox" id="chkTipoPIAR">&nbsp;</span><span>Pedagógico / PIAR</span></div>
+        </div>
+        <div class="section-block">
+          <div class="section-header"><span>1. DESCRIPCIÓN OBJETIVA DE LOS HECHOS</span><span style="font-size:8px;color:#64748b;">Factual y descriptivo</span></div>
+          <div class="section-content-box hechos-box" id="previewHechos"></div>
+        </div>
+        <div class="section-block">
+          <div class="section-header"><span>2. DESCARGOS Y VERSIÓN LIBRE DEL ESTUDIANTE</span><span style="font-size:8px;color:#64748b;">Art. 29 C.P.</span></div>
+          <div class="section-content-box descargos-box" id="previewDescargos"></div>
+        </div>
+        <div class="section-block">
+          <div class="section-header"><span>3. ACCIONES PEDAGÓGICAS Y COMPROMISOS ACORDADOS</span><span style="font-size:8px;color:#64748b;">Restaura y previene</span></div>
+          <div class="section-content-box compromisos-box" id="previewCompromisos"></div>
+        </div>
+      </div>
+      <div>
+        <div class="signatures-section">
+          <div class="signatures-title">Constancia de Notificación y Aceptación de Compromisos</div>
+          <div class="signatures-grid" id="previewGridFirmas"></div>
+        </div>
+        <div class="print-footer">
+          <span>Garantía de Debido Proceso Escolar — Ley 1620 de 2013 | Ley 1098 de 2006</span>
+          <span>I.E. Nuestra Señora del Pilar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div> <!-- Fin #seccion-redactar -->
+
+  <!-- ======================================================== -->
+  <!-- APARTADO DEDICADO: EXPLORADOR DE TODOS LOS FOLIOS GUARDADOS -->
+  <!-- ======================================================== -->
+  <div id="apartado-todos-folios" class="apartado-container no-print" style="display: none;">
+    <!-- Encabezado del Apartado -->
+    <div style="background: white; border-radius: 12px; padding: 18px 24px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 style="margin: 0; font-size: 18px; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="folder-kanban" style="width: 22px; height: 22px;"></i> Expediente de Folios Guardados
+          </h2>
+          <p style="margin: 4px 0 0 0; font-size: 12.5px; color: #64748b;">
+            Listado general de todas las actas convivenciales registradas, histórico de mediaciones y archivo probatorio escolar.
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-outline" type="button" onclick="confirmarLimpiezaPruebas()" style="color: #dc2626; border-color: #fca5a5;" title="Reiniciar folios de prueba a OBS-2026-0001">
+            <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i> Purgar Pruebas
+          </button>
+          <button class="btn btn-outline" type="button" onclick="cargarHistorialCompleto()" title="Refrescar lista desde la base de datos">
+            <i data-lucide="refresh-cw" style="width: 15px; height: 15px;"></i> Sincronizar
+          </button>
+          <button class="btn btn-primary" type="button" onclick="cambiarTabObservador('redactar')">
+            <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> + Redactar Nuevo Folio
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Tarjetas KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #eff6ff; color: #2563eb;">
+          <i data-lucide="files" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+          <div class="kpi-val" id="kpi-total-folios">0</div>
+          <div class="kpi-lbl">Total Folios Guardados</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #f0fdf4; color: #16a34a;">
+          <i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+          <div class="kpi-val" id="kpi-t1-folios" style="color: #16a34a;">0</div>
+          <div class="kpi-lbl">Faltas Leves (Tipo I)</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #fffbeb; color: #d97706;">
+          <i data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+          <div class="kpi-val" id="kpi-t2-folios" style="color: #d97706;">0</div>
+          <div class="kpi-lbl">Faltas Graves (Tipo II)</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #fef2f2; color: #dc2626;">
+          <i data-lucide="shield-alert" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+          <div class="kpi-val" id="kpi-t3-folios" style="color: #dc2626;">0</div>
+          <div class="kpi-lbl">Gravísimas (Tipo III)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Contexto Académico y Filtros Inteligentes -->
+    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+        <!-- Indicadores del Grado en Curso y Año Lectivo Vinculados -->
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <span style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Enlace Académico:</span>
+          <span style="background: white; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; color: var(--primary); display: inline-flex; align-items: center; gap: 5px;">
+            <i data-lucide="school" style="width: 14px; height: 14px;"></i> Grado: <span id="filtro-badge-grado">5°02</span>
+          </span>
+          <span style="background: white; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; color: #0284c7; display: inline-flex; align-items: center; gap: 5px;">
+            <i data-lucide="calendar" style="width: 14px; height: 14px;"></i> Año Lectivo: <span id="filtro-badge-anio">2026</span>
+          </span>
+        </div>
+        <div style="font-size: 12px; color: #64748b; font-weight: 700;" id="contador-apartado-filtrados">
+          Cargando folios...
+        </div>
+      </div>
+
+      <!-- Controles de Filtrado: Desplegable de Alumno + Clasificación + Buscador -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; align-items: center;">
+        <!-- Desplegable por Nombre de Estudiante -->
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label for="filtro-estudiante-folios" style="font-size: 11.5px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px;">
+            <i data-lucide="user" style="width: 14px; height: 14px; color: var(--primary);"></i> Seleccionar Alumno:
+          </label>
+          <select id="filtro-estudiante-folios" style="font-size: 12.5px; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #0284c7; background: white; font-weight: 600; color: #0f172a;" onchange="filtrarApartadoFolios()">
+            <option value="TODOS">Todos los Estudiantes del Grado</option>
+          </select>
+        </div>
+
+        <!-- Clasificación / Tipo de Falta -->
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label for="filtro-tipo-folios" style="font-size: 11.5px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px;">
+            <i data-lucide="tag" style="width: 14px; height: 14px; color: var(--primary);"></i> Clasificación / Falta:
+          </label>
+          <select id="filtro-tipo-folios" style="font-size: 12.5px; padding: 8px 10px; border-radius: 7px; border: 1px solid #cbd5e1; background: white;" onchange="filtrarApartadoFolios()">
+            <option value="TODOS">Todos los Tipos</option>
+            <option value="T1">Tipo I (Leves / Aula)</option>
+            <option value="T2">Tipo II (Graves / Agresión)</option>
+            <option value="T3">Tipo III (Gravísimas / Delitos)</option>
+            <option value="PIAR">Acompañamiento PIAR / DUA</option>
+          </select>
+        </div>
+
+        <!-- Búsqueda Rápida de Texto -->
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label for="filtro-buscador-folios" style="font-size: 11.5px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px;">
+            <i data-lucide="search" style="width: 14px; height: 14px; color: var(--primary);"></i> Búsqueda rápida:
+          </label>
+          <input type="text" id="filtro-buscador-folios" placeholder="Folio, situación, docente..." style="padding: 8px 10px; font-size: 12.5px; border-radius: 7px; border: 1px solid #cbd5e1; background: white;" oninput="filtrarApartadoFolios()">
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Tabla Completa de Folios -->
+    <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+      <div style="overflow-x: auto;">
+        <table class="history-table" style="margin-top: 0;">
+          <thead>
+            <tr style="background: #f8fafc;">
+              <th style="padding: 12px 14px;">Folio</th>
+              <th style="padding: 12px 14px;">Fecha / Hora</th>
+              <th style="padding: 12px 14px;">Estudiante(s)</th>
+              <th style="padding: 12px 14px;">Tipo</th>
+              <th style="padding: 12px 14px;">Situación / Hechos</th>
+              <th style="padding: 12px 14px;">Instancia</th>
+              <th style="padding: 12px 14px; text-align: center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-apartado-folios-body">
+            <tr><td colspan="7" style="text-align: center; padding: 24px; color: #64748b;">Consultando expedientes escolares...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const clienteSupabase = window.clienteSupabaseCompartido;
+    const toast = mostrarToast;
+
+    let estudiantes = [];
+    let materias = [];
+    let configuracion = {};
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Fetch dynamic data
+      const [resCfg, resEst, resMat] = await Promise.all([
+        clienteSupabase.from('configuracion_global').select('*').limit(1).single(),
+        clienteSupabase.from('estudiantes').select('id, nombre_completo, documento_identidad').eq('estado', 'Activo').order('nombre_completo'),
+        clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
+      ]);
+
+      if (resCfg.data) configuracion = resCfg.data;
+      if (resEst.data) estudiantes = resEst.data;
+      if (resMat.data) materias = resMat.data;
+
+      // Populate Institution Info
+      const instName = configuracion.nombre_institucion || 'INSTITUCIÓN EDUCATIVA';
+      const docName = configuracion.nombre_docente || 'Docente Titular';
+      const instYear = configuracion.año_actual || new Date().getFullYear();
+
+      document.querySelector('.inst-title-box h1').textContent = instName.toUpperCase();
+      document.querySelector('.inst-meta-box div:nth-child(1) strong').textContent = instYear;
+      document.getElementById('docente-nombre').textContent = docName;
+      document.getElementById('preview-docente-nombre').textContent = docName;
+
+      // Populate Students Dropdown 1 y 2
+      const selEst = document.getElementById('selEstudiante');
+      selEst.innerHTML = '<option value="">-- Selecciona un estudiante --</option>';
+      const selEst2 = document.getElementById('selEstudiante2');
+      if (selEst2) selEst2.innerHTML = '<option value="">-- Selecciona segundo estudiante --</option>';
+
+      estudiantes.forEach((e) => {
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = `${e.nombre_completo}`;
+        selEst.appendChild(opt);
+
+        if (selEst2) {
+          const opt2 = document.createElement('option');
+          opt2.value = e.id;
+          opt2.textContent = `${e.nombre_completo}`;
+          selEst2.appendChild(opt2);
+        }
+      });
+
+      // Populate Apartado Students Dropdown y Enlace Académico
+      const selFiltroEst = document.getElementById('filtro-estudiante-folios');
+      const gradoTxt = configuracion.grado || '5°02';
+      const anioTxt = configuracion.año_actual || new Date().getFullYear();
+
+      const elBadgeGrado = document.getElementById('filtro-badge-grado');
+      const elBadgeAnio = document.getElementById('filtro-badge-anio');
+      if (elBadgeGrado) elBadgeGrado.textContent = gradoTxt;
+      if (elBadgeAnio) elBadgeAnio.textContent = anioTxt;
+
+      if (selFiltroEst) {
+        selFiltroEst.innerHTML = `<option value="TODOS">👥 Todos los Estudiantes de ${gradoTxt} (${estudiantes.length} Alumnos)</option>`;
+        estudiantes.forEach((e) => {
+          const opt = document.createElement('option');
+          opt.value = e.id;
+          opt.textContent = `${e.nombre_completo}`;
+          selFiltroEst.appendChild(opt);
+        });
+      }
+
+      // Populate Subjects Dropdown
+      const selAsig = document.getElementById('selAsignatura');
+      selAsig.innerHTML = '<option value="">-- Selecciona una asignatura --</option>';
+      materias.forEach((m) => {
+        const opt = document.createElement('option');
+        opt.value = m.nombre_materia;
+        opt.textContent = m.nombre_materia;
+        selAsig.appendChild(opt);
+      });
+      
+      // Auto-set Date and Time
+      const now = new Date();
+      document.getElementById('txtFecha').value = now.toISOString().split('T')[0];
+      document.getElementById('txtHora').value = now.toTimeString().slice(0, 5);
+      
+      // Update Title Tag
+      if (configuracion.nombre_clase) {
+        document.getElementById('app-title-tag').textContent = 'Observador Estudiantil — ' + configuracion.nombre_clase;
+      }
+
+      onCambioTipo();
+      cargarHistorialCompleto();
+    });
+
+    function getEstudianteSeleccionado() {
+      const id = document.getElementById('selEstudiante').value;
+      return estudiantes.find(e => String(e.id) === String(id));
+    }
+
+    const CATALOGO_SITUACIONES = {
+      'T1': [
+        {
+          texto: "T1-01. Interrupción constante de la explicación de clase (levantarse sin permiso, ruido)",
+          acciones: [
+            "Se realizó una pausa pedagógica y se dio una instrucción clara, privada y objetiva sobre la conducta esperada.",
+            "Se indagaron las causas de la distracción y se registró la versión del estudiante en sus propias palabras.",
+            "Se otorgó un rol activo en el aula para canalizar la atención y energía del estudiante.",
+            "Se anotaron los hechos específicos y los llamados de atención, junto con la versión del estudiante.",
+            "Se fijó una fecha de revisión del compromiso en 8 días y se informó al acudiente sobre la conducta."
+          ]
+        },
+        {
+          texto: "T1-02. Uso no autorizado de celulares o dispositivos distractores durante la sesión",
+          acciones: [
+            "Se solicitó el guardado del dispositivo de manera serena, evitando confrontaciones en público.",
+            "Se conversó sobre el impacto del distractor en el ritmo de aprendizaje del estudiante y el de sus compañeros.",
+            "Se permitió que el estudiante expresara el motivo de uso del dispositivo y se consignó su respuesta.",
+            "Se acordó que el dispositivo permanecerá en la mochila o en la mesa del docente durante la clase.",
+            "Se envió un reporte breve al acudiente para alinear pautas de uso responsable en casa."
+          ]
+        },
+        {
+          texto: "T1-03. Discusiones o altercados verbales por puestos, turnos o útiles escolares",
+          acciones: [
+            "Se separó a los estudiantes involucrados temporalmente para reducir la tensión emocional.",
+            "Se recibieron los descargos e impresiones de cada estudiante de forma independiente.",
+            "Se facilitó un espacio de diálogo dirigido a la concertación de acuerdos de respeto mutuo.",
+            "Se registró el hecho en el observador tipificándolo como Tipo I, con sus respectivos acuerdos.",
+            "Se programó un seguimiento al cumplimiento de lo pactado en un plazo de 15 días."
+          ]
+        },
+        {
+          texto: "T1-04. Lenguaje inapropiado o burlas esporádicas hacia compañeros de clase",
+          acciones: [
+            "Se frenó la interacción de inmediato señalando la incorrección del lenguaje utilizado.",
+            "Se reflexionó en privado con el estudiante sobre el efecto de las palabras en la convivencia escolar.",
+            "Se promovió una disculpa consciente o una acción reparadora hacia el compañero afectado.",
+            "Se documentó la versión del estudiante y su compromiso escrito de respetarse con sus pares.",
+            "Se programó un taller reflexivo en la hora de dirección de grupo sobre comunicación asertiva."
+          ]
+        },
+        {
+          texto: "T1-05. Lanzamiento o deterioro menor e involuntario de material educativo de pares",
+          acciones: [
+            "Se detuvo el lanzamiento de objetos y se verificó que ningún estudiante haya resultado lastimado.",
+            "Se escuchó la explicación del estudiante sobre cómo y por qué ocurrieron los hechos.",
+            "Se acordó la reparación, ordenamiento o reposición del bien o material dañado.",
+            "Se anotó detalladamente el hecho en el observador, especificando el acuerdo reparador.",
+            "Se comunicó al acudiente lo sucedido y el compromiso asumido por su acudido."
+          ]
+        },
+        {
+          texto: "T1-06. Llegadas tardías reiteradas al aula de clase o a la jornada escolar",
+          acciones: [
+            "Se permitió el ingreso al aula sin interrumpir la clase, registrando la hora exacta de llegada.",
+            "Se indagaron los motivos de la impuntualidad (transporte, rutinas de sueño o situaciones familiares).",
+            "Se registraron los motivos expresados por el estudiante en la ficha de seguimiento.",
+            "Se diseñó conjuntamente una estrategia de gestión del tiempo y preparación previa.",
+            "Se notificó al padre de familia para coordinar el cumplimiento de los horarios desde el hogar."
+          ]
+        },
+        {
+          texto: "T1-07. Incumplimiento de las pautas de presentación personal o uniforme establecidas",
+          acciones: [
+            "Se abordó al estudiante en privado para no exponerlo frente al grupo.",
+            "Se verificó si existen dificultades socioeconómicas, climáticas o familiares para el cumplimiento.",
+            "Se consignaron las razones del incumplimiento expresadas por el estudiante.",
+            "Se estableció un plazo razonable para la normalización de la presentación personal.",
+            "Se reportó a bienestar escolar al identificarse una posible situación de desprotección o vulnerabilidad."
+          ]
+        },
+        {
+          texto: "T1-08. Copia, plagio o uso de medios no permitidos durante una evaluación o actividad calificada",
+          acciones: [
+            "Se suspendió la evaluación al estudiante de forma discreta y se retiró el medio utilizado para copiar.",
+            "Se registró el momento exacto, el tipo de fraude y los medios empleados, con firma del docente.",
+            "Se escuchó la versión del estudiante sobre las razones que lo llevaron a recurrir al engaño.",
+            "Se citó al acudiente para notificar la falta y acordar el procedimiento según el manual de convivencia.",
+            "Se asignó una actividad de evaluación alternativa y se estableció un compromiso de honestidad académica."
+          ]
+        },
+        {
+          texto: "T1-09. Negativa reiterada a participar en actividades grupales o trabajo colaborativo en el aula",
+          acciones: [
+            "Se dialogó en privado con el estudiante para identificar las razones de la resistencia al trabajo grupal.",
+            "Se consignó la justificación dada por el estudiante, diferenciando si es de origen social, emocional o académico.",
+            "Se acordó un rol específico dentro del grupo acorde a sus habilidades para facilitar su integración.",
+            "Se notificó a Orientación Escolar si se identificaron señales de aislamiento social persistente.",
+            "Se fijó un plazo de seguimiento de 10 días y se informó al acudiente para reforzar la participación desde el hogar."
+          ]
+        },
+        {
+          texto: "T1-10. Manejo inapropiado de situaciones personales o emocionales dentro del espacio de clase",
+          acciones: [
+            "Se brindó contención emocional inmediata y se permitió al estudiante salir brevemente del aula de ser necesario.",
+            "Se escuchó al estudiante en un espacio de confianza y se registró su relato sin emitir juicios valorativos.",
+            "Se identificó si la situación requería intervención de Orientación Escolar, Coordinación o Bienestar.",
+            "Se consignó en el observador el contexto del episodio, las acciones de contención realizadas y los acuerdos pactados.",
+            "Se notificó al acudiente para establecer un plan conjunto de acompañamiento emocional y seguimiento escolar."
+          ]
+        }
+      ],
+      'T2': [
+        {
+          texto: "T2-01. Agresión física leve o pleitos entre alumnos (empujones, jaloneos, peleas menores)",
+          acciones: [
+            "Se intervino inmediatamente para separar a los estudiantes y salvaguardar su integridad.",
+            "Se remitió al servicio de salud escolar para verificar que no existan lesiones ocultas.",
+            "Se tomó la versión escrita individual de cada uno de los involucrados.",
+            "Se documentó la falta como Tipo II y se convocó con urgencia a los acudientes.",
+            "Se remitió al Comité de Convivencia y Orientación Escolar con acta de compromiso no agresivo."
+          ]
+        },
+        {
+          texto: "T2-02. Burlas u hostigamiento sistemático y repetido hacia un compañero (Acoso escolar / Bullying)",
+          acciones: [
+            "Se brindó un espacio seguro, apoyo emocional y contención inmediata al estudiante afectado.",
+            "Se revisaron las anotaciones previas en el observador para verificar la sistematicidad de la conducta.",
+            "Se recibió la versión escrita oficial tanto del estudiante agresor como de los testimonios.",
+            "Se notificó formalmente a los acudientes de las partes y se informó a Coordinación y Orientación.",
+            "Se establecieron compromisos pedagógicos estrictos de no agresión con fechas de seguimiento semanal."
+          ]
+        },
+        {
+          texto: "T2-03. Difusión de comentarios difamatorios o burlas a través de redes sociales (Ciberacoso)",
+          acciones: [
+            "Se solicitó al acudiente/víctima guardar evidencia digital sin revictimizar al menor.",
+            "Se requirió al estudiante señalado y se registró su versión sobre la creación o difusión de la publicación.",
+            "Se convocó a reunión urgente con los padres de familia para exponer la gravedad del hecho.",
+            "Se reportó el caso formalmente para aplicar el procedimiento del Manual de Convivencia.",
+            "Se firmó un acuerdo pedagógico sobre uso ético de la tecnología con revisión a 15 días."
+          ]
+        },
+        {
+          texto: "T2-04. Expresiones irrespetuosas, rebeldía contra el docente u ofensas verbales severas",
+          acciones: [
+            "Se mantuvo la calma, evitando discusiones acaloradas, y se remitió al estudiante a coordinación.",
+            "Se permitió un espacio de enfriamiento y se tomó la declaración escrita del estudiante.",
+            "Se redactaron de forma objetiva las frases o conductas manifestadas, sin adjetivos subjetivos.",
+            "Se citó obligatoriamente a la familia para revisar la falta y acordar medidas reparadoras.",
+            "Se remitió a Orientación Escolar para trabajar aspectos de autorregulación y respeto a la autoridad."
+          ]
+        },
+        {
+          texto: "T2-05. Daño intencional a la infraestructura, muebles o equipos del establecimiento educativo",
+          acciones: [
+            "Se detuvo la acción inmediatamente, se aseguró el área y se notificó a la administración del colegio.",
+            "Se registró en el observador la explicación del estudiante sobre los motivos del hecho.",
+            "Se formuló el reporte especificando el bien afectado, la fecha, la hora y los involucrados.",
+            "Se acordó con el acudiente el plan de reparación o restitución del bien dañado.",
+            "Se asignó una actividad de servicio escolar relacionada con el cuidado de los bienes comunes."
+          ]
+        }
+      ],
+      'T3': [
+        {
+          texto: "T3-01. Presunta comisión de un delito (Tipo III) según la Ley 1620",
+          acciones: [
+            "Se garantizó la protección inmediata de los involucrados y se informó a la rectoría.",
+            "Se notificó de forma inmediata a la Policía de Infancia y Adolescencia.",
+            "Se citó de carácter urgente a los acudientes de los estudiantes implicados.",
+            "Se reportó el caso en el Sistema de Información Unificado de Convivencia Escolar (SIUCE).",
+            "Se remitió a las autoridades competentes y se inició el debido proceso disciplinario interno."
+          ]
+        }
+      ],
+      'PIAR': [
+        {
+          texto: "ACAD-01. Incumplimiento reiterado en la entrega de tareas o talleres por falta de organización",
+          acciones: [
+            "Se indagó si la causa del incumplimiento es conceptual, de organización o familiar.",
+            "Se consignó la justificación dada por el estudiante al ser indagado sobre las tareas faltantes.",
+            "Se estableció flexibilización de fechas o ajustes razonables ante posibles barreras de aprendizaje.",
+            "Se definió un cronograma de entregas pendientes con fechas y horas límite.",
+            "Se informó al acudiente sobre el plan de apoyo para que realice seguimiento en el hogar."
+          ]
+        },
+        {
+          texto: "ACAD-02. Bajo rendimiento persistente acompañado de apatía o desinterés académico",
+          acciones: [
+            "Se dialogó en privado para identificar posibles bloqueos emocionales o académicos.",
+            "Se identificaron las áreas de mayor interés del estudiante para vincularlas a la asignatura.",
+            "Se registró la percepción del estudiante sobre su desempeño y sus necesidades de apoyo.",
+            "Se asignó un compañero tutor para reforzar los temas de mayor dificultad.",
+            "Se acordó un plan de mejora con la familia y se fijó fecha de revisión en 15 días."
+          ]
+        },
+        {
+          texto: "ACAD-03. Reconocimiento por avance significativo, liderazgo o superación de dificultades",
+          acciones: [
+            "Se felicitó al estudiante resaltando las acciones y el esfuerzo específico que demostró.",
+            "Se consignó el logro, felicitación o avance destacado en la ficha de seguimiento.",
+            "Se invitó al estudiante a apoyar la monitoría del curso o liderar proyectos del aula.",
+            "Se envió una nota al acudiente destacando el avance significativo del estudiante.",
+            "Se acordaron nuevas metas académicas o convivenciales para mantener su motivación."
+          ]
+        }
+      ]
+    };
+
+    function onCambioTipo() {
+      const tipo = document.getElementById('selTipo').value;
+      const selSit = document.getElementById('selSituacionCatalogo');
+      const lblSit = document.getElementById('lblSituacionCatalogo');
+      selSit.innerHTML = '';
+      
+      const situaciones = CATALOGO_SITUACIONES[tipo] || [];
+      
+      if (lblSit) {
+        lblSit.textContent = `6. Situación Frecuente (${situaciones.length} Tipificadas + Opción Otro):`;
+      }
+      
+      situaciones.forEach((sit, index) => {
+        const opt = document.createElement('option');
+        opt.value = index; 
+        opt.textContent = sit.texto;
+        selSit.appendChild(opt);
+      });
+      
+      const optOtro = document.createElement('option');
+      optOtro.value = 'otro'; 
+      optOtro.textContent = 'Otro caso / Redacción manual personalizada...';
+      selSit.appendChild(optOtro);
+      
+      onCambioSituacion();
+    }
+
+    function onCambioSituacion() {
+      const tipo = document.getElementById('selTipo').value;
+      const situacionIndex = document.getElementById('selSituacionCatalogo').value;
+      const selAcc = document.getElementById('selAccionDocente');
+      selAcc.innerHTML = '';
+      
+      let acciones = [];
+      if (situacionIndex === 'otro' || !CATALOGO_SITUACIONES[tipo] || !CATALOGO_SITUACIONES[tipo][situacionIndex]) {
+        acciones = [
+          "Se realizó un diálogo reflexivo y se establecieron acuerdos de mejora.",
+          "Se notificó al acudiente para realizar seguimiento en casa.",
+          "Se remitió el caso a Orientación Escolar para acompañamiento.",
+          "Se aplicó una acción pedagógica restaurativa según el manual de convivencia."
+        ];
+      } else {
+        acciones = CATALOGO_SITUACIONES[tipo][situacionIndex].acciones;
+      }
+      
+      acciones.forEach((txt, i) => {
+        const opt = document.createElement('option');
+        opt.value = i; 
+        opt.textContent = txt;
+        selAcc.appendChild(opt);
+      });
+      
+      reaplicarConectores();
+    }
+
+    function getEstudiante2Seleccionado() {
+      const id = document.getElementById('selEstudiante2')?.value;
+      if (!id) return null;
+      return estudiantes.find(e => String(e.id) === String(id));
+    }
+
+    function onCambioModalidad() {
+      const modalidad = document.querySelector('input[name="radModalidad"]:checked')?.value || 'individual';
+      const gridPares = document.getElementById('grid-pares');
+      const rowEst2 = document.getElementById('row-estudiante-2');
+      const lblEst1 = document.getElementById('lblEstudiante1');
+      const prevLblEst1 = document.getElementById('previewLabelEstudiante1');
+
+      if (modalidad === 'pares') {
+        gridPares.style.display = 'block';
+        rowEst2.style.display = 'table-row';
+        lblEst1.textContent = '2. Estudiante 1 (Generador/Involucrado):';
+        prevLblEst1.textContent = 'Estudiante 1:';
+      } else {
+        gridPares.style.display = 'none';
+        rowEst2.style.display = 'none';
+        lblEst1.textContent = '2. Estudiante de 5°02:';
+        prevLblEst1.textContent = 'Estudiante:';
+      }
+      lucide.createIcons();
+      reaplicarConectores();
+    }
+
+    function onCambioRolPares() {
+      const rol = document.querySelector('input[name="radRolPares"]:checked')?.value || 'generador_afectado';
+      const lblEst2 = document.getElementById('lblEstudiante2');
+      const prevLblEst2 = document.getElementById('previewLabelEstudiante2');
+      if (rol === 'generador_afectado') {
+        lblEst2.textContent = 'Segundo Estudiante (Afectado/Víctima):';
+        prevLblEst2.textContent = 'Estudiante 2 (Afectado):';
+      } else {
+        lblEst2.textContent = 'Segundo Estudiante (Involucrado Mutuo):';
+        prevLblEst2.textContent = 'Estudiante 2 (Involucrado):';
+      }
+      reaplicarConectores();
+    }
+
+    function onSeleccionarEstudiante() {
+      const est = getEstudianteSeleccionado();
+      if(est) {
+        document.getElementById('txtDocEstudiante').value = est.documento_identidad || '';
+        consultarHistorialEstudiante(est.id);
+      } else {
+        document.getElementById('txtDocEstudiante').value = '';
+        document.getElementById('contenedor-semaforo').innerHTML = '';
+        document.getElementById('alerta-reincidencia').style.display = 'none';
+      }
+      reaplicarConectores();
+    }
+
+    function onSeleccionarEstudiante2() {
+      const est2 = getEstudiante2Seleccionado();
+      if(est2) {
+        document.getElementById('txtDocEstudiante2').value = est2.documento_identidad || '';
+      } else {
+        document.getElementById('txtDocEstudiante2').value = '';
+      }
+      reaplicarConectores();
+    }
+
+    let historialAlumnoActual = [];
+
+    async function consultarHistorialEstudiante(estId) {
+      if (!estId) return;
+      const semaforo = document.getElementById('contenedor-semaforo');
+      const alerta = document.getElementById('alerta-reincidencia');
+      semaforo.innerHTML = '<span style="color:#64748b; font-size:10px;">Consultando historial...</span>';
+
+      let dataSupabase = [];
+      let conexionOk = false;
+      try {
+        const { data, error } = await clienteSupabase
+          .from('registros_observador')
+          .select('*')
+          .or(`estudiante_id.eq.${estId},estudiante_afectado_id.eq.${estId}`)
+          .order('fecha', { ascending: false });
+
+        if (!error && Array.isArray(data)) {
+          dataSupabase = data;
+          conexionOk = true;
+        }
+      } catch (e) {
+        console.warn('Fallo consulta supabase, usando cache local:', e);
+      }
+
+      if (conexionOk) {
+        historialAlumnoActual = dataSupabase;
+        try {
+          localStorage.setItem('cache_observador_' + estId, JSON.stringify(dataSupabase));
+        } catch (e) {}
+      } else {
+        historialAlumnoActual = JSON.parse(localStorage.getItem('cache_observador_' + estId) || '[]');
+      }
+
+      historialAlumnoActual.sort((a, b) => new Date(b.created_at || b.fecha) - new Date(a.created_at || a.fecha));
+
+      let cT1 = 0, cT2 = 0, cT3 = 0, cPIAR = 0;
+      historialAlumnoActual.forEach(r => {
+        if (r.tipo_falta === 'T1') cT1++;
+        else if (r.tipo_falta === 'T2') cT2++;
+        else if (r.tipo_falta === 'T3') cT3++;
+        else if (r.tipo_falta === 'PIAR') cPIAR++;
+      });
+
+      semaforo.innerHTML = `
+        <span class="semaforo-badge badge-t1" title="Faltas Leves">${cT1} Tipo I</span>
+        <span class="semaforo-badge badge-t2" title="Faltas Graves">${cT2} Tipo II</span>
+        <span class="semaforo-badge badge-t3" title="Faltas Gravísimas">${cT3} Tipo III</span>
+        ${cPIAR > 0 ? `<span class="semaforo-badge badge-piar">${cPIAR} PIAR</span>` : ''}
+      `;
+
+      const tipoActual = document.getElementById('selTipo').value;
+      if (cT1 >= 2 && tipoActual === 'T1') {
+        alerta.style.display = 'block';
+        alerta.innerHTML = `
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; flex-shrink: 0; color: #d97706;"></i>
+            <div>
+              <strong>⚠️ ALERTA DE REINCIDENCIA (Ley 1620 / Manual de Convivencia):</strong><br>
+              Este estudiante ya acumula <strong>${cT1} situaciones Tipo I</strong> previas registradas. La tercera situación Tipo I constituye reincidencia sistemática y da lugar a remisión a Coordinación como <strong>Falta Grave Tipo II</strong>.<br>
+              <button type="button" class="btn btn-primary" style="margin-top: 6px; padding: 5px 12px; font-size: 11px;" onclick="escalarATipo2PorReincidencia(${cT1})">
+                <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i> Escalar a Tipo II con Remisión Obligatoria
+              </button>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+      } else {
+        alerta.style.display = 'none';
+      }
+
+      actualizarTablaHistorialUI();
+    }
+
+    function escalarATipo2PorReincidencia(t1Count) {
+      document.getElementById('selTipo').value = 'T2';
+      onCambioTipo();
+      
+      const txtHechos = document.getElementById('txtHechosEditor');
+      const textoReincidencia = `[REINCIDENCIA SISTEMÁTICA CONSTATADA]: El estudiante registra ${t1Count} anotaciones previas Tipo I en su observador. Habiéndose agotado el protocolo pedagógico de aula (Art. 29 C.P. y Ley 1620), se remite formalmente a Coordinación de Convivencia y Orientación Escolar para trámite como Falta Grave Tipo II.\n`;
+      txtHechos.value = textoReincidencia + txtHechos.value;
+      
+      document.getElementById('alerta-reincidencia').style.display = 'none';
+      actualizarVistaPrevia();
+      toast('Situación escalada a Tipo II por reincidencia obligatoria.');
+    }
+
+    function reaplicarConectores() {
+      const est = getEstudianteSeleccionado();
+      const nombreEst = est ? est.nombre_completo : '[ESTUDIANTE 1]';
+      const modalidad = document.querySelector('input[name="radModalidad"]:checked')?.value || 'individual';
+      const est2 = getEstudiante2Seleccionado();
+      const nombreEst2 = est2 ? est2.nombre_completo : '[ESTUDIANTE 2]';
+      const rolPares = document.querySelector('input[name="radRolPares"]:checked')?.value || 'generador_afectado';
+
+      const fechaRaw = document.getElementById('txtFecha').value;
+      const fecha = fechaRaw ? fechaRaw.split('-').reverse().join('/') : '';
+      const horaRaw = document.getElementById('txtHora').value;
+      let hora = horaRaw;
+      if (horaRaw) {
+        const [h, m] = horaRaw.split(':');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        hora = `${h12}:${m} ${ampm}`;
+      }
+      const asig = document.getElementById('selAsignatura').value || '[ASIGNATURA]';
+      const docName = configuracion.nombre_docente || 'Docente Titular';
+      const selSitText = document.getElementById('selSituacionCatalogo').options[document.getElementById('selSituacionCatalogo').selectedIndex]?.text || '';
+      let selAccText = document.getElementById('selAccionDocente').options[document.getElementById('selAccionDocente').selectedIndex]?.text || '';
+
+      if (modalidad === 'pares' && est2) {
+        if (selAccText.toLowerCase().includes('compañero') || selAccText.toLowerCase().includes('pares') || selAccText.toLowerCase().includes('reparador')) {
+          selAccText = selAccText.replace(/compañero afectado|compañero|pares/gi, `compañero ${nombreEst2}`);
+        }
+      }
+
+      let baseHechos = '';
+      if (modalidad === 'individual') {
+        baseHechos = `El día ${fecha}, siendo aproximadamente las ${hora}, en el espacio pedagógico de ${asig} (Grado ${configuracion.grado || '5°02'}), se constató que el estudiante ${nombreEst} incurrió en una conducta que amerita intervención. `;
+        if (document.getElementById('selSituacionCatalogo').value !== 'otro') {
+          baseHechos += `Situación observada: ${selSitText}. `;
+        }
+        baseHechos += `Ante los hechos observados, el docente titular ${docName} procedió conforme al manual de convivencia y la Ley 1620 de 2013.`;
+      } else {
+        if (rolPares === 'generador_afectado') {
+          baseHechos = `El día ${fecha}, siendo aproximadamente las ${hora}, en el espacio pedagógico de ${asig} (Grado ${configuracion.grado || '5°02'}), se constató una situación de convivencia que involucró a dos estudiantes. El estudiante ${nombreEst} incurrió en la situación tipificada: "${selSitText}", resultando afectado/a el estudiante ${nombreEst2}. El docente titular ${docName} intervino de forma inmediata para restaurar el clima pedagógico.`;
+        } else {
+          baseHechos = `El día ${fecha}, siendo aproximadamente las ${hora}, en el espacio pedagógico de ${asig} (Grado ${configuracion.grado || '5°02'}), se constató un altercado/situación mutua entre los estudiantes ${nombreEst} y ${nombreEst2}. Situación observada: "${selSitText}". Ambos participaron en la conducta. El docente titular ${docName} procedió a separarlos y activar el protocolo de diálogo restaurativo.`;
+        }
+      }
+      
+      document.getElementById('txtHechosEditor').value = baseHechos;
+
+      if (modalidad === 'individual') {
+        document.getElementById('txtDescargosEditor').value = `"El estudiante ${nombreEst}, en ejercicio pleno de su garantía constitucional al debido proceso (Art. 29 C.P.), manifiesta en su versión libre: 'Reconozco lo ocurrido y manifiesto mi compromiso de mejora'."`;
+      } else {
+        if (rolPares === 'generador_afectado') {
+          document.getElementById('txtDescargosEditor').value = `1. VERSIÓN LIBRE DE ${nombreEst} (Generador/a): 'Reconozco que cometí una falta hacia mi compañero/a y acepto reparar el daño acordado.'\n2. DECLARACIÓN DE ${nombreEst2} (Afectado/a): 'Manifiesto cómo ocurrieron los hechos y solicito respeto y la reposición/reparación de lo sucedido.'`;
+        } else {
+          document.getElementById('txtDescargosEditor').value = `1. VERSIÓN LIBRE DE ${nombreEst}: 'Explico los motivos de mi reacción y me comprometo al respeto mutuo.'\n2. VERSIÓN LIBRE DE ${nombreEst2}: 'Doy mi versión sobre lo ocurrido y acepto las pautas de no agresión.'`;
+        }
+      }
+      
+      let baseCompromisos = '';
+      if (modalidad === 'individual') {
+        baseCompromisos = `1. ACCIÓN PEDAGÓGICA ADOPTADA POR EL DOCENTE:
+   • ${selAccText}.
+2. COMPROMISOS ASUMIDOS POR EL ESTUDIANTE:
+   • El estudiante ${nombreEst} se compromete a respetar los acuerdos establecidos.
+3. CORRESPONSABILIDAD FAMILIAR:
+   • El acudiente realizará seguimiento en casa.
+FECHA DE PRÓXIMA REVISIÓN: A definir (8 días hábiles).`;
+      } else {
+        baseCompromisos = `1. ACCIONES PEDAGÓGICAS Y RESTAURATIVAS ADOPTADAS:
+   • ${selAccText}.
+2. COMPROMISOS ACORDADOS ENTRE PARES:
+   • El estudiante ${nombreEst} asume el compromiso explícito de respeto y acción restaurativa hacia ${nombreEst2}.
+   • El estudiante ${nombreEst2} acepta las disculpas/acuerdos reparadores en un marco de convivencia pacífica.
+3. SEGUIMIENTO INSTITUCIONAL Y FAMILIAR:
+   • Notificación y corresponsabilidad con los acudientes de ambos estudiantes.
+FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
+      }
+      
+      document.getElementById('txtCompromisosEditor').value = baseCompromisos;
+      actualizarVistaPrevia();
+    }
+
+    function actualizarVistaPrevia() {
+      const est = getEstudianteSeleccionado();
+      const nombreEst = est ? est.nombre_completo : 'Nombre del Estudiante';
+      const docEst = document.getElementById('txtDocEstudiante').value || '-';
+      const modalidad = document.querySelector('input[name="radModalidad"]:checked')?.value || 'individual';
+      const est2 = getEstudiante2Seleccionado();
+      const nombreEst2 = est2 ? est2.nombre_completo : 'Segundo Estudiante';
+      const docEst2 = document.getElementById('txtDocEstudiante2').value || '-';
+
+      const tipo = document.getElementById('selTipo').value;
+      const docName = configuracion.nombre_docente || 'Docente Titular';
+
+      document.getElementById('previewNombreEstudiante').textContent = nombreEst;
+      document.getElementById('previewDocEstudiante').textContent = docEst;
+      
+      if (modalidad === 'pares') {
+        document.getElementById('row-estudiante-2').style.display = 'table-row';
+        document.getElementById('previewNombreEstudiante2').textContent = nombreEst2;
+        document.getElementById('previewDocEstudiante2').textContent = docEst2;
+      } else {
+        document.getElementById('row-estudiante-2').style.display = 'none';
+      }
+
+      document.title = nombreEst !== 'Nombre del Estudiante' ? `Observador - ${nombreEst}` : 'Observador Estudiantil';
+      
+      if (!idRegistroEnEdicion) {
+        const previewFolioEl = document.getElementById('previewFolio');
+        if (previewFolioEl && (!previewFolioEl.textContent || previewFolioEl.textContent === 'OBS-2026-001')) {
+          previewFolioEl.textContent = obtenerSiguienteFolio();
+        }
+      }
+      
+      const fechaRaw = document.getElementById('txtFecha').value;
+      document.getElementById('previewFecha').textContent = fechaRaw ? fechaRaw.split('-').reverse().join('/') : '';
+      
+      const horaRaw = document.getElementById('txtHora').value;
+      let horaFormat = horaRaw;
+      if (horaRaw) {
+        const [h, m] = horaRaw.split(':');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        horaFormat = `${h12}:${m} ${ampm}`;
+      }
+      document.getElementById('previewHora').textContent = horaFormat;
+      document.getElementById('previewAsignatura').textContent = document.getElementById('selAsignatura').value || '-';
+
+      document.getElementById('chkTipo1').className = 'class-checkbox ' + (tipo === 'T1' ? 'checked' : '');
+      document.getElementById('chkTipo2').className = 'class-checkbox ' + (tipo === 'T2' ? 'checked' : '');
+      document.getElementById('chkTipo3').className = 'class-checkbox ' + (tipo === 'T3' ? 'checked' : '');
+      document.getElementById('chkTipoPIAR').className = 'class-checkbox ' + (tipo === 'PIAR' ? 'checked' : '');
+
+      document.getElementById('previewHechos').innerHTML = document.getElementById('txtHechosEditor').value.replace(/\n/g, '<br>');
+      document.getElementById('previewDescargos').innerHTML = document.getElementById('txtDescargosEditor').value.replace(/\n/g, '<br>');
+      document.getElementById('previewCompromisos').innerHTML = document.getElementById('txtCompromisosEditor').value.replace(/\n/g, '<br>');
+
+      const grid = document.getElementById('previewGridFirmas');
+      if (modalidad === 'individual') {
+        grid.innerHTML = `
+          <div class="signature-item"><div class="sig-line"></div><div class="sig-name">${nombreEst}</div><div class="sig-role">Estudiante (Grado ${configuracion.grado || '5°02'})</div></div>
+          <div class="signature-item"><div class="sig-line"></div><div class="sig-name">Padre de Familia / Acudiente</div><div class="sig-role">C.C. ___________________</div></div>
+          <div class="signature-item"><div class="sig-line"></div><div class="sig-name" id="preview-docente-firma">${docName}</div><div class="sig-role">Docente Titular / Registra</div></div>
+          <div class="signature-item"><div class="sig-line"></div><div class="sig-name">Coordinación de Convivencia</div><div class="sig-role">Seguimiento Institucional</div></div>
+        `;
+      } else {
+        grid.innerHTML = `
+          <div class="signature-item"><div class="sig-line"></div><div class="sig-name">${nombreEst}</div><div class="sig-role">Estudiante 1 (Grado ${configuracion.grado || '5°02'})</div></div>
+          <div class="signature-item"><div class="sig-line"></div><div class="sig-name">Acudiente Estudiante 1</div><div class="sig-role">C.C. ___________________</div></div>
+          <div class="signature-item"><div class="sig-line"></div><div class="sig-name">${nombreEst2}</div><div class="sig-role">Estudiante 2 (Grado ${configuracion.grado || '5°02'})</div></div>
+          <div class="signature-item"><div class="sig-line"></div><div class="sig-name">Docente: ${docName}</div><div class="sig-role">Firma de Registro / Coordinación</div></div>
+        `;
+      }
+    }
+
+    let todosLosRegistrosObservador = [];
+
+    function cambiarTabObservador(tabName) {
+      const tabBtnRedactar = document.getElementById('tab-btn-redactar');
+      const tabBtnExplorador = document.getElementById('tab-btn-explorador');
+      const seccionRedactar = document.getElementById('seccion-redactar');
+      const seccionExplorador = document.getElementById('apartado-todos-folios');
+
+      if (tabName === 'explorador') {
+        if (tabBtnRedactar) tabBtnRedactar.classList.remove('active');
+        if (tabBtnExplorador) tabBtnExplorador.classList.add('active');
+        if (seccionRedactar) seccionRedactar.style.display = 'none';
+        if (seccionExplorador) seccionExplorador.style.display = 'block';
+        cargarHistorialCompleto();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        if (tabBtnExplorador) tabBtnExplorador.classList.remove('active');
+        if (tabBtnRedactar) tabBtnRedactar.classList.add('active');
+        if (seccionExplorador) seccionExplorador.style.display = 'none';
+        if (seccionRedactar) seccionRedactar.style.display = 'block';
+        if (!idRegistroEnEdicion) {
+          const previewFolioEl = document.getElementById('previewFolio');
+          if (previewFolioEl) previewFolioEl.textContent = obtenerSiguienteFolio();
+        }
+      }
+      lucide.createIcons();
+    }
+
+    function actualizarContadorBadgeTab() {
+      const badge = document.getElementById('badge-total-folios-tab');
+      if (badge) badge.textContent = todosLosRegistrosObservador.length;
+    }
+
+    function obtenerSiguienteFolio() {
+      const anio = configuracion.año_actual || new Date().getFullYear();
+      const regex = new RegExp(`^OBS-${anio}-(\\d+)$`, 'i');
+      let maxNum = 0;
+
+      todosLosRegistrosObservador.forEach(r => {
+        if (r && r.folio) {
+          const match = String(r.folio).match(regex);
+          if (match && match[1]) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxNum) {
+              maxNum = num;
+            }
+          }
+        }
+      });
+
+      const siguienteNum = maxNum + 1;
+      return `OBS-${anio}-${String(siguienteNum).padStart(4, '0')}`;
+    }
+
+    function confirmarLimpiezaPruebas() {
+      const inputPass = document.getElementById('txt-password-purga');
+      if (inputPass) {
+        inputPass.value = '';
+        inputPass.type = 'password';
+      }
+      const err = document.getElementById('msg-error-purga');
+      if (err) err.style.display = 'none';
+      const modal = document.getElementById('modal-purga-seguridad');
+      if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => { if (inputPass) inputPass.focus(); }, 150);
+      }
+      lucide.createIcons();
+    }
+
+    function cerrarModalPurga() {
+      const modal = document.getElementById('modal-purga-seguridad');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function toggleVerPasswordPurga() {
+      const input = document.getElementById('txt-password-purga');
+      const icono = document.getElementById('icono-ver-pass-purga');
+      if (!input || !icono) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        icono.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icono.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    async function ejecutarPurgaConClave() {
+      const input = document.getElementById('txt-password-purga');
+      const pass = input ? input.value.trim() : '';
+      const errorEl = document.getElementById('msg-error-purga');
+      const btn = document.getElementById('btn-confirmar-purga-modal');
+
+      if (!pass) {
+        if (errorEl) {
+          errorEl.textContent = 'Por favor ingresa la contraseña para autorizar la purga.';
+          errorEl.style.display = 'block';
+        }
+        if (input) input.focus();
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader" class="lucide-spin" style="width: 16px; height: 16px;"></i> Validando contraseña...';
+        lucide.createIcons();
+      }
+
+      let claveValida = false;
+
+      // 1. Validar contra sesión activa de Supabase Auth
+      try {
+        const { data: { session } } = await clienteSupabase.auth.getSession();
+        if (session && session.user && session.user.email) {
+          const { error: authErr } = await clienteSupabase.auth.signInWithPassword({
+            email: session.user.email,
+            password: pass
+          });
+          if (!authErr) claveValida = true;
+        }
+      } catch (e) {
+        console.warn('Aviso en validación auth:', e);
+      }
+
+      // 2. Claves institucionales autorizadas
+      const CLAVES_AUTORIZADAS = ['admin502', 'pilar2026', '502', '123456'];
+      if (!claveValida && CLAVES_AUTORIZADAS.includes(pass.toLowerCase())) {
+        claveValida = true;
+      }
+
+      if (!claveValida) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Autorizar y Purgar Folios';
+          lucide.createIcons();
+        }
+        if (errorEl) {
+          errorEl.textContent = 'Contraseña incorrecta. Autorización denegada para purgar folios.';
+          errorEl.style.display = 'block';
+        }
+        if (input) input.focus();
+        return;
+      }
+
+      // Contraseña correcta: Proceder con la purga definitiva
+      if (btn) {
+        btn.innerHTML = '<i data-lucide="loader" class="lucide-spin" style="width: 16px; height: 16px;"></i> Purgando folios...';
+        lucide.createIcons();
+      }
+
+      try {
+        const { error } = await clienteSupabase
+          .from('registros_observador')
+          .delete()
+          .not('id', 'is', null);
+        if (error) console.warn('Aviso limpiando Supabase:', error);
+      } catch (err) {
+        console.warn('Error purga Supabase:', err);
+      }
+
+      // Limpiar memoria local
+      localStorage.removeItem('todos_los_folios_globales');
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('cache_observador_') || k === 'todos_los_folios_globales')) {
+          localStorage.removeItem(k);
+        }
+      }
+
+      todosLosRegistrosObservador = [];
+      actualizarApartadoFoliosUI();
+      actualizarTablaHistorialUI();
+      actualizarContadorBadgeTab();
+
+      const nuevoFolio = obtenerSiguienteFolio();
+      const previewFolioEl = document.getElementById('previewFolio');
+      if (previewFolioEl) previewFolioEl.textContent = nuevoFolio;
+
+      cerrarModalPurga();
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Autorizar y Purgar Folios';
+      }
+
+      toast('<i data-lucide="check-circle" style="width:16px;height:16px;"></i> Purga autorizada. Todos los registros fueron eliminados y el consecutivo reinició a ' + nuevoFolio);
+      lucide.createIcons();
+    }
+
+    async function cargarHistorialCompleto() {
+      let registrosSupabase = [];
+      let conexionExitosa = false;
+      try {
+        const { data, error } = await clienteSupabase
+          .from('registros_observador')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && Array.isArray(data)) {
+          registrosSupabase = data;
+          conexionExitosa = true;
+        } else if (error) {
+          console.warn('Error leyendo registros_observador:', error);
+        }
+      } catch (e) {
+        console.warn('Excepción leyendo Supabase registros_observador:', e);
+      }
+
+      if (conexionExitosa) {
+        // La base de datos es la única fuente oficial de verdad
+        todosLosRegistrosObservador = registrosSupabase;
+
+        // Limpiar cachés viejas locales para no resucitar folios borrados en BD
+        try {
+          localStorage.setItem('todos_los_folios_globales', JSON.stringify(registrosSupabase));
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('cache_observador_')) {
+              localStorage.removeItem(key);
+            }
+          }
+          registrosSupabase.forEach(item => {
+            if (item && item.estudiante_id) {
+              const k = 'cache_observador_' + item.estudiante_id;
+              const cur = JSON.parse(localStorage.getItem(k) || '[]');
+              cur.push(item);
+              localStorage.setItem(k, JSON.stringify(cur));
+            }
+          });
+        } catch (e) {}
+      } else {
+        // Solo como respaldo en caso de desconexión / fallo de red
+        const locales = JSON.parse(localStorage.getItem('todos_los_folios_globales') || '[]');
+        todosLosRegistrosObservador = locales;
+      }
+
+      actualizarTablaHistorialUI();
+      actualizarApartadoFoliosUI();
+      actualizarContadorBadgeTab();
+
+      if (!idRegistroEnEdicion) {
+        const previewFolioEl = document.getElementById('previewFolio');
+        if (previewFolioEl) previewFolioEl.textContent = obtenerSiguienteFolio();
+      }
+    }
+
+    function actualizarApartadoFoliosUI() {
+      let cT1 = 0, cT2 = 0, cT3 = 0;
+      todosLosRegistrosObservador.forEach(r => {
+        if (r.tipo_falta === 'T1') cT1++;
+        else if (r.tipo_falta === 'T2') cT2++;
+        else if (r.tipo_falta === 'T3') cT3++;
+      });
+
+      const elTotal = document.getElementById('kpi-total-folios');
+      const elT1 = document.getElementById('kpi-t1-folios');
+      const elT2 = document.getElementById('kpi-t2-folios');
+      const elT3 = document.getElementById('kpi-t3-folios');
+
+      if (elTotal) elTotal.textContent = todosLosRegistrosObservador.length;
+      if (elT1) elT1.textContent = cT1;
+      if (elT2) elT2.textContent = cT2;
+      if (elT3) elT3.textContent = cT3;
+
+      filtrarApartadoFolios();
+    }
+
+    function limpiarTextoParaBusqueda(str) {
+      if (!str) return '';
+      return String(str).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
+
+    function filtrarApartadoFolios() {
+      const tbody = document.getElementById('tabla-apartado-folios-body');
+      if (!tbody) return;
+
+      const idEstSel = document.getElementById('filtro-estudiante-folios')?.value || 'TODOS';
+      const tipoSel = document.getElementById('filtro-tipo-folios')?.value || 'TODOS';
+      const query = limpiarTextoParaBusqueda(document.getElementById('filtro-buscador-folios')?.value || '');
+
+      let filtrados = todosLosRegistrosObservador.filter(r => {
+        // 1. Filtro estricto por estudiante seleccionado en el desplegable
+        if (idEstSel !== 'TODOS') {
+          const coincideEst = String(r.estudiante_id) === String(idEstSel) || String(r.estudiante_afectado_id) === String(idEstSel);
+          if (!coincideEst) return false;
+        }
+
+        // 2. Filtro por clasificación de falta
+        if (tipoSel !== 'TODOS' && r.tipo_falta !== tipoSel) return false;
+
+        // 3. Filtro por búsqueda rápida normalizada (sin problemas de tildes ni mayúsculas)
+        if (query) {
+          const nombreEst1 = limpiarTextoParaBusqueda(r.estudiantes?.nombre_completo || (estudiantes.find(e => String(e.id) === String(r.estudiante_id))?.nombre_completo) || '');
+          const nombreEst2 = limpiarTextoParaBusqueda(estudiantes.find(e => String(e.id) === String(r.estudiante_afectado_id))?.nombre_completo || '');
+          const folio = limpiarTextoParaBusqueda(r.folio || ('OBS-' + r.id));
+          const hechos = limpiarTextoParaBusqueda(r.hechos || '');
+          const docente = limpiarTextoParaBusqueda(r.docente || '');
+          const codigo = limpiarTextoParaBusqueda(r.codigo_situacion || '');
+          const asignatura = limpiarTextoParaBusqueda(r.asignatura || '');
+
+          const coincide = folio.includes(query) || nombreEst1.includes(query) || nombreEst2.includes(query) || hechos.includes(query) || docente.includes(query) || codigo.includes(query) || asignatura.includes(query);
+          if (!coincide) return false;
+        }
+
+        return true;
+      });
+
+      const lblContador = document.getElementById('contador-apartado-filtrados');
+      if (lblContador) {
+        lblContador.textContent = `Mostrando ${filtrados.length} de ${todosLosRegistrosObservador.length} folio(s)`;
+      }
+
+      if (filtrados.length === 0) {
+        const estSeleccionado = estudiantes.find(e => String(e.id) === String(idEstSel));
+        const nombreEst = estSeleccionado ? estSeleccionado.nombre_completo : null;
+
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align:center; padding: 36px 20px; color: #64748b;">
+              <i data-lucide="folder-search" style="width: 38px; height: 38px; color: #94a3b8; display: block; margin: 0 auto 10px auto;"></i>
+              ${nombreEst 
+                ? `<div style="font-size: 14.5px; font-weight: 700; color: #1e293b; margin-bottom: 5px;">No hay folios registrados para ${nombreEst}</div>
+                   <div style="font-size: 12px; color: #64748b; margin-bottom: 14px;">El estudiante se encuentra al día sin observaciones en el Grado ${configuracion.grado || '5°02'} (Año ${configuracion.año_actual || '2026'}).</div>
+                   <button type="button" class="btn btn-primary" onclick="redactarFolioParaEstudiante('${idEstSel}')" style="padding: 6px 14px; font-size: 12px;">
+                     <i data-lucide="plus-circle" style="width: 15px; height: 15px;"></i> + Redactar Nuevo Folio para este Alumno
+                   </button>`
+                : `<div style="font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 4px;">No se encontraron folios registrados</div>
+                   <div style="font-size: 12px; color: #64748b;">Prueba seleccionando "Todos los Estudiantes" o revisa los términos de búsqueda.</div>`
+              }
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = filtrados.map(r => {
+        const est1 = estudiantes.find(e => String(e.id) === String(r.estudiante_id));
+        const nombreAlumno1 = r.estudiantes?.nombre_completo || est1?.nombre_completo || `Estudiante #${r.estudiante_id}`;
+        
+        let detalleEstudiantes = `<strong>${nombreAlumno1}</strong>`;
+        if (r.estudiante_afectado_id) {
+          const est2 = estudiantes.find(e => String(e.id) === String(r.estudiante_afectado_id));
+          const nombreAlumno2 = est2?.nombre_completo || `Estudiante #${r.estudiante_afectado_id}`;
+          detalleEstudiantes += `<br><span style="font-size: 10px; color: #0284c7;">👥 Par: ${nombreAlumno2}</span>`;
+        }
+
+        const badgeClass = r.tipo_falta === 'T1' ? 'badge-t1' : (r.tipo_falta === 'T2' ? 'badge-t2' : (r.tipo_falta === 'T3' ? 'badge-t3' : 'badge-piar'));
+        const remisionBadge = r.remitido_coordinacion 
+          ? '<span class="semaforo-badge badge-t2">⚠️ Remitido a Coord.</span>' 
+          : '<span class="semaforo-badge badge-t1">Aula de Clase</span>';
+
+        return `
+          <tr>
+            <td style="white-space: nowrap;">
+              <span style="font-weight: 800; color: var(--primary); background: #eff6ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #bfdbfe; font-size: 11px;">
+                ${r.folio || ('OBS-' + r.id)}
+              </span>
+            </td>
+            <td style="white-space: nowrap; font-size: 11px;">
+              <div>${r.fecha || '-'}</div>
+              <div style="font-size: 10px; color: #64748b;">${r.hora ? r.hora.slice(0,5) : ''}</div>
+            </td>
+            <td>${detalleEstudiantes}</td>
+            <td><span class="semaforo-badge ${badgeClass}">${r.tipo_falta}</span></td>
+            <td style="max-width: 240px; font-size: 11px;" title="${r.hechos || ''}">
+              <div style="font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.codigo_situacion || ''}</div>
+              <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #64748b;">${r.hechos || 'Sin observaciones'}</div>
+            </td>
+            <td>${remisionBadge}</td>
+            <td style="white-space: nowrap; text-align: center;">
+              <button class="btn btn-outline" style="padding: 4px 8px; font-size: 10.5px;" onclick="cargarFolioEnVista('${r.id || r.folio}')" title="Ver en la hoja oficial del Observador">
+                <i data-lucide="eye" style="width: 13px; height: 13px;"></i> Ver en Hoja
+              </button>
+              <button class="btn btn-outline" style="padding: 4px 8px; font-size: 10.5px;" onclick="imprimirFolioDirecto('${r.id || r.folio}')" title="Imprimir hoja oficial sin etiquetas">
+                <i data-lucide="printer" style="width: 13px; height: 13px;"></i> Imprimir
+              </button>
+              <button class="btn btn-outline" style="padding: 4px 8px; font-size: 10.5px;" onclick="abrirModalEdicion('${r.id || r.folio}')" title="Editar con justificación de debido proceso">
+                <i data-lucide="edit-3" style="width: 13px; height: 13px;"></i> Editar
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function imprimirFolioDirecto(id) {
+      cargarFolioEnVista(id);
+      const toastEl = document.getElementById('toast');
+      if (toastEl) toastEl.style.display = 'none';
+      setTimeout(() => {
+        window.print();
+      }, 300);
+    }
+
+    function redactarFolioParaEstudiante(estId) {
+      if (estId) {
+        document.getElementById('selEstudiante').value = estId;
+        onSeleccionarEstudiante();
+      }
+      cambiarTabObservador('redactar');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast('Listo para redactar nuevo folio para el estudiante seleccionado.');
+    }
+
+    function actualizarTablaHistorialUI() {
+      const tbody = document.getElementById('historial-tabla-body');
+      if (!tbody) return;
+
+      const est = getEstudianteSeleccionado();
+      let registros = todosLosRegistrosObservador;
+      if (est) {
+        registros = registros.filter(r => String(r.estudiante_id) === String(est.id) || String(r.estudiante_afectado_id) === String(est.id));
+        document.getElementById('subtitulo-historial').textContent = `Mostrando ${registros.length} acta(s) de ${est.nombre_completo}`;
+      } else {
+        document.getElementById('subtitulo-historial').textContent = `Mostrando ${registros.length} acta(s) institucionales recientes`;
+      }
+
+      if (registros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 14px; color: #64748b;">No hay actas registradas para este criterio.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = registros.map(r => {
+        const nombreAlumno = r.estudiantes?.nombre_completo || (estudiantes.find(e => String(e.id) === String(r.estudiante_id))?.nombre_completo) || `Estudiante #${r.estudiante_id}`;
+        const badgeClass = r.tipo_falta === 'T1' ? 'badge-t1' : (r.tipo_falta === 'T2' ? 'badge-t2' : (r.tipo_falta === 'T3' ? 'badge-t3' : 'badge-piar'));
+        const remisionBadge = r.remitido_coordinacion 
+          ? '<span class="semaforo-badge badge-t2">⚠️ Remitido</span>' 
+          : '<span style="color:#64748b; font-size:10px;">Aula</span>';
+
+        return `
+          <tr>
+            <td><strong style="color:var(--primary);">${r.folio || 'OBS-' + r.id}</strong></td>
+            <td>${r.fecha} ${r.hora ? r.hora.slice(0,5) : ''}</td>
+            <td><strong>${nombreAlumno}</strong></td>
+            <td><span class="semaforo-badge ${badgeClass}">${r.tipo_falta}</span></td>
+            <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${r.hechos || ''}">${r.codigo_situacion || ''} - ${r.hechos ? r.hechos.slice(0, 50) + '...' : ''}</td>
+            <td>${remisionBadge}</td>
+            <td style="white-space: nowrap;">
+              <button class="btn btn-outline" style="padding: 2px 7px; font-size: 10px;" onclick="cargarFolioEnVista('${r.id || r.folio}')">Ver Folio</button>
+              <button class="btn btn-outline" style="padding: 2px 7px; font-size: 10px;" onclick="abrirModalEdicion('${r.id || r.folio}')">Editar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function togglePanelHistorial() {
+      const p = document.getElementById('panel-historial');
+      p.style.display = p.style.display === 'none' ? 'block' : 'none';
+      if (p.style.display === 'block') {
+        cargarHistorialCompleto();
+        p.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function guardarEnPersistenciaGlobal(registro) {
+      const existeIdx = todosLosRegistrosObservador.findIndex(r => (r.folio && r.folio === registro.folio) || (r.id && String(r.id) === String(registro.id)));
+      if (existeIdx >= 0) {
+        todosLosRegistrosObservador[existeIdx] = registro;
+      } else {
+        todosLosRegistrosObservador.unshift(registro);
+      }
+
+      const locales = JSON.parse(localStorage.getItem('todos_los_folios_globales') || '[]');
+      const locIdx = locales.findIndex(r => (r.folio && r.folio === registro.folio) || (r.id && String(r.id) === String(registro.id)));
+      if (locIdx >= 0) {
+        locales[locIdx] = registro;
+      } else {
+        locales.unshift(registro);
+      }
+      localStorage.setItem('todos_los_folios_globales', JSON.stringify(locales));
+
+      const estId = registro.estudiante_id;
+      if (estId) {
+        const key = 'cache_observador_' + estId;
+        const cache = JSON.parse(localStorage.getItem(key) || '[]');
+        cache.unshift(registro);
+        localStorage.setItem(key, JSON.stringify(cache));
+      }
+
+      actualizarApartadoFoliosUI();
+      actualizarTablaHistorialUI();
+      actualizarContadorBadgeTab();
+    }
+
+    async function guardarYGenerarReporte() {
+      const est = getEstudianteSeleccionado();
+      if (!est) {
+        toast('<i data-lucide="alert-triangle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Por favor selecciona un estudiante.');
+        return;
+      }
+      
+      const btn = document.getElementById('btn-guardar-reporte');
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader" class="lucide-spin" style="width: 18px; height: 18px;"></i> Guardando Folio...';
+      lucide.createIcons();
+
+      const modalidad = document.querySelector('input[name="radModalidad"]:checked')?.value || 'individual';
+      const est2 = getEstudiante2Seleccionado();
+      const rolPares = document.querySelector('input[name="radRolPares"]:checked')?.value || 'generador_afectado';
+      const tipo = document.getElementById('selTipo').value;
+      const folioGenerado = obtenerSiguienteFolio();
+      document.getElementById('previewFolio').textContent = folioGenerado;
+
+      const uuidCompat = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : '00000000-0000-0000-0000-000000000000';
+
+      const payload = {
+        folio: folioGenerado,
+        solicitud_id: uuidCompat,
+        estudiante_id: est.id,
+        estudiante_afectado_id: modalidad === 'pares' && est2 ? est2.id : null,
+        modalidad: modalidad === 'pares' ? (rolPares === 'generador_afectado' ? 'agresor_afectado' : 'compartida') : 'individual',
+        fecha: document.getElementById('txtFecha').value,
+        hora: document.getElementById('txtHora').value,
+        asignatura: document.getElementById('selAsignatura').value,
+        tipo_falta: tipo,
+        codigo_situacion: document.getElementById('selSituacionCatalogo').options[document.getElementById('selSituacionCatalogo').selectedIndex]?.text?.split('.')[0] || '',
+        hechos: document.getElementById('txtHechosEditor').value,
+        descargos: document.getElementById('txtDescargosEditor').value,
+        compromisos: document.getElementById('txtCompromisosEditor').value,
+        docente: document.getElementById('docente-nombre').textContent,
+        remitido_coordinacion: tipo === 'T2' || tipo === 'T3'
+      };
+
+      let registroFinal = null;
+
+      try {
+        const { data, error } = await clienteSupabase.from('registros_observador').insert([payload]).select();
+        if (error) {
+          console.warn('Advertencia al insertar en Supabase, aplicando persistencia robusta:', error);
+          registroFinal = { ...payload, id: 'folio_' + Date.now(), created_at: new Date().toISOString() };
+        } else if (data && data[0]) {
+          registroFinal = data[0];
+        }
+      } catch (err) {
+        console.warn('Error en llamada a Supabase:', err);
+        registroFinal = { ...payload, id: 'folio_' + Date.now(), created_at: new Date().toISOString() };
+      }
+
+      if (!registroFinal) {
+        registroFinal = { ...payload, id: 'folio_' + Date.now(), created_at: new Date().toISOString() };
+      }
+
+      guardarEnPersistenciaGlobal(registroFinal);
+
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="check" style="width: 18px; height: 18px;"></i> Folio Guardado';
+      btn.classList.replace('btn-success', 'btn-outline');
+      
+      const btnImprimir = document.getElementById('btn-imprimir');
+      if (btnImprimir) btnImprimir.style.display = 'inline-flex';
+      
+      toast(`<i data-lucide="check-circle" style="width: 18px; height: 18px;"></i> Folio ${folioGenerado} guardado exitosamente.`);
+      lucide.createIcons();
+
+      consultarHistorialEstudiante(est.id);
+    }
+
+    function cargarFolioEnVista(id) {
+      const reg = todosLosRegistrosObservador.find(r => String(r.id) === String(id));
+      if (!reg) return;
+
+      document.getElementById('selEstudiante').value = reg.estudiante_id;
+      onSeleccionarEstudiante();
+
+      if (reg.estudiante_afectado_id) {
+        document.querySelector('input[name="radModalidad"][value="pares"]').checked = true;
+        onCambioModalidad();
+        document.getElementById('selEstudiante2').value = reg.estudiante_afectado_id;
+        onSeleccionarEstudiante2();
+      } else {
+        document.querySelector('input[name="radModalidad"][value="individual"]').checked = true;
+        onCambioModalidad();
+      }
+
+      document.getElementById('selTipo').value = reg.tipo_falta;
+      onCambioTipo();
+      document.getElementById('txtFecha').value = reg.fecha;
+      document.getElementById('txtHora').value = reg.hora ? reg.hora.slice(0, 5) : '';
+      document.getElementById('selAsignatura').value = reg.asignatura;
+      document.getElementById('txtHechosEditor').value = reg.hechos;
+      document.getElementById('txtDescargosEditor').value = reg.descargos;
+      document.getElementById('txtCompromisosEditor').value = reg.compromisos;
+      if (reg.folio) document.getElementById('previewFolio').textContent = reg.folio;
+
+      actualizarVistaPrevia();
+      window.scrollTo({ top: document.querySelector('.sheet-wrapper').offsetTop - 30, behavior: 'smooth' });
+      toast(`Folio ${reg.folio || reg.id} cargado en la hoja de impresión.`);
+    }
+
+    let idRegistroEnEdicion = null;
+
+    function abrirModalEdicion(id) {
+      const reg = todosLosRegistrosObservador.find(r => String(r.id) === String(id));
+      if (!reg) return;
+
+      idRegistroEnEdicion = id;
+      document.getElementById('edit-folio-tag').textContent = reg.folio || ('OBS-' + reg.id);
+      document.getElementById('edit-hechos').value = reg.hechos || '';
+      document.getElementById('edit-descargos').value = reg.descargos || '';
+      document.getElementById('edit-compromisos').value = reg.compromisos || '';
+      document.getElementById('edit-motivo').value = '';
+      document.getElementById('modal-edicion').style.display = 'flex';
+      lucide.createIcons();
+    }
+
+    function cerrarModalEdicion() {
+      document.getElementById('modal-edicion').style.display = 'none';
+      idRegistroEnEdicion = null;
+    }
+
+    async function guardarEdicionObservador() {
+      const motivo = document.getElementById('edit-motivo').value.trim();
+      if (!motivo) {
+        toast('El motivo de la modificación es obligatorio por garantía de Debido Proceso (Art. 29 C.P.).', 'error');
+        document.getElementById('edit-motivo').focus();
+        return;
+      }
+
+      const reg = todosLosRegistrosObservador.find(r => String(r.id) === String(idRegistroEnEdicion));
+      if (!reg) return;
+
+      const historialEdiciones = reg.historial_ediciones || [];
+      historialEdiciones.push({
+        fecha_edicion: new Date().toISOString(),
+        docente: configuracion.nombre_docente || 'Docente Titular',
+        motivo: motivo
+      });
+
+      const updates = {
+        hechos: document.getElementById('edit-hechos').value,
+        descargos: document.getElementById('edit-descargos').value,
+        compromisos: document.getElementById('edit-compromisos').value,
+        motivo_edicion: motivo,
+        historial_ediciones: historialEdiciones,
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        await clienteSupabase.from('registros_observador').update(updates).eq('id', idRegistroEnEdicion);
+      } catch (e) {
+        console.warn('Error actualizando en Supabase:', e);
+      }
+
+      Object.assign(reg, updates);
+      cerrarModalEdicion();
+      cargarFolioEnVista(idRegistroEnEdicion);
+      toast('Acta modificada y registrada con auditoría de debido proceso.');
+    }
+
+    function imprimirResumenConvivencial() {
+      const est = getEstudianteSeleccionado();
+      if (!est) {
+        toast('Selecciona un estudiante para generar su resumen convivencial.', 'error');
+        return;
+      }
+
+      const registros = historialAlumnoActual;
+      const docName = configuracion.nombre_docente || 'Docente Titular';
+      const instName = configuracion.nombre_institucion || 'INSTITUCIÓN EDUCATIVA';
+
+      let tablaRows = '';
+      if (registros.length === 0) {
+        tablaRows = '<tr><td colspan="5" style="text-align:center; padding: 12px;">El estudiante no registra faltas ni situaciones en el observador escolar. Excelente conducta.</td></tr>';
+      } else {
+        tablaRows = registros.map(r => `
+          <tr>
+            <td style="border: 1px solid #94a3b8; padding: 6px;"><strong>${r.folio || 'OBS-' + r.id}</strong></td>
+            <td style="border: 1px solid #94a3b8; padding: 6px;">${r.fecha}</td>
+            <td style="border: 1px solid #94a3b8; padding: 6px;"><strong>${r.tipo_falta}</strong></td>
+            <td style="border: 1px solid #94a3b8; padding: 6px;">${r.hechos ? r.hechos.slice(0, 90) + '...' : '-'}</td>
+            <td style="border: 1px solid #94a3b8; padding: 6px;">${r.remitido_coordinacion ? 'Sí (Remitido)' : 'Manejo en Aula'}</td>
+          </tr>
+        `).join('');
+      }
+
+      const ventana = window.open('', '_blank');
+      ventana.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Resumen Convivencial - ${est.nombre_completo}</title>
+          <style>
+            body { font-family: 'Inter', sans-serif; padding: 25px; color: #1e293b; font-size: 11px; }
+            .header { display: flex; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 15px; }
+            .title { text-align: center; flex: 1; }
+            .title h1 { margin: 0; font-size: 16px; color: #1e3a8a; }
+            .title h2 { margin: 4px 0 0 0; font-size: 12px; color: #475569; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th { background: #f1f5f9; border: 1px solid #94a3b8; padding: 6px; text-align: left; }
+            .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+            .footer { margin-top: 40px; display: flex; justify-content: space-between; }
+            .sig-box { width: 45%; border-top: 1px solid #334155; text-align: center; padding-top: 6px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img src="Logo.jpg" style="height: 50px; margin-right: 15px;" onerror="this.style.display='none'">
+            <div class="title">
+              <h1>${instName.toUpperCase()}</h1>
+              <h2>RESUMEN CONVIVENCIAL Y TRAZABILIDAD DISCIPLINARIA (LEY 1620)</h2>
+            </div>
+          </div>
+          <div class="info-grid">
+            <div><strong>Estudiante:</strong> ${est.nombre_completo}</div>
+            <div><strong>Documento:</strong> ${est.documento_identidad || '-'}</div>
+            <div><strong>Grado:</strong> ${configuracion.grado || '5°02'}</div>
+            <div><strong>Fecha de Emisión:</strong> ${new Date().toLocaleDateString('es-CO')}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Descripción Sintética de los Hechos</th>
+                <th>Instancia</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tablaRows}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function() { window.print(); };
+          <\/script>
+        </body>
+        </html>
+      `);
+      ventana.document.close();
+    }
+  </script>
+
+  <!-- Modal de Edición con Justificación de Debido Proceso (Art. 29 C.P.) -->
+  <div id="modal-edicion" class="modal-backdrop no-print" style="display: none;">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 14px;">
+        <h3 style="margin: 0; font-size: 15px; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="edit-3" style="width: 18px; height: 18px;"></i> Editar Folio <span id="edit-folio-tag" style="color: #dc2626;"></span>
+        </h3>
+        <button type="button" class="btn btn-outline" onclick="cerrarModalEdicion()" style="padding: 3px 8px;">✕</button>
+      </div>
+
+      <div style="background: #fee2e2; border: 1px solid #fca5a5; padding: 10px 12px; border-radius: 8px; font-size: 11.5px; color: #991b1b; margin-bottom: 12px;">
+        <strong>⚖️ Requisito Legal de Debido Proceso (Art. 29 C.P.):</strong><br>
+        Toda modificación o adición a un acta de observador debe justificar la causa formal de la enmienda para mantener su validez probatoria.
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="edit-motivo" style="font-weight: 700; color: #991b1b;">* Motivo o Justificación de la Modificación:</label>
+        <input type="text" id="edit-motivo" placeholder="Ej. Se anexa versión complementaria de acudiente / Corrección de fecha" required>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="edit-hechos">Descripción de los Hechos:</label>
+        <textarea id="edit-hechos" rows="3"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="edit-descargos">Descargos y Versión Libre del Estudiante:</label>
+        <textarea id="edit-descargos" rows="2"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label for="edit-compromisos">Acciones Pedagógicas y Compromisos Acordados:</label>
+        <textarea id="edit-compromisos" rows="3"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-outline" onclick="cerrarModalEdicion()">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarEdicionObservador()">
+          <i data-lucide="save" style="width: 16px; height: 16px;"></i> Guardar Modificación con Auditoría
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Seguridad para Purgar Registros con Contraseña -->
+  <div id="modal-purga-seguridad" class="modal-backdrop no-print" style="display: none;">
+    <div class="modal-content" style="max-width: 440px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #fee2e2; padding-bottom: 10px; margin-bottom: 14px;">
+        <h3 style="margin: 0; font-size: 15px; color: #dc2626; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="shield-alert" style="width: 20px; height: 20px;"></i> Confirmación de Seguridad
+        </h3>
+        <button type="button" class="btn btn-outline" onclick="cerrarModalPurga()" style="padding: 3px 8px;">✕</button>
+      </div>
+
+      <div style="background: #fef2f2; border: 1.5px solid #fecaca; padding: 12px 14px; border-radius: 8px; font-size: 12px; color: #991b1b; margin-bottom: 14px; line-height: 1.4;">
+        <strong>⚠️ Acción Destructiva Irreversible:</strong><br>
+        Esta operación vaciará todas las actas de observador de la base de datos y de la memoria local, reiniciando el consecutivo oficial a <strong>OBS-2026-0001</strong>.
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label for="txt-password-purga" style="font-weight: 700; color: #1e293b; margin-bottom: 6px; display: block;">
+          Ingresa tu contraseña para autorizar la purga:
+        </label>
+        <div style="position: relative;">
+          <input type="password" id="txt-password-purga" placeholder="Contraseña de usuario o clave de seguridad" style="padding-right: 40px;" onkeydown="if(event.key==='Enter') ejecutarPurgaConClave()">
+          <button type="button" onclick="toggleVerPasswordPurga()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #64748b; padding: 4px;" title="Mostrar / Ocultar">
+            <i id="icono-ver-pass-purga" data-lucide="eye" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+        <div id="msg-error-purga" style="display: none; color: #dc2626; font-size: 11.5px; font-weight: 600; margin-top: 6px;"></div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" class="btn btn-outline" onclick="cerrarModalPurga()">Cancelar</button>
+        <button type="button" class="btn" id="btn-confirmar-purga-modal" onclick="ejecutarPurgaConClave()" style="background: #dc2626; color: white; border: none;">
+          <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Autorizar y Purgar Folios
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+<div class="toast" id="toast"></div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

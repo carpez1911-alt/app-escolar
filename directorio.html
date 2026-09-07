@@ -9,42 +9,59 @@
 <script src="app.js"></script>
 <style>
   .directorio-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-  @media (min-width: 768px) { .directorio-grid { grid-template-columns: 1fr 1fr; } }
-  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border); margin-top: 15px;}
-  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; white-space: nowrap; }
-  th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
-  th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 800; }
-  .estado-badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+  @media (min-width: 980px) { .directorio-grid { grid-template-columns: 1.5fr 1fr; } }
+  
+  /* Tablas de directorio optimizadas */
+  .dir-table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+  .dir-table th, .dir-table td { padding: 9px 7px; border-bottom: 1px solid var(--border); }
+  .dir-table th { background-color: var(--primary-soft); color: var(--primary-dark); font-weight: 700; font-size: 12px; }
+  .dir-table td:nth-child(1) { width: 32px; color: #64748b; font-weight: 600; font-size: 11.5px; }
+  .dir-table td:nth-child(2) { font-size: 11.5px; color: #475569; white-space: nowrap; }
+  .dir-table td:nth-child(3) { font-weight: 600; }
+  .dir-table th:last-child, .dir-table td:last-child { text-align: right; white-space: nowrap; width: 75px; }
+
+  .estado-badge { padding: 3px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; }
   .estado-activo { background-color: #dcfce7; color: #15803d; }
   .estado-inactivo { background-color: #fee2e2; color: #b91c1c; }
-  .action-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px; border-radius: 4px;}
-  .action-btn:hover { background: #f1f5f9; }
+  
+  .action-btn { 
+    background: white; border: 1px solid #cbd5e1; cursor: pointer; 
+    font-size: 13px; padding: 4px 6px; border-radius: 6px;
+    min-width: 28px; min-height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #475569; transition: all 0.15s ease;
+  }
+  .action-btn:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+
+  /* Modal responsive */
+  .modal-card {
+    width: 90%; max-width: 420px; padding: 24px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    background: var(--surface); border-radius: var(--radius);
+  }
+  .modal-card h3 { margin-top: 0; font-size: 18px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .modal-actions .primary-btn, .modal-actions .secondary-btn { width: auto; }
+
+  @media (max-width: 480px) {
+    .dir-table td { padding: 8px 6px; font-size: 11.5px; }
+    .modal-card { padding: 16px; }
+    .modal-actions { flex-direction: column-reverse; }
+    .modal-actions .primary-btn,
+    .modal-actions .secondary-btn { width: 100%; }
+  }
 </style>
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
 <nav class="navbar">
   <div class="brand">
-    <div class="brand-mark">👥</div>
+    <div class="brand-mark"><i data-lucide="users" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></div>
     <div><div class="brand-title">Mi Clase 502</div><div class="brand-subtitle">Directorio</div></div>
   </div>
-  <div class="nav-actions">
-    <a class="nav-btn" href="dashboard.html">🏠 Panel</a>
-    <div class="menu-wrap" id="menuWrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú" title="Abrir menú">☰</button>
-      <div class="menu-panel">
-        <a href="dashboard.html">🏠 Panel principal</a>
-        <a href="index.html">📋 Control de asistencia</a>
-        <a href="actividades.html">📚 Gestionar actividades</a>
-        <a href="calificaciones.html">📝 Calificaciones</a>
-        <a href="consolidado.html">📈 Consolidado de Notas</a>
-        <a href="reportes.html">📊 Reportes y filtros</a>
-        <a href="directorio.html">👥 Estudiantes y Materias</a>
-        <a href="configuracion.html">⚙️ Configuración</a>
-      </div>
-    </div>
-  </div>
-</nav>
+  <div class="nav-actions" id="contenedor-menu-global"></div>
+  </nav>
 
 <main class="page">
   <section class="hero" style="margin-bottom: 15px;">
@@ -60,14 +77,14 @@
     <section class="card" style="padding: 20px;">
       <div class="toolbar">
         <div>
-          <div class="toolbar-title">🎓 Estudiantes</div>
+          <div class="toolbar-title"><i data-lucide="graduation-cap" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiantes</div>
           <div class="toolbar-meta">Control de matrícula</div>
         </div>
         <button class="primary-btn" onclick="abrirModalEstudiante()">+ Nuevo</button>
       </div>
-      <div class="table-container">
-        <table>
-          <thead><tr><th>ID</th><th>Nombre Completo</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <div class="table-container" style="margin-top: 0;">
+        <table class="dir-table">
+          <thead><tr><th>ID</th><th>Documento</th><th>Nombre Completo</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody id="lista-estudiantes">
               <tr><td colspan="4" class="loading">Cargando estudiantes...</td></tr>
           </tbody>
@@ -79,13 +96,13 @@
     <section class="card" style="padding: 20px;">
       <div class="toolbar">
         <div>
-          <div class="toolbar-title">📖 Materias</div>
+          <div class="toolbar-title"><i data-lucide="book-open" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Materias</div>
           <div class="toolbar-meta">Asignaturas impartidas</div>
         </div>
         <button class="primary-btn" onclick="abrirModalMateria()">+ Nueva</button>
       </div>
-      <div class="table-container">
-        <table>
+      <div class="table-container" style="margin-top: 0;">
+        <table class="dir-table">
           <thead><tr><th>ID</th><th>Nombre de Materia</th><th>Acciones</th></tr></thead>
           <tbody id="lista-materias">
               <tr><td colspan="3" class="loading">Cargando materias...</td></tr>
@@ -98,14 +115,24 @@
 <div class="toast" id="toast"></div>
 
 <!-- MODAL ESTUDIANTE -->
-<div id="modal-estudiante" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-  <div class="card" style="width:90%; max-width:400px; padding:20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-    <h3 style="margin-top:0;" id="modal-estudiante-titulo">Nuevo Estudiante</h3>
+<div id="modal-estudiante" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding: 16px;">
+  <div class="modal-card card">
+    <h3 id="modal-estudiante-titulo">Nuevo Estudiante</h3>
     <input type="hidden" id="edit-estudiante-id">
     
     <div class="form-group">
       <label>Nombre Completo:</label>
       <input type="text" id="edit-estudiante-nombre" class="form-control" placeholder="Apellidos y Nombres">
+    </div>
+
+    <div class="form-group">
+      <label>Documento de Identidad:</label>
+      <input type="text" id="edit-estudiante-doc" class="form-control" placeholder="Ej. T.I. 123456789">
+    </div>
+    
+    <div class="form-group">
+      <label>Nombre del Acudiente:</label>
+      <input type="text" id="edit-estudiante-acudiente" class="form-control" placeholder="Ej. Juan Pérez">
     </div>
     
     <div class="form-group">
@@ -113,7 +140,7 @@
       <input type="tel" id="edit-estudiante-telefono" class="form-control" placeholder="Ej. +573001234567">
     </div>
     
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+    <div class="modal-actions">
       <button class="secondary-btn" onclick="cerrarModal('modal-estudiante')">Cancelar</button>
       <button class="primary-btn" onclick="guardarEstudiante()">Guardar</button>
     </div>
@@ -121,9 +148,9 @@
 </div>
 
 <!-- MODAL MATERIA -->
-<div id="modal-materia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-  <div class="card" style="width:90%; max-width:400px; padding:20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-    <h3 style="margin-top:0;" id="modal-materia-titulo">Nueva Materia</h3>
+<div id="modal-materia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding: 16px;">
+  <div class="modal-card card">
+    <h3 id="modal-materia-titulo">Nueva Materia</h3>
     <input type="hidden" id="edit-materia-id">
     
     <div class="form-group">
@@ -131,7 +158,7 @@
       <input type="text" id="edit-materia-nombre" class="form-control" placeholder="Ej. Matemáticas">
     </div>
     
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+    <div class="modal-actions">
       <button class="secondary-btn" onclick="cerrarModal('modal-materia')">Cancelar</button>
       <button class="primary-btn" onclick="guardarMateria()">Guardar</button>
     </div>
@@ -154,7 +181,7 @@ async function cargarDirectorio() {
   
   const [resCfg, resEst, resMat] = await Promise.all([
     clienteSupabase.from('configuracion_global').select('año_actual').limit(1).single(),
-    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado, telefono_acudiente').order('nombre_completo'),
+    clienteSupabase.from('estudiantes').select('id, nombre_completo, estado, telefono_acudiente, documento_identidad, nombre_acudiente').order('nombre_completo'),
     clienteSupabase.from('materias').select('id, nombre_materia').order('nombre_materia')
   ]);
 
@@ -182,20 +209,22 @@ function renderizarEstudiantes() {
   estudiantesData.forEach(est => {
     const estadoClass = est.estado === 'Activo' ? 'estado-activo' : 'estado-inactivo';
     const toggleAction = est.estado === 'Activo' ? 'Desactivar' : 'Activar';
-    const toggleIcon = est.estado === 'Activo' ? '⛔' : '✅';
+    const toggleIcon = est.estado === 'Activo' ? '<i data-lucide="minus-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>' : '<i data-lucide="check-circle" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>';
     
     tbody.innerHTML += `
       <tr>
         <td>${est.id}</td>
+        <td>${est.documento_identidad || '-'}</td>
         <td style="font-weight: 600;">${est.nombre_completo}</td>
         <td><span class="estado-badge ${estadoClass}">${est.estado}</span></td>
         <td>
-          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}', '${(est.telefono_acudiente || '').replace(/'/g, "\\'")}')">✏️</button>
+          <button class="action-btn" title="Editar" onclick="abrirModalEstudiante(${est.id}, '${est.nombre_completo.replace(/'/g, "\\'")}', '${(est.documento_identidad || '').replace(/'/g, "\\'")}', '${(est.nombre_acudiente || '').replace(/'/g, "\\'")}', '${(est.telefono_acudiente || '').replace(/'/g, "\\'")}')"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
           <button class="action-btn" title="${toggleAction}" onclick="toggleEstadoEstudiante(${est.id}, '${est.estado}')">${toggleIcon}</button>
         </td>
       </tr>
     `;
   });
+  if (window.lucide) lucide.createIcons();
 }
 
 function renderizarMaterias() {
@@ -212,12 +241,13 @@ function renderizarMaterias() {
         <td>${mat.id}</td>
         <td style="font-weight: 600;">${mat.nombre_materia}</td>
         <td>
-          <button class="action-btn" title="Editar" onclick="abrirModalMateria(${mat.id}, '${mat.nombre_materia.replace(/'/g, "\\'")}')">✏️</button>
-          <button class="action-btn" title="Eliminar" onclick="eliminarMateria(${mat.id})">🗑️</button>
+          <button class="action-btn" title="Editar" onclick="abrirModalMateria(${mat.id}, '${mat.nombre_materia.replace(/'/g, "\\'")}')"><i data-lucide="edit-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
+          <button class="action-btn" title="Eliminar" onclick="eliminarMateria(${mat.id})"><i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i></button>
         </td>
       </tr>
     `;
   });
+  if (window.lucide) lucide.createIcons();
 }
 
 // === MODALES ===
@@ -226,10 +256,12 @@ function cerrarModal(modalId) {
 }
 
 // === ESTUDIANTES ===
-function abrirModalEstudiante(id = null, nombre = '', telefono = '') {
+function abrirModalEstudiante(id = null, nombre = '', doc = '', acudiente = '', telefono = '') {
   document.getElementById('modal-estudiante-titulo').textContent = id ? 'Editar Estudiante' : 'Nuevo Estudiante';
   document.getElementById('edit-estudiante-id').value = id || '';
   document.getElementById('edit-estudiante-nombre').value = nombre;
+  document.getElementById('edit-estudiante-doc').value = doc;
+  document.getElementById('edit-estudiante-acudiente').value = acudiente;
   document.getElementById('edit-estudiante-telefono').value = telefono;
   document.getElementById('modal-estudiante').style.display = 'flex';
 }
@@ -237,24 +269,35 @@ function abrirModalEstudiante(id = null, nombre = '', telefono = '') {
 async function guardarEstudiante() {
   const id = document.getElementById('edit-estudiante-id').value;
   const nombre = document.getElementById('edit-estudiante-nombre').value.trim();
+  const doc = document.getElementById('edit-estudiante-doc').value.trim();
+  const acudiente = document.getElementById('edit-estudiante-acudiente').value.trim();
   const telefono = document.getElementById('edit-estudiante-telefono').value.trim();
   
   if (!nombre) { toast('El nombre es obligatorio.'); return; }
   if (!añoActual) { toast('Error: No se ha configurado el año académico.'); return; }
 
+  const payload = {
+    nombre_completo: nombre,
+    documento_identidad: doc || null,
+    nombre_acudiente: acudiente || null,
+    telefono_acudiente: telefono || null
+  };
+
   let error;
   if (id) {
-    const res = await clienteSupabase.from('estudiantes').update({ nombre_completo: nombre, telefono_acudiente: telefono }).eq('id', id);
+    const res = await clienteSupabase.from('estudiantes').update(payload).eq('id', id);
     error = res.error;
   } else {
-    const res = await clienteSupabase.from('estudiantes').insert([{ nombre_completo: nombre, telefono_acudiente: telefono, estado: 'Activo', año_lectivo: añoActual }]);
+    payload.estado = 'Activo';
+    payload.año_lectivo = añoActual;
+    const res = await clienteSupabase.from('estudiantes').insert([payload]);
     error = res.error;
   }
 
   if (error) { toast(`Error al guardar: ${error.message}`); return; }
   
   cerrarModal('modal-estudiante');
-  toast('✓ Estudiante guardado exitosamente.');
+  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiante guardado exitosamente.');
   cargarDirectorio();
 }
 
@@ -265,7 +308,7 @@ async function toggleEstadoEstudiante(id, estadoActual) {
   const { error } = await clienteSupabase.from('estudiantes').update({ estado: nuevoEstado }).eq('id', id);
   if (error) { toast(`Error al cambiar estado: ${error.message}`); return; }
   
-  toast(`✓ Estudiante marcado como ${nuevoEstado}.`);
+  toast(`<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Estudiante marcado como ${nuevoEstado}.`);
   cargarDirectorio();
 }
 
@@ -295,7 +338,7 @@ async function guardarMateria() {
   if (error) { toast(`Error al guardar: ${error.message}`); return; }
   
   cerrarModal('modal-materia');
-  toast('✓ Materia guardada exitosamente.');
+  toast('<i data-lucide="check" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i> Materia guardada exitosamente.');
   cargarDirectorio();
 }
 
@@ -309,11 +352,12 @@ async function eliminarMateria(id) {
     return; 
   }
   
-  toast('🗑️ Materia eliminada.');
+  toast('<i data-lucide="trash-2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>️ Materia eliminada.');
   cargarDirectorio();
 }
 
 cargarDirectorio();
 </script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

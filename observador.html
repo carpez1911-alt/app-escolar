@@ -102,77 +102,221 @@
       #ventana-impresion-folio { display: block !important; }
     }
 
-    /* ===== MODAL DE FIRMAS DIGITALES ===== */
-    #modal-firmas {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(15,23,42,0.95); z-index: 99999;
-      display: none; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 12px;
-      overflow-y: auto;
+    /* ===== MODAL PANEL DE GESTIÓN DE FIRMAS (POR IMPLICADO) ===== */
+    .implicado-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.2s ease;
     }
-    .firmas-card {
-      background: white; border-radius: 16px;
-      padding: 20px 22px;
-      max-width: 520px; width: 100%;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    .implicado-card:hover {
+      border-color: #cbd5e1;
+      background: #ffffff;
     }
-    .firmas-progress { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; }
-    .firma-step-dot {
-      width: 34px; height: 34px; border-radius: 50%;
-      border: 2px solid #cbd5e1; background: white;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 800; color: #94a3b8;
-      transition: all 0.3s; cursor: pointer;
+    .implicado-card.firmado {
+      border-color: #86efac;
+      background: #f0fdf4;
     }
-    .firma-step-dot.active  { border-color: #1e3a8a; background: #1e3a8a; color: white; transform: scale(1.15); }
-    .firma-step-dot.done    { border-color: #059669; background: #059669; color: white; }
-    .firma-step-dot.skipped { border-color: #94a3b8; background: #f1f5f9; color: #94a3b8; }
-    .canvas-firma-wrapper {
-      border: 2.5px dashed #7c3aed; border-radius: 12px;
-      background: #faf8ff; margin: 12px 0;
-      position: relative; overflow: hidden;
-      /* Área grande para firma táctil */
+    .implicado-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
     }
-    #canvas-firma { display: block; width: 100%; touch-action: none; cursor: crosshair; }
-    .firma-instructions { font-size: 12px; color: #64748b; text-align: center; margin-bottom: 4px; }
-    .firma-hint-rotate {
+    .implicado-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .implicado-text {
+      min-width: 0;
+    }
+    .implicado-rol {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+    .implicado-nombre {
+      font-size: 11px;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .implicado-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .implicado-badge.badge-firmado {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .implicado-badge.badge-pendiente {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+    .implicado-preview-img {
+      max-height: 32px;
+      max-width: 90px;
+      object-fit: contain;
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 2px;
+    }
+    .implicado-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .sig-line-firmada {
+      border-bottom: none !important;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 2px;
+    }
+    .sig-line-firmada img {
+      max-height: 30px;
+      max-width: 96%;
+      object-fit: contain;
+    }
+
+    /* ===== PANTALLA COMPLETA DE FIRMA (100% OPACA, CERO FOLIO AL FONDO) ===== */
+    #pantalla-firma-completa {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100dvh;
+      background: #0f172a !important; /* Fondo sólido oscuro, nunca translúcido */
+      z-index: 1000000;
       display: none;
-      background: #fffbeb; border: 1px solid #fcd34d;
-      border-radius: 8px; padding: 8px 12px;
-      font-size: 11.5px; font-weight: 700; color: #92400e;
-      text-align: center; margin-bottom: 10px;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .sig-image { width: 100%; height: 100%; object-fit: contain; }
-    .sig-line-firmada { border-bottom: none !important; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 2px; }
-    .sig-line-firmada img { max-height: 28px; max-width: 100%; object-fit: contain; }
-
-    /* === PORTRAIT (celular vertical) === */
-    @media (orientation: portrait) and (max-width: 600px) {
-      #modal-firmas { padding: 8px; justify-content: flex-start; padding-top: 10px; }
-      .firmas-card { padding: 14px 14px; border-radius: 14px; max-width: 100%; }
-      .firma-hint-rotate { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    #pfc-header {
+      padding: 10px 16px;
+      background: #1e3a8a;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
     }
-
-    /* === LANDSCAPE (celular horizontal) — modo firma maximizado === */
-    @media (orientation: landscape) and (max-height: 500px) {
-      #modal-firmas { padding: 0; align-items: stretch; justify-content: stretch; overflow: hidden; }
-      .firmas-card {
-        border-radius: 0; padding: 0;
-        max-width: 100%; height: 100vh;
-        display: grid;
-        grid-template-columns: 1fr 130px;
-        grid-template-rows: auto 1fr auto;
-        gap: 0;
-      }
-      .firmas-card-header-ls  { grid-column: 1 / 3; padding: 8px 14px 6px 14px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-      .firmas-card-canvas-ls  { grid-column: 1; padding: 8px 0 8px 8px; display: flex; align-items: center; }
-      .firmas-card-btns-ls    { grid-column: 2; padding: 8px; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
-      /* Ocultar en landscape lo que no cabe */
-      .firma-hint-rotate, .firmas-progress, #firma-preview-existente, .firma-footer-hint { display: none !important; }
-      /* Dots compactos en el header landscape */
-      .firmas-progress-ls { display: flex; gap: 6px; }
-      .firma-step-dot { width: 26px; height: 26px; font-size: 11px; }
+    #pfc-btn-cerrar {
+      background: rgba(255,255,255,0.18);
+      border: none;
+      color: white;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    #pfc-rotar-hint {
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 11px;
+      text-align: center;
+      padding: 4px 10px;
+      flex-shrink: 0;
+    }
+    #pfc-canvas-container {
+      flex: 1;
+      position: relative;
+      margin: 8px 12px;
+      background: #ffffff;
+      border: 2px dashed #93c5fd;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      align-items: stretch;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    #pfc-canvas {
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: crosshair;
+      display: block;
+      background: transparent;
+      z-index: 2;
+      position: relative;
+    }
+    #pfc-canvas-watermark {
+      position: absolute;
+      bottom: 12px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 11px;
+      color: #94a3b8;
+      pointer-events: none;
+      z-index: 1;
+      font-weight: 500;
+    }
+    #pfc-footer {
+      padding: 10px 16px;
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .pfc-btn {
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .pfc-btn-borrar {
+      background: #1e293b;
+      color: #f87171;
+      border: 1px solid #ef4444;
+    }
+    .pfc-btn-guardar {
+      background: linear-gradient(135deg, #059669, #047857);
+      color: white;
+      flex: 1;
+      max-width: 320px;
+      box-shadow: 0 4px 12px rgba(5,150,105,0.4);
+    }
+    @media (orientation: landscape) and (max-height: 520px) {
+      #pfc-rotar-hint { display: none; }
+      #pfc-header { padding: 6px 14px; }
+      #pfc-footer { padding: 6px 14px; }
+      .pfc-btn { padding: 8px 14px; font-size: 12.5px; }
+      #pfc-canvas-container { margin: 4px 10px; }
     }
   </style>
 
@@ -1284,6 +1428,10 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
           <div class="signature-item"><div class="sig-line"></div><div class="sig-name">Docente: ${docName}</div><div class="sig-role">Firma de Registro / Coordinación</div></div>
         `;
       }
+
+      if (typeof folioActivoFirmas !== 'undefined' && folioActivoFirmas && typeof actualizarFirmasEnHojaImpresa === 'function') {
+        actualizarFirmasEnHojaImpresa(folioActivoFirmas);
+      }
     }
 
     let todosLosRegistrosObservador = [];
@@ -1683,14 +1831,7 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     }
 
     function abrirFirmasParaFolio(id) {
-      // CRÍTICO: window.open() DEBE llamarse en el mismo call stack del click del usuario.
-      // Si se llama dentro de setTimeout, el navegador lo bloquea silenciosamente.
-      // Por eso: abrimos la ventana PRIMERO, luego actualizamos la hoja en segundo plano.
-      folioIdFirma = id;
-      const btnFirmas = document.getElementById('btn-recoger-firmas');
-      if (btnFirmas) { btnFirmas.dataset.folioId = id; btnFirmas.style.display = 'inline-flex'; }
-      abrirVentanaFirmas(id); // ← apertura inmediata, misma respuesta al click
-      cargarFolioEnVista(id); // ← carga en segundo plano (no bloquea el popup)
+      abrirPanelFirmas(id);
     }
 
     function imprimirFolioActual() {
@@ -2058,22 +2199,8 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
       if (btnFirmas) { btnFirmas.style.display = 'inline-flex'; btnFirmas.dataset.folioId = reg.id; }
       if (btnImprimir) btnImprimir.style.display = 'inline-flex';
 
-      // Si el folio ya tiene firmas guardadas, mostrarlas en la vista previa
-      if (reg.firma_docente || reg.firma_estudiante || reg.firma_acudiente || reg.firma_coordinador) {
-        const grid = document.getElementById('previewGridFirmas');
-        if (grid) {
-          setTimeout(() => {
-            const items = grid.querySelectorAll('.signature-item');
-            const mapa = [reg.firma_estudiante, reg.firma_acudiente, reg.firma_docente, reg.firma_coordinador];
-            items.forEach((item, i) => {
-              const sigLine = item.querySelector('.sig-line');
-              if (sigLine && mapa[i]) {
-                sigLine.innerHTML = `<img src="${mapa[i]}" style="max-height:28px;max-width:95%;object-fit:contain;" alt="Firma">`;
-              }
-            });
-          }, 200);
-        }
-      }
+      folioActivoFirmas = reg;
+      actualizarFirmasEnHojaImpresa(reg);
 
       cambiarTabObservador('redactar');
       window.scrollTo({ top: document.querySelector('.sheet-wrapper')?.offsetTop - 30 || 0, behavior: 'smooth' });
@@ -2225,349 +2352,445 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
 
   <script>
   // ============================================================
-  // MÓDULO DE FIRMAS DIGITALES PRESENCIALES
-  // Usa signature_pad (MIT License) — sin costo
+  // MÓDULO DE FIRMAS DIGITALES PRESENCIALES (POR IMPLICADO)
+  // Permite tomar la firma de cada involucrado por separado (docente,
+  // estudiante, acudiente, coordinador) en pantalla completa táctil,
+  // sin ventanas emergentes en blanco ni popups bloqueados.
   // ============================================================
 
-  let signaturePadInstance = null;
-  let firmasActuales = {}; // { docente, estudiante, acudiente, coordinador }
-  let pasoFirmaActual = 0;
-  let folioIdFirma = null;
+  let padFirmaIndividual = null;
+  let folioActivoFirmas = null;      // Objeto de datos del folio activo
+  let campoFirmaActivo = null;       // 'firma_docente', 'firma_estudiante', 'firma_acudiente', 'firma_coordinador'
+  let rolFirmaActivo = '';           // Ej. 'Estudiante'
+  let nombreFirmaActivo = '';        // Ej. 'Carlos Gómez'
 
-  const PASOS_FIRMA = [
-    { key: 'docente',      label: 'Docente Titular',           icono: '👨‍🏫', instruccion: 'El docente firma aquí para registrar la anotación.' },
-    { key: 'estudiante',   label: 'Estudiante',                icono: '🎒', instruccion: 'El estudiante firma como constancia de conocimiento del acta.' },
-    { key: 'acudiente',    label: 'Padre de Familia / Acudiente', icono: '👨‍👩‍👦', instruccion: 'El acudiente firma como constancia de notificación.' },
-    { key: 'coordinador',  label: 'Coordinación',              icono: '🏫', instruccion: 'El coordinador firma en caso de remisión o seguimiento institucional.' }
-  ];
-
-
-
+  // Abre el panel de firmas desde la vista de redacción
   function abrirModalFirmas() {
     const btn = document.getElementById('btn-recoger-firmas');
-    folioIdFirma = btn ? btn.dataset.folioId : null;
-    abrirVentanaFirmas(folioIdFirma);
+    const folioId = btn ? btn.dataset.folioId : null;
+    if (!folioId) {
+      toast('Carga o guarda un folio primero para recoger firmas.', 'error');
+      return;
+    }
+    abrirPanelFirmas(folioId);
   }
 
-  function abrirFirmasParaFolioDirecto(id) {
-    folioIdFirma = id;
-    abrirVentanaFirmas(id);
-  }
-
-  function abrirVentanaFirmas(folioId) {
-    const ventana = window.open('', '_blank', 'width=680,height=720,resizable=yes,scrollbars=no');
-    if (!ventana) {
-      alert('El navegador bloqueó la ventana emergente. Por favor permite las ventanas emergentes para este sitio e inténtalo de nuevo.');
+  // Abre el panel de firmas para un folio específico
+  async function abrirPanelFirmas(folioId) {
+    if (!folioId) {
+      toast('Identificador de folio no válido.', 'error');
       return;
     }
 
-    // Callback en la página padre: recibe firmas (JSON string) desde ventana hija
-    window._recibirFirmasCallback = async function(firmasJson) {
-      // Deserializar: la ventana popup envía JSON.stringify para evitar problemas cross-window
-      const firmas = typeof firmasJson === 'string' ? JSON.parse(firmasJson) : firmasJson;
-      firmasActuales = firmas;
-      await guardarFirmasEnRegistro(folioId, firmas);
-      aplicarFirmasEnVistaPrevia(firmas);
-      toast('<i data-lucide="check-circle" style="width:16px;height:16px;"></i> ¡Firmas guardadas en el folio!');
-      lucide.createIcons();
-    };
+    // Buscar en memoria local primero
+    let reg = todosLosRegistrosObservador.find(r => String(r.id) === String(folioId) || String(r.folio) === String(folioId));
 
-    const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Firma Digital — Observador Estudiantil</title>
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"><\\/script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;}
-#app{display:flex;flex-direction:column;width:100vw;height:100dvh;background:#0f172a;}
-/* ── HEADER ── */
-#header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1e3a8a;color:white;flex-shrink:0;gap:10px;}
-#header-left{display:flex;align-items:center;gap:10px;min-width:0;}
-#paso-titulo{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#paso-sub{font-size:10px;opacity:0.75;margin-top:1px;}
-#btn-cerrar{background:rgba(255,255,255,0.15);border:none;color:white;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-/* ── DOTS ── */
-#dots{display:flex;gap:8px;padding:10px 14px 6px 14px;background:#1e2d5c;flex-shrink:0;align-items:center;justify-content:center;}
-.dot{width:32px;height:32px;border-radius:50%;border:2px solid #475569;background:#1e293b;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.25s;}
-.dot.active{border-color:#60a5fa;background:#2563eb;color:white;transform:scale(1.15);}
-.dot.done{border-color:#34d399;background:#059669;color:white;}
-.dot.skipped{border-color:#475569;background:#1e293b;color:#475569;}
-#dots-hint{font-size:10px;color:#94a3b8;margin-left:8px;white-space:nowrap;}
-/* ── INSTRUCCIÓN ── */
-#instruccion{padding:8px 14px 4px 14px;font-size:12px;color:#94a3b8;text-align:center;flex-shrink:0;background:#0f172a;}
-/* ── PREVIEW FIRMA PREVIA ── */
-#preview-firma{display:none;margin:0 14px 6px 14px;padding:8px;background:#042f2e;border:1px solid #34d399;border-radius:8px;text-align:center;}
-#preview-firma p{font-size:10px;color:#34d399;font-weight:700;margin-bottom:4px;}
-#preview-img{max-height:36px;max-width:100%;object-fit:contain;background:white;border-radius:4px;padding:2px;}
-/* ── CANVAS ── */
-#canvas-wrap{flex:1;padding:8px 10px;display:flex;align-items:stretch;}
-#canvas-wrap canvas{width:100%;height:100%;touch-action:none;cursor:crosshair;border-radius:14px;border:2.5px dashed #7c3aed;background:#faf8ff;display:block;}
-/* ── BOTONES ── */
-#btns{display:flex;gap:8px;padding:10px 12px;background:#0f172a;flex-shrink:0;flex-wrap:wrap;}
-.btn-firma{flex:1;min-width:70px;padding:11px 8px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
-.btn-anterior{background:#1e293b;color:#94a3b8;}
-.btn-borrar{background:#1e293b;color:#f87171;border:1px solid #f87171;}
-.btn-omitir{background:#1e293b;color:#94a3b8;}
-.btn-confirmar{background:linear-gradient(135deg,#059669,#047857);color:white;flex:2;}
-/* ── FOOTER ── */
-#footer{text-align:center;font-size:10px;color:#334155;padding:4px 0 8px 0;flex-shrink:0;background:#0f172a;}
-/* ── LANDSCAPE ── */
-@media(orientation:landscape) and (max-height:500px){
-  #app{flex-direction:row;flex-wrap:wrap;}
-  #header{width:100%;flex-shrink:0;}
-  #dots{flex-direction:column;padding:8px;width:50px;height:calc(100% - 44px);justify-content:center;background:#1e2d5c;}
-  #dots-hint{display:none;}
-  #instruccion,#preview-firma{display:none!important;}
-  #canvas-wrap{flex:1;height:calc(100dvh - 44px);padding:6px;}
-  #btns{flex-direction:column;width:110px;height:calc(100dvh - 44px);padding:6px 8px;gap:6px;}
-  .btn-firma{min-width:unset;font-size:12px;padding:8px 6px;}
-  #footer{display:none;}
-}
-</style>
-</head>
-<body>
-<div id="app">
-  <div id="header">
-    <div id="header-left">
-      <span id="paso-icono" style="font-size:20px;">👨‍🏫</span>
-      <div>
-        <div id="paso-titulo">Docente Titular</div>
-        <div id="paso-sub">Paso 1 de 4</div>
-      </div>
-    </div>
-    <button id="btn-cerrar" onclick="cerrarVentana()" title="Cancelar">✕</button>
-  </div>
-
-  <div id="dots">
-    <div class="dot active" id="d0" onclick="irAPaso(0)" title="Paso 1">1</div>
-    <div class="dot" id="d1" onclick="irAPaso(1)" title="Paso 2">2</div>
-    <div class="dot" id="d2" onclick="irAPaso(2)" title="Paso 3">3</div>
-    <div class="dot" id="d3" onclick="irAPaso(3)" title="Paso 4">4</div>
-    <span id="dots-hint">toca para rehacer</span>
-  </div>
-
-  <div id="instruccion">El firmante dibuja su firma en el área de abajo</div>
-
-  <div id="preview-firma">
-    <p>✅ Firma capturada — dibuja de nuevo para reemplazarla</p>
-    <img id="preview-img" src="" alt="firma previa">
-  </div>
-
-  <div id="canvas-wrap">
-    <canvas id="cvs"></canvas>
-  </div>
-
-  <div id="btns">
-    <button class="btn-firma btn-anterior" id="btn-ant" onclick="anterior()">◀ Anterior</button>
-    <button class="btn-firma btn-borrar" onclick="borrar()">🗑 Borrar</button>
-    <button class="btn-firma btn-omitir" onclick="omitir()">↷ Omitir</button>
-    <button class="btn-firma btn-confirmar" onclick="confirmar()">✔ Confirmar</button>
-  </div>
-  <div id="footer">✋ Firma con el dedo · Gira el celular en horizontal para más espacio</div>
-</div>
-
-<script>
-const PASOS=[
-  {key:'docente',    label:'Docente Titular',             icono:'👨‍🏫', inst:'El docente firma para registrar la anotación.'},
-  {key:'estudiante', label:'Estudiante',                  icono:'🎒',  inst:'El estudiante firma como constancia de conocimiento.'},
-  {key:'acudiente',  label:'Padre / Acudiente',           icono:'👨‍👩‍👦', inst:'El acudiente firma como constancia de notificación.'},
-  {key:'coordinador',label:'Coordinación',                icono:'🏫',  inst:'El coordinador firma en remisión o seguimiento.'}
-];
-
-let paso=0, firmas={}, pad=null;
-
-function initCanvas(){
-  const cvs=document.getElementById('cvs');
-  cvs.width=cvs.offsetWidth||400;
-  cvs.height=cvs.offsetHeight||300;
-  if(!pad) pad=new SignaturePad(cvs,{minWidth:1.8,maxWidth:3.5,penColor:'#1e3a8a'});
-  else pad.clear();
-}
-
-function render(){
-  const p=PASOS[paso];
-  document.getElementById('paso-icono').textContent=p.icono;
-  document.getElementById('paso-titulo').textContent=p.label;
-  document.getElementById('paso-sub').textContent='Paso '+(paso+1)+' de '+PASOS.length;
-  document.getElementById('instruccion').textContent=p.inst;
-
-  // Dots
-  PASOS.forEach((_,i)=>{
-    const d=document.getElementById('d'+i);
-    d.className='dot';
-    if(firmas[PASOS[i].key]==='omitida') d.classList.add('skipped');
-    else if(firmas[PASOS[i].key])        d.classList.add('done');
-    else if(i===paso)                    d.classList.add('active');
-  });
-
-  // Preview firma previa
-  const prev=firmas[p.key];
-  const pvDiv=document.getElementById('preview-firma');
-  const pvImg=document.getElementById('preview-img');
-  if(prev&&prev!=='omitida'){pvImg.src=prev;pvDiv.style.display='block';}
-  else{pvDiv.style.display='none';}
-
-  // Botón anterior
-  document.getElementById('btn-ant').style.display=paso===0?'none':'flex';
-
-  initCanvas();
-}
-
-function borrar(){if(pad)pad.clear();}
-
-function omitir(){
-  firmas[PASOS[paso].key]='omitida';
-  siguiente();
-}
-
-function confirmar(){
-  if(!pad||pad.isEmpty()){alert('Por favor dibuja la firma antes de confirmar.');return;}
-  // JPEG calidad 0.5 = mucho más pequeño que PNG, perfecto para firmas en blanco/azul
-  firmas[PASOS[paso].key]=pad.toDataURL('image/jpeg', 0.5);
-  siguiente();
-}
-
-function siguiente(){
-  paso++;
-  if(paso>=PASOS.length){
-    // Serializar a JSON para garantizar transferencia correcta entre ventanas
-    const firmasJson = JSON.stringify(firmas);
-    try{
-      if(window.opener && window.opener._recibirFirmasCallback){
-        window.opener._recibirFirmasCallback(firmasJson);
-      }
-    }catch(e){console.warn('Error enviando firmas al padre:',e);}
-    window.close();
-    return;
-  }
-  render();
-}
-
-function anterior(){
-  if(paso<=0)return;
-  delete firmas[PASOS[paso].key];
-  paso--;
-  delete firmas[PASOS[paso].key];
-  render();
-}
-
-function irAPaso(i){
-  if(i>paso)return;
-  delete firmas[PASOS[i].key];
-  paso=i;
-  render();
-}
-
-function cerrarVentana(){
-  if(confirm('¿Cancelar la recogida de firmas? Los pasos completados se perderán.')){
-    window.close();
-  }
-}
-
-// Redimensionar canvas al rotar
-function onResize(){
-  setTimeout(()=>{
-    const cvs=document.getElementById('cvs');
-    if(!cvs||!pad)return;
-    const data=pad.isEmpty()?null:pad.toDataURL();
-    cvs.width=cvs.offsetWidth||400;
-    cvs.height=cvs.offsetHeight||300;
-    pad.clear();
-    if(data)pad.fromDataURL(data,{ratio:1,width:cvs.width,height:cvs.height});
-  },350);
-}
-window.addEventListener('orientationchange',onResize);
-window.addEventListener('resize',onResize);
-
-// Iniciar
-window.onload=()=>render();
-<\/script>
-</body>
-</html>`;
-
-    ventana.document.write(html);
-    ventana.document.close();
-  }
-
-  // Guarda cada firma individualmente para evitar el límite de payload de Supabase
-  async function guardarFirmasEnRegistro(folioId, firmas) {
-    if (!folioId || String(folioId).startsWith('folio_')) {
-      toast('Este folio no está guardado en la base de datos todavía. Guarda el folio primero.', 'error');
-      return;
-    }
-
-    const mapa = {
-      docente:     'firma_docente',
-      estudiante:  'firma_estudiante',
-      acudiente:   'firma_acudiente',
-      coordinador: 'firma_coordinador'
-    };
-
-    let guardadas = 0;
-    let errores   = 0;
-
-    for (const [key, col] of Object.entries(mapa)) {
-      const valor = firmas[key];
-      if (!valor || valor === 'omitida') continue; // no firmó / fue omitida
-
-      const payload = {};
-      payload[col] = valor;
-      payload.updated_at = new Date().toISOString();
-
+    // Si no está en memoria, consultar directamente en Supabase
+    if (!reg) {
       try {
-        const { data, error } = await clienteSupabase
-          .from('registros_observador')
-          .update(payload)
-          .eq('id', Number(folioId))
-          .select('id');
-
-        if (error) {
-          console.error(`Error guardando firma_${key}:`, error);
-          errores++;
-        } else if (!data || data.length === 0) {
-          console.warn(`No se encontró el folio id=${folioId} al guardar firma_${key}`);
-          errores++;
+        const idNum = Number(folioId);
+        let query = clienteSupabase.from('registros_observador').select('*');
+        if (!isNaN(idNum) && idNum > 0) {
+          query = query.eq('id', idNum);
         } else {
-          console.log(`✅ firma_${key} guardada en folio id=${folioId}`);
-          guardadas++;
+          query = query.eq('folio', String(folioId));
+        }
+        const { data, error } = await query.maybeSingle();
+        if (!error && data) {
+          reg = data;
         }
       } catch (e) {
-        console.error(`Excepción guardando firma_${key}:`, e);
-        errores++;
+        console.warn('Error consultando folio en Supabase:', e);
       }
     }
 
-    if (errores > 0) {
-      toast(`⚠️ ${guardadas} firma(s) guardada(s). ${errores} no pudieron guardarse. Revisa la consola.`, 'error');
+    if (!reg) {
+      toast('No se encontró el registro del folio seleccionado.', 'error');
+      return;
     }
 
-    // Actualizar en memoria local
-    try {
-      const reg = todosLosRegistrosObservador.find(r => String(r.id) === String(folioId));
-      if (reg) {
-        for (const [key, col] of Object.entries(mapa)) {
-          if (firmas[key] && firmas[key] !== 'omitida') reg[col] = firmas[key];
-        }
-      }
-    } catch (e) { /* todosLosRegistrosObservador puede estar en otro scope */ }
+    folioActivoFirmas = reg;
+
+    // Configurar botón en la barra superior
+    const btnFirmas = document.getElementById('btn-recoger-firmas');
+    if (btnFirmas) {
+      btnFirmas.dataset.folioId = reg.id;
+      btnFirmas.style.display = 'inline-flex';
+    }
+
+    renderizarPanelFirmas(reg);
+
+    const modal = document.getElementById('modal-panel-firmas');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+    lucide.createIcons();
   }
 
-  function aplicarFirmasEnVistaPrevia(firmas) {
+  // Dibuja las tarjetas de cada implicado en el panel
+  function renderizarPanelFirmas(reg) {
+    if (!reg) return;
+
+    const est1 = estudiantes.find(e => String(e.id) === String(reg.estudiante_id));
+    const nombreEst1 = reg.estudiantes?.nombre_completo || est1?.nombre_completo || `Estudiante #${reg.estudiante_id || ''}`;
+    const docName = reg.docente || (typeof configuracion !== 'undefined' && configuracion.profesor_nombre ? configuracion.profesor_nombre : 'Docente Titular');
+    const esPares = reg.modalidad === 'pares' || Boolean(reg.estudiante_afectado_id);
+
+    let nombreEst2 = '';
+    if (esPares && reg.estudiante_afectado_id) {
+      const est2 = estudiantes.find(e => String(e.id) === String(reg.estudiante_afectado_id));
+      nombreEst2 = est2?.nombre_completo || `Estudiante #${reg.estudiante_afectado_id}`;
+    }
+
+    // Definición de roles según la modalidad del folio
+    let implicados = [];
+    if (!esPares) {
+      implicados = [
+        {
+          campo: 'firma_docente',
+          rol: 'Docente Titular',
+          icono: '👨‍🏫',
+          nombre: docName
+        },
+        {
+          campo: 'firma_estudiante',
+          rol: 'Estudiante',
+          icono: '🎒',
+          nombre: nombreEst1
+        },
+        {
+          campo: 'firma_acudiente',
+          rol: 'Padre / Acudiente',
+          icono: '👨‍👩‍👦',
+          nombre: `Acudiente de ${nombreEst1}`
+        },
+        {
+          campo: 'firma_coordinador',
+          rol: 'Coordinación',
+          icono: '🏫',
+          nombre: 'Coordinación de Convivencia'
+        }
+      ];
+    } else {
+      implicados = [
+        {
+          campo: 'firma_docente',
+          rol: 'Docente Titular',
+          icono: '👨‍🏫',
+          nombre: docName
+        },
+        {
+          campo: 'firma_estudiante',
+          rol: 'Estudiante 1',
+          icono: '🎒',
+          nombre: nombreEst1
+        },
+        {
+          campo: 'firma_acudiente',
+          rol: 'Acudiente Estudiante 1',
+          icono: '👨‍👩‍👦',
+          nombre: `Acudiente de ${nombreEst1}`
+        },
+        {
+          campo: 'firma_coordinador',
+          rol: 'Estudiante 2 (Par)',
+          icono: '👥',
+          nombre: nombreEst2 || 'Segundo Estudiante Implicado'
+        }
+      ];
+    }
+
+    // Actualizar encabezados
+    const tag = document.getElementById('panel-firmas-folio-tag');
+    if (tag) tag.textContent = reg.folio || `ID #${reg.id}`;
+
+    const sub = document.getElementById('panel-firmas-subtitulo');
+    if (sub) {
+      sub.innerHTML = `Folio: <strong style="color:#1e3a8a;">${reg.folio || ('ID #' + reg.id)}</strong> · Alumno: <strong>${nombreEst1}</strong>`;
+    }
+
+    const cont = document.getElementById('panel-firmas-lista-implicados');
+    if (!cont) return;
+
+    cont.innerHTML = implicados.map(imp => {
+      const firmaData = reg[imp.campo];
+      const yaFirmo = Boolean(firmaData && firmaData !== 'omitida' && String(firmaData).startsWith('data:image'));
+
+      const escapeNombre = (imp.nombre || '').replace(/'/g, "\\'");
+      const escapeRol = (imp.rol || '').replace(/'/g, "\\'");
+
+      return `
+        <div class="implicado-card ${yaFirmo ? 'firmado' : ''}">
+          <div class="implicado-info">
+            <div class="implicado-icon">${imp.icono}</div>
+            <div class="implicado-text">
+              <div class="implicado-rol">${imp.rol}</div>
+              <div class="implicado-nombre">${imp.nombre}</div>
+              <div style="margin-top: 4px;">
+                ${yaFirmo 
+                  ? `<span class="implicado-badge badge-firmado"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Firmado</span>` 
+                  : `<span class="implicado-badge badge-pendiente"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pendiente</span>`}
+              </div>
+            </div>
+          </div>
+
+          ${yaFirmo ? `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="${firmaData}" class="implicado-preview-img" alt="Firma ${imp.rol}" title="Firma actual">
+            </div>
+          ` : ''}
+
+          <div class="implicado-actions">
+            ${yaFirmo ? `
+              <button type="button" class="btn btn-outline" style="padding: 6px 10px; font-size: 11.5px;" onclick="abrirCapturaFirma('${imp.campo}', '${escapeRol}', '${escapeNombre}')" title="Rehacer o cambiar firma">
+                <i data-lucide="edit-2" style="width: 13px; height: 13px;"></i> Cambiar
+              </button>
+              <button type="button" class="btn btn-outline" style="padding: 6px 8px; font-size: 11.5px; color:#ef4444; border-color:#fca5a5;" onclick="eliminarFirmaImplicado('${imp.campo}', '${escapeRol}')" title="Borrar esta firma">
+                <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+              </button>
+            ` : `
+              <button type="button" class="btn" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; padding: 7px 14px; font-size: 12px; font-weight: 700; border-radius: 8px;" onclick="abrirCapturaFirma('${imp.campo}', '${escapeRol}', '${escapeNombre}')">
+                <i data-lucide="pen-tool" style="width: 14px; height: 14px;"></i> ✍️ Firmar
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    lucide.createIcons();
+  }
+
+  function cerrarPanelFirmas() {
+    const modal = document.getElementById('modal-panel-firmas');
+    if (modal) modal.style.display = 'none';
+  }
+
+  // Abre la pantalla completa de captura de firma para un implicado
+  function abrirCapturaFirma(campoColumna, rolLabel, nombrePersona) {
+    campoFirmaActivo = campoColumna;
+    rolFirmaActivo = rolLabel;
+    nombreFirmaActivo = nombrePersona;
+
+    document.getElementById('pfc-titulo').textContent = `Firma de: ${rolLabel}`;
+    document.getElementById('pfc-subtitulo').textContent = `${nombrePersona} · Folio ${folioActivoFirmas?.folio || ('ID #' + folioActivoFirmas?.id)}`;
+
+    const iconos = {
+      firma_docente: '👨‍🏫',
+      firma_estudiante: '🎒',
+      firma_acudiente: '👨‍👩‍👦',
+      firma_coordinador: '🏫'
+    };
+    document.getElementById('pfc-icono').textContent = iconos[campoColumna] || '✍️';
+
+    const pantalla = document.getElementById('pantalla-firma-completa');
+    if (pantalla) pantalla.style.display = 'flex';
+
+    setTimeout(() => {
+      inicializarCanvasFirma();
+    }, 60);
+  }
+
+  function inicializarCanvasFirma() {
+    const canvas = document.getElementById('pfc-canvas');
+    const container = document.getElementById('pfc-canvas-container');
+    if (!canvas || !container) return;
+
+    const rect = container.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    if (padFirmaIndividual) {
+      padFirmaIndividual.off();
+      padFirmaIndividual = null;
+    }
+
+    padFirmaIndividual = new SignaturePad(canvas, {
+      minWidth: 1.8,
+      maxWidth: 4.2,
+      penColor: '#0f172a',
+      backgroundColor: 'rgba(255,255,255,0)'
+    });
+  }
+
+  function limpiarCanvasFirma() {
+    if (padFirmaIndividual) {
+      padFirmaIndividual.clear();
+    }
+  }
+
+  function cerrarCapturaFirma() {
+    const pantalla = document.getElementById('pantalla-firma-completa');
+    if (pantalla) pantalla.style.display = 'none';
+    if (padFirmaIndividual) {
+      padFirmaIndividual.clear();
+    }
+  }
+
+  // Redimensionamiento inteligente al rotar el celular
+  function ajustarCanvasPorResize() {
+    const pantalla = document.getElementById('pantalla-firma-completa');
+    if (!pantalla || pantalla.style.display === 'none') return;
+    if (!padFirmaIndividual) return;
+
+    const data = padFirmaIndividual.isEmpty() ? null : padFirmaIndividual.toDataURL();
+    inicializarCanvasFirma();
+    if (data && padFirmaIndividual) {
+      padFirmaIndividual.fromDataURL(data, { ratio: 1 });
+    }
+  }
+  window.addEventListener('resize', ajustarCanvasPorResize);
+  window.addEventListener('orientationchange', () => setTimeout(ajustarCanvasPorResize, 280));
+
+  // Guarda la firma del implicado en Supabase y actualiza todo
+  async function guardarFirmaActual() {
+    if (!padFirmaIndividual || padFirmaIndividual.isEmpty()) {
+      alert('Por favor dibuja la firma en el área blanca antes de guardar.');
+      return;
+    }
+
+    if (!folioActivoFirmas || !folioActivoFirmas.id) {
+      toast('No hay un folio activo seleccionado.', 'error');
+      return;
+    }
+
+    const btnGuardar = document.querySelector('.pfc-btn-guardar');
+    if (btnGuardar) {
+      btnGuardar.disabled = true;
+      btnGuardar.innerHTML = '⏳ Guardando...';
+    }
+
+    try {
+      // DataURL optimizado en JPEG al 65% de calidad (liviano, rápido y nítido)
+      const dataUrl = padFirmaIndividual.toDataURL('image/jpeg', 0.65);
+
+      const updateData = {};
+      updateData[campoFirmaActivo] = dataUrl;
+      updateData.updated_at = new Date().toISOString();
+
+      const { error } = await clienteSupabase
+        .from('registros_observador')
+        .update(updateData)
+        .eq('id', Number(folioActivoFirmas.id));
+
+      if (error) {
+        console.error('Error guardando firma en Supabase:', error);
+        alert('No se pudo guardar la firma: ' + (error.message || 'Error de conexión'));
+        if (btnGuardar) {
+          btnGuardar.disabled = false;
+          btnGuardar.innerHTML = '<i data-lucide="check" style="width: 18px; height: 18px;"></i> Guardar Firma';
+          lucide.createIcons();
+        }
+        return;
+      }
+
+      // Actualizar en el objeto activo
+      folioActivoFirmas[campoFirmaActivo] = dataUrl;
+
+      // Actualizar en la lista en memoria
+      const regMem = todosLosRegistrosObservador.find(r => String(r.id) === String(folioActivoFirmas.id));
+      if (regMem) {
+        regMem[campoFirmaActivo] = dataUrl;
+      }
+
+      // Actualizar hoja impresa si está visible
+      actualizarFirmasEnHojaImpresa(folioActivoFirmas);
+
+      toast(`✅ ¡Firma de ${rolFirmaActivo} guardada correctamente!`);
+
+      // Cerrar pantalla de captura y refrescar panel
+      cerrarCapturaFirma();
+      renderizarPanelFirmas(folioActivoFirmas);
+
+    } catch (e) {
+      console.error('Excepción guardando firma:', e);
+      alert('Ocurrió un error inesperado al guardar la firma.');
+    } finally {
+      if (btnGuardar) {
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = '<i data-lucide="check" style="width: 18px; height: 18px;"></i> Guardar Firma';
+        lucide.createIcons();
+      }
+    }
+  }
+
+  // Elimina la firma de un implicado con confirmación
+  async function eliminarFirmaImplicado(campoColumna, rolLabel) {
+    if (!confirm(`¿Estás seguro de que deseas eliminar la firma de ${rolLabel}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    if (!folioActivoFirmas || !folioActivoFirmas.id) return;
+
+    try {
+      const updateData = {};
+      updateData[campoColumna] = null;
+      updateData.updated_at = new Date().toISOString();
+
+      const { error } = await clienteSupabase
+        .from('registros_observador')
+        .update(updateData)
+        .eq('id', Number(folioActivoFirmas.id));
+
+      if (error) {
+        toast('No se pudo eliminar la firma: ' + error.message, 'error');
+        return;
+      }
+
+      folioActivoFirmas[campoColumna] = null;
+      const regMem = todosLosRegistrosObservador.find(r => String(r.id) === String(folioActivoFirmas.id));
+      if (regMem) regMem[campoColumna] = null;
+
+      actualizarFirmasEnHojaImpresa(folioActivoFirmas);
+      renderizarPanelFirmas(folioActivoFirmas);
+      toast(`Firma de ${rolLabel} eliminada.`);
+
+    } catch (e) {
+      console.error('Error eliminando firma:', e);
+      toast('Error al eliminar firma.', 'error');
+    }
+  }
+
+  // Aplica las firmas guardadas sobre la hoja oficial `.print-sheet`
+  function actualizarFirmasEnHojaImpresa(reg) {
+    if (!reg) return;
     const grid = document.getElementById('previewGridFirmas');
     if (!grid) return;
     const items = grid.querySelectorAll('.signature-item');
-    const claves = ['estudiante', 'acudiente', 'docente', 'coordinador'];
+    if (!items || items.length === 0) return;
+
+    const esPares = reg.modalidad === 'pares' || Boolean(reg.estudiante_afectado_id);
+    // Orden visual en el print-sheet:
+    // Individual: [0: Estudiante, 1: Acudiente, 2: Docente, 3: Coordinación]
+    // Pares: [0: Estudiante 1, 1: Acudiente 1, 2: Estudiante 2, 3: Docente]
+    const firmas = esPares 
+      ? [reg.firma_estudiante, reg.firma_acudiente, reg.firma_coordinador, reg.firma_docente]
+      : [reg.firma_estudiante, reg.firma_acudiente, reg.firma_docente, reg.firma_coordinador];
+
     items.forEach((item, i) => {
-      const clave = claves[i];
-      const dataUrl = firmas[clave];
       const sigLine = item.querySelector('.sig-line');
-      if (sigLine && dataUrl && dataUrl !== 'omitida') {
-        sigLine.innerHTML = `<img src="${dataUrl}" style="max-height:28px;max-width:95%;object-fit:contain;" alt="Firma">`;
+      if (!sigLine) return;
+      const firmaData = firmas[i];
+      if (firmaData && firmaData !== 'omitida' && String(firmaData).startsWith('data:image')) {
+        sigLine.innerHTML = `<img src="${firmaData}" style="max-height:30px;max-width:96%;object-fit:contain;" alt="Firma">`;
+        sigLine.classList.add('sig-line-firmada');
+      } else {
+        sigLine.innerHTML = '';
+        sigLine.classList.remove('sig-line-firmada');
       }
     });
+  }
+
+  function verFolioDesdeFirmas() {
+    cerrarPanelFirmas();
+    if (folioActivoFirmas) {
+      verFolioVentana(folioActivoFirmas.id || folioActivoFirmas.folio);
+    }
   }
   </script>
 
@@ -2615,78 +2838,78 @@ window.onload=()=>render();
     </div>
   </div>
 
-  <!-- ===== MODAL DE FIRMAS DIGITALES PRESENCIALES ===== -->
-  <div id="modal-firmas" class="no-print">
-    <div class="firmas-card">
-
-      <!-- ── HEADER (visible en portrait y landscape) ── -->
-      <div class="firmas-card-header-ls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-          <!-- Dots compactos para landscape -->
-          <div class="firmas-progress-ls" style="display:none;gap:6px;">
-            <div class="firma-step-dot active" id="firma-dot-ls-0" onclick="irAPasoFirma(0)" title="Paso 1">1</div>
-            <div class="firma-step-dot" id="firma-dot-ls-1" onclick="irAPasoFirma(1)" title="Paso 2">2</div>
-            <div class="firma-step-dot" id="firma-dot-ls-2" onclick="irAPasoFirma(2)" title="Paso 3">3</div>
-            <div class="firma-step-dot" id="firma-dot-ls-3" onclick="irAPasoFirma(3)" title="Paso 4">4</div>
-          </div>
-          <div style="min-width:0;">
-            <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;" id="firma-numero">Paso 1 de 4</div>
-            <div style="font-size:15px;font-weight:800;color:#1e3a8a;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              <span id="firma-paso-icono">👨‍🏫</span>
-              <span id="firma-paso-label">Docente Titular</span>
-            </div>
+  <!-- ===== MODAL PANEL DE GESTIÓN DE FIRMAS (POR IMPLICADO) ===== -->
+  <div id="modal-panel-firmas" class="modal-backdrop no-print" style="display: none;">
+    <div class="modal-content" style="max-width: 580px; width: 95%; padding: 18px 20px; border-radius: 16px;">
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 14px;">
+        <div>
+          <h3 style="margin: 0; font-size: 16px; color: #1e3a8a; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="pen-tool" style="width: 20px; height: 20px;"></i> Gestión de Firmas Presenciales
+          </h3>
+          <div id="panel-firmas-subtitulo" style="font-size: 12px; color: #64748b; margin-top: 3px;">
+            Folio: <strong id="panel-firmas-folio-tag" style="color: #0f172a;">-</strong>
           </div>
         </div>
-        <button type="button" onclick="cerrarModalFirmas()" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:22px;padding:4px;flex-shrink:0;" title="Cerrar">✕</button>
+        <button type="button" class="btn btn-outline" onclick="cerrarPanelFirmas()" style="padding: 4px 10px; border-radius: 8px;">✕</button>
       </div>
 
-      <!-- ── PORTRAIT: progress dots ── -->
-      <div class="firmas-progress">
-        <div class="firma-step-dot active" id="firma-dot-0" onclick="irAPasoFirma(0)" title="Rehacer paso 1">1</div>
-        <div class="firma-step-dot" id="firma-dot-1" onclick="irAPasoFirma(1)" title="Rehacer paso 2">2</div>
-        <div class="firma-step-dot" id="firma-dot-2" onclick="irAPasoFirma(2)" title="Rehacer paso 3">3</div>
-        <div class="firma-step-dot" id="firma-dot-3" onclick="irAPasoFirma(3)" title="Rehacer paso 4">4</div>
-      </div>
-      <p style="font-size:10px;color:#94a3b8;text-align:center;margin-top:-10px;margin-bottom:8px;">💡 Toca un número para rehacer ese paso</p>
-
-      <!-- ── HINT DE ROTACIÓN (solo portrait en celular) ── -->
-      <div class="firma-hint-rotate">
-        📱↔️ <span>Gira el celular en horizontal para tener más espacio para firmar</span>
+      <!-- Nota pedagógica -->
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 12px; border-radius: 10px; font-size: 11.5px; color: #166534; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">💡</span>
+        <div>Cada implicado puede firmar <strong>por separado</strong> cuando esté disponible (el alumno en el aula, el coordinador en su despacho y el acudiente en su cita).</div>
       </div>
 
-      <!-- ── Instrucción ── -->
-      <p class="firma-instructions" id="firma-paso-instruccion">El docente firma aquí para registrar la anotación.</p>
-
-      <!-- ── Vista previa de firma ya capturada ── -->
-      <div id="firma-preview-existente" style="display:none; text-align:center; margin-bottom:6px; padding:6px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px;">
-        <div style="font-size:10px;color:#166534;font-weight:700;margin-bottom:4px;">✅ Firma capturada — dibuja de nuevo para reemplazarla</div>
-        <img id="firma-preview-img" src="" style="max-height:40px;max-width:100%;object-fit:contain;border:1px dashed #86efac;border-radius:4px;background:white;padding:2px;" alt="Firma previa">
+      <!-- Lista de Implicados dinámicos -->
+      <div id="panel-firmas-lista-implicados" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+        <!-- Se llena dinámicamente con renderizarPanelFirmas() -->
       </div>
 
-      <!-- ── ÁREA DE CANVAS (columna izquierda en landscape) ── -->
-      <div class="firmas-card-canvas-ls" style="flex:1;">
-        <div class="canvas-firma-wrapper" style="width:100%;">
-          <canvas id="canvas-firma"></canvas>
+      <!-- Footer con acciones -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 12px; gap: 10px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline" onclick="verFolioDesdeFirmas()" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;">
+          <i data-lucide="eye" style="width: 15px; height: 15px;"></i> Ver Folio Completo
+        </button>
+        <button type="button" class="btn btn-primary" onclick="cerrarPanelFirmas()" style="font-size: 12.5px; padding: 7px 18px;">
+          Listo / Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PANTALLA COMPLETA DE FIRMA TÁCTIL (100% OPACA, CERO FOLIO AL FONDO) ===== -->
+  <div id="pantalla-firma-completa" class="no-print" style="display: none;">
+    <!-- Header de la pantalla de firma -->
+    <div id="pfc-header">
+      <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+        <span id="pfc-icono" style="font-size: 22px; flex-shrink: 0;">✍️</span>
+        <div style="min-width: 0;">
+          <div id="pfc-titulo" style="font-size: 15px; font-weight: 800; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Firma de Implicado</div>
+          <div id="pfc-subtitulo" style="font-size: 11px; color: #93c5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Folio -</div>
         </div>
       </div>
+      <button type="button" id="pfc-btn-cerrar" onclick="cerrarCapturaFirma()" title="Cancelar y volver">✕</button>
+    </div>
 
-      <!-- ── BOTONES (columna derecha en landscape, fila en portrait) ── -->
-      <div class="firmas-card-btns-ls" style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;flex-wrap:wrap;">
-        <button type="button" onclick="retrocederPasoFirma()" class="btn btn-outline" style="flex:1;min-width:80px;" id="btn-retroceder-firma">
-          <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior
-        </button>
-        <button type="button" onclick="limpiarFirmaCanvas()" class="btn btn-outline" style="flex:1;min-width:80px;color:#dc2626;border-color:#fca5a5;">
-          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Borrar
-        </button>
-        <button type="button" onclick="omitirFirmaActual()" class="btn btn-outline" style="flex:1;min-width:80px;color:#64748b;">
-          <i data-lucide="skip-forward" style="width:14px;height:14px;"></i> Omitir
-        </button>
-        <button type="button" onclick="confirmarFirmaActual()" class="btn btn-success" style="flex:1.5;min-width:110px;">
-          <i data-lucide="check" style="width:14px;height:14px;"></i> ✔ Confirmar
-        </button>
-      </div>
+    <!-- Indicador de orientación para celular -->
+    <div id="pfc-rotar-hint">
+      <span>📱↔️ Gira el celular en horizontal si deseas más espacio para firmar</span>
+    </div>
 
-      <p class="firma-footer-hint" style="font-size:10px;color:#94a3b8;text-align:center;margin-top:10px;">✋ Firma con el dedo en pantalla táctil o con el mouse</p>
+    <!-- Contenedor del Lienzo Táctil -->
+    <div id="pfc-canvas-container">
+      <canvas id="pfc-canvas"></canvas>
+      <div id="pfc-canvas-watermark">Dibuja la firma aquí con el dedo o lápiz táctil</div>
+    </div>
+
+    <!-- Barra Inferior de Acciones -->
+    <div id="pfc-footer">
+      <button type="button" class="pfc-btn pfc-btn-borrar" onclick="limpiarCanvasFirma()">
+        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Borrar Trazo
+      </button>
+      <button type="button" class="pfc-btn pfc-btn-guardar" onclick="guardarFirmaActual()">
+        <i data-lucide="check" style="width: 18px; height: 18px;"></i> Guardar Firma
+      </button>
     </div>
   </div>
 

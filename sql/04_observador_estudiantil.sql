@@ -39,6 +39,7 @@ ALTER TABLE public.registros_observador
   -- Firmas digitales presenciales (imagen PNG en base64 capturada con signature_pad)
   ADD COLUMN IF NOT EXISTS firma_docente TEXT,
   ADD COLUMN IF NOT EXISTS firma_estudiante TEXT,
+  ADD COLUMN IF NOT EXISTS firma_estudiante2 TEXT,
   ADD COLUMN IF NOT EXISTS firma_acudiente TEXT,
   ADD COLUMN IF NOT EXISTS firma_coordinador TEXT;
 

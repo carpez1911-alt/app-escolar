@@ -60,6 +60,7 @@
     .signatures-section { margin-top: 10px; border-top: 1px dashed #94a3b8; padding-top: 8px; }
     .signatures-title { font-size: 8.5px; font-weight: 700; text-align: center; text-transform: uppercase; color: #475569; margin-bottom: 8px; }
     .signatures-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .signatures-grid.grid-5-firmas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
     .signature-item { text-align: center; }
     .sig-line { border-bottom: 1px solid #334155; height: 30px; margin-bottom: 4px; }
     .sig-name { font-size: 8.5px; font-weight: 700; }
@@ -1878,6 +1879,7 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     .signatures-section{margin-top:10px;border-top:1px dashed #94a3b8;padding-top:8px}
     .signatures-title{font-size:8.5px;font-weight:700;text-align:center;text-transform:uppercase;color:#475569;margin-bottom:8px}
     .signatures-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .signatures-grid.grid-5-firmas{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
     .signature-item{text-align:center}
     .sig-line{border-bottom:1px solid #334155;height:30px;margin-bottom:4px;display:flex;align-items:flex-end;justify-content:center}
     .sig-line img{max-height:28px;max-width:95%;object-fit:contain}
@@ -1955,6 +1957,7 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     .signatures-section{margin-top:10px;border-top:1px dashed #94a3b8;padding-top:8px}
     .signatures-title{font-size:8.5px;font-weight:700;text-align:center;text-transform:uppercase;color:#475569;margin-bottom:8px}
     .signatures-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .signatures-grid.grid-5-firmas{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
     .signature-item{text-align:center}
     .sig-line{border-bottom:1px solid #334155;height:30px;margin-bottom:4px;display:flex;align-items:flex-end;justify-content:center}
     .sig-line img{max-height:28px;max-width:95%;object-fit:contain}
@@ -2487,6 +2490,12 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
           nombre: nombreEst1
         },
         {
+          campo: 'firma_estudiante2',
+          rol: 'Estudiante 2 (Par)',
+          icono: '👥',
+          nombre: nombreEst2 || 'Segundo Estudiante Implicado'
+        },
+        {
           campo: 'firma_acudiente',
           rol: 'Acudiente Estudiante 1',
           icono: '👨‍👩‍👦',
@@ -2494,9 +2503,9 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
         },
         {
           campo: 'firma_coordinador',
-          rol: 'Estudiante 2 (Par)',
-          icono: '👥',
-          nombre: nombreEst2 || 'Segundo Estudiante Implicado'
+          rol: 'Coordinación de Convivencia',
+          icono: '🏫',
+          nombre: 'Coordinación / Orientación'
         }
       ];
     }
@@ -2514,7 +2523,11 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     if (!cont) return;
 
     cont.innerHTML = implicados.map(imp => {
-      const firmaData = reg[imp.campo];
+      let firmaData = reg[imp.campo];
+      if (!firmaData && imp.campo === 'firma_estudiante2' && Array.isArray(reg.historial_ediciones)) {
+        const hF = [...reg.historial_ediciones].reverse().find(h => h.tipo === 'firma_estudiante2');
+        if (hF) firmaData = hF.data;
+      }
       const yaFirmo = Boolean(firmaData && firmaData !== 'omitida' && String(firmaData).startsWith('data:image'));
 
       const escapeNombre = (imp.nombre || '').replace(/'/g, "\\'");
@@ -2579,6 +2592,7 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     const iconos = {
       firma_docente: '👨‍🏫',
       firma_estudiante: '🎒',
+      firma_estudiante2: '👥',
       firma_acudiente: '👨‍👩‍👦',
       firma_coordinador: '🏫'
     };
@@ -2674,10 +2688,24 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
       updateData[campoFirmaActivo] = dataUrl;
       updateData.updated_at = new Date().toISOString();
 
-      const { error } = await clienteSupabase
+      let { error } = await clienteSupabase
         .from('registros_observador')
         .update(updateData)
         .eq('id', Number(folioActivoFirmas.id));
+
+      // Fallback seguro si la columna firma_estudiante2 aún no existe en Supabase:
+      if (error && campoFirmaActivo === 'firma_estudiante2') {
+        const histPrev = Array.isArray(folioActivoFirmas.historial_ediciones) ? folioActivoFirmas.historial_ediciones : [];
+        const histNuevo = [...histPrev, { tipo: 'firma_estudiante2', data: dataUrl, fecha: new Date().toISOString() }];
+        const resHist = await clienteSupabase
+          .from('registros_observador')
+          .update({ historial_ediciones: histNuevo, updated_at: new Date().toISOString() })
+          .eq('id', Number(folioActivoFirmas.id));
+        if (!resHist.error) {
+          error = null;
+          folioActivoFirmas.historial_ediciones = histNuevo;
+        }
+      }
 
       if (error) {
         console.error('Error guardando firma en Supabase:', error);
@@ -2733,10 +2761,22 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
       updateData[campoColumna] = null;
       updateData.updated_at = new Date().toISOString();
 
-      const { error } = await clienteSupabase
+      let { error } = await clienteSupabase
         .from('registros_observador')
         .update(updateData)
         .eq('id', Number(folioActivoFirmas.id));
+
+      if (error && campoColumna === 'firma_estudiante2') {
+        const histPrev = Array.isArray(folioActivoFirmas.historial_ediciones) 
+          ? folioActivoFirmas.historial_ediciones.filter(h => h.tipo !== 'firma_estudiante2') 
+          : [];
+        await clienteSupabase
+          .from('registros_observador')
+          .update({ historial_ediciones: histPrev, updated_at: new Date().toISOString() })
+          .eq('id', Number(folioActivoFirmas.id));
+        error = null;
+        folioActivoFirmas.historial_ediciones = histPrev;
+      }
 
       if (error) {
         toast('No se pudo eliminar la firma: ' + error.message, 'error');
@@ -2803,16 +2843,26 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
           <div class="sig-role">Seguimiento Institucional</div>
         </div>
       `;
+      grid.className = 'signatures-grid';
     } else {
-      // MODALIDAD PARES (DUPLA):
+      // MODALIDAD PARES (DUPLA): 5 casillas completas
       // Casilla 1: Estudiante 1
       // Casilla 2: Acudiente Estudiante 1
       // Casilla 3: Estudiante 2 (Par)
       // Casilla 4: Docente Titular / Registra
+      // Casilla 5: Coordinación de Convivencia
+      grid.className = 'signatures-grid grid-5-firmas';
+
       let nombreEst2 = 'Segundo Estudiante';
       if (reg.estudiante_afectado_id) {
         const est2 = estudiantes.find(e => String(e.id) === String(reg.estudiante_afectado_id));
         nombreEst2 = est2?.nombre_completo || `Estudiante #${reg.estudiante_afectado_id}`;
+      }
+
+      let firmaEst2 = reg.firma_estudiante2;
+      if (!firmaEst2 && Array.isArray(reg.historial_ediciones)) {
+        const hF = [...reg.historial_ediciones].reverse().find(h => h.tipo === 'firma_estudiante2');
+        if (hF) firmaEst2 = hF.data;
       }
 
       grid.innerHTML = `
@@ -2827,7 +2877,7 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
           <div class="sig-role">C.C. ___________________</div>
         </div>
         <div class="signature-item">
-          ${generarHtmlFirma(reg.firma_coordinador)}
+          ${generarHtmlFirma(firmaEst2)}
           <div class="sig-name">${nombreEst2}</div>
           <div class="sig-role">Estudiante 2 (Grado ${configuracion.grado || '5°02'})</div>
         </div>
@@ -2835,6 +2885,11 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
           ${generarHtmlFirma(reg.firma_docente)}
           <div class="sig-name">Docente: ${docName}</div>
           <div class="sig-role">Docente Titular / Registra</div>
+        </div>
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_coordinador)}
+          <div class="sig-name">Coordinación de Convivencia</div>
+          <div class="sig-role">Seguimiento Institucional</div>
         </div>
       `;
     }

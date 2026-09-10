@@ -2613,8 +2613,8 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     padFirmaIndividual = new SignaturePad(canvas, {
       minWidth: 1.8,
       maxWidth: 4.2,
-      penColor: '#0f172a',
-      backgroundColor: 'rgba(255,255,255,0)'
+      penColor: '#1e3a8a', // Tinta azul bolígrafo escolar nítida
+      backgroundColor: 'rgba(0,0,0,0)' // Fondo transparente
     });
   }
 
@@ -2638,7 +2638,7 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     if (!pantalla || pantalla.style.display === 'none') return;
     if (!padFirmaIndividual) return;
 
-    const data = padFirmaIndividual.isEmpty() ? null : padFirmaIndividual.toDataURL();
+    const data = padFirmaIndividual.isEmpty() ? null : padFirmaIndividual.toDataURL('image/png');
     inicializarCanvasFirma();
     if (data && padFirmaIndividual) {
       padFirmaIndividual.fromDataURL(data, { ratio: 1 });
@@ -2666,8 +2666,8 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     }
 
     try {
-      // DataURL optimizado en JPEG al 65% de calidad (liviano, rápido y nítido)
-      const dataUrl = padFirmaIndividual.toDataURL('image/jpeg', 0.65);
+      // PNG con fondo transparente: trazo limpio de tinta sobre el documento, CERO fondo negro
+      const dataUrl = padFirmaIndividual.toDataURL('image/png');
 
       const updateData = {};
       updateData[campoFirmaActivo] = dataUrl;

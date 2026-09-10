@@ -2410,6 +2410,7 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     }
 
     folioActivoFirmas = reg;
+    try { cargarFolioEnVista(reg.id); } catch (e) { console.warn(e); }
 
     // Configurar botón en la barra superior
     const btnFirmas = document.getElementById('btn-recoger-firmas');
@@ -2756,34 +2757,87 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     }
   }
 
-  // Aplica las firmas guardadas sobre la hoja oficial `.print-sheet`
+  // Aplica las firmas guardadas sobre la hoja oficial `.print-sheet` con nombres exactos
   function actualizarFirmasEnHojaImpresa(reg) {
     if (!reg) return;
     const grid = document.getElementById('previewGridFirmas');
     if (!grid) return;
-    const items = grid.querySelectorAll('.signature-item');
-    if (!items || items.length === 0) return;
 
+    const est1 = estudiantes.find(e => String(e.id) === String(reg.estudiante_id));
+    const nombreEst1 = reg.estudiantes?.nombre_completo || est1?.nombre_completo || 'Estudiante';
+    const docName = reg.docente || (typeof configuracion !== 'undefined' && configuracion.profesor_nombre ? configuracion.profesor_nombre : 'Docente Titular');
     const esPares = reg.modalidad === 'pares' || Boolean(reg.estudiante_afectado_id);
-    // Orden visual en el print-sheet:
-    // Individual: [0: Estudiante, 1: Acudiente, 2: Docente, 3: Coordinación]
-    // Pares: [0: Estudiante 1, 1: Acudiente 1, 2: Estudiante 2, 3: Docente]
-    const firmas = esPares 
-      ? [reg.firma_estudiante, reg.firma_acudiente, reg.firma_coordinador, reg.firma_docente]
-      : [reg.firma_estudiante, reg.firma_acudiente, reg.firma_docente, reg.firma_coordinador];
 
-    items.forEach((item, i) => {
-      const sigLine = item.querySelector('.sig-line');
-      if (!sigLine) return;
-      const firmaData = firmas[i];
-      if (firmaData && firmaData !== 'omitida' && String(firmaData).startsWith('data:image')) {
-        sigLine.innerHTML = `<img src="${firmaData}" style="max-height:30px;max-width:96%;object-fit:contain;" alt="Firma">`;
-        sigLine.classList.add('sig-line-firmada');
-      } else {
-        sigLine.innerHTML = '';
-        sigLine.classList.remove('sig-line-firmada');
+    function generarHtmlFirma(dataUrl) {
+      if (dataUrl && dataUrl !== 'omitida' && String(dataUrl).startsWith('data:image')) {
+        return `<div class="sig-line sig-line-firmada"><img src="${dataUrl}" style="max-height:30px;max-width:96%;object-fit:contain;background:transparent;" alt="Firma"></div>`;
       }
-    });
+      return `<div class="sig-line"></div>`;
+    }
+
+    if (!esPares) {
+      // MODALIDAD INDIVIDUAL:
+      // Casilla 1: Estudiante
+      // Casilla 2: Padre / Acudiente
+      // Casilla 3: Docente Titular
+      // Casilla 4: Coordinación de Convivencia
+      grid.innerHTML = `
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_estudiante)}
+          <div class="sig-name">${nombreEst1}</div>
+          <div class="sig-role">Estudiante (Grado ${configuracion.grado || '5°02'})</div>
+        </div>
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_acudiente)}
+          <div class="sig-name">Padre de Familia / Acudiente</div>
+          <div class="sig-role">C.C. ___________________</div>
+        </div>
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_docente)}
+          <div class="sig-name" id="preview-docente-firma">${docName}</div>
+          <div class="sig-role">Docente Titular / Registra</div>
+        </div>
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_coordinador)}
+          <div class="sig-name">Coordinación de Convivencia</div>
+          <div class="sig-role">Seguimiento Institucional</div>
+        </div>
+      `;
+    } else {
+      // MODALIDAD PARES (DUPLA):
+      // Casilla 1: Estudiante 1
+      // Casilla 2: Acudiente Estudiante 1
+      // Casilla 3: Estudiante 2 (Par)
+      // Casilla 4: Docente Titular / Registra
+      let nombreEst2 = 'Segundo Estudiante';
+      if (reg.estudiante_afectado_id) {
+        const est2 = estudiantes.find(e => String(e.id) === String(reg.estudiante_afectado_id));
+        nombreEst2 = est2?.nombre_completo || `Estudiante #${reg.estudiante_afectado_id}`;
+      }
+
+      grid.innerHTML = `
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_estudiante)}
+          <div class="sig-name">${nombreEst1}</div>
+          <div class="sig-role">Estudiante 1 (Grado ${configuracion.grado || '5°02'})</div>
+        </div>
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_acudiente)}
+          <div class="sig-name">Acudiente Estudiante 1</div>
+          <div class="sig-role">C.C. ___________________</div>
+        </div>
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_coordinador)}
+          <div class="sig-name">${nombreEst2}</div>
+          <div class="sig-role">Estudiante 2 (Grado ${configuracion.grado || '5°02'})</div>
+        </div>
+        <div class="signature-item">
+          ${generarHtmlFirma(reg.firma_docente)}
+          <div class="sig-name">Docente: ${docName}</div>
+          <div class="sig-role">Docente Titular / Registra</div>
+        </div>
+      `;
+    }
   }
 
   function verFolioDesdeFirmas() {

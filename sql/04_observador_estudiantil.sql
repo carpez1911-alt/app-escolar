@@ -35,7 +35,12 @@ ALTER TABLE public.registros_observador
   ADD COLUMN IF NOT EXISTS motivo_edicion TEXT,
   ADD COLUMN IF NOT EXISTS historial_ediciones JSONB DEFAULT '[]'::jsonb,
   ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
-  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW(),
+  -- Firmas digitales presenciales (imagen PNG en base64 capturada con signature_pad)
+  ADD COLUMN IF NOT EXISTS firma_docente TEXT,
+  ADD COLUMN IF NOT EXISTS firma_estudiante TEXT,
+  ADD COLUMN IF NOT EXISTS firma_acudiente TEXT,
+  ADD COLUMN IF NOT EXISTS firma_coordinador TEXT;
 
 -- 4. Crear índices ahora que las columnas existen
 CREATE INDEX IF NOT EXISTS idx_obs_estudiante ON public.registros_observador(estudiante_id);

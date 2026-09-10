@@ -1683,13 +1683,14 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     }
 
     function abrirFirmasParaFolio(id) {
-      // Carga el folio en la hoja y abre el modal de firmas directamente
-      cargarFolioEnVista(id);
-      setTimeout(() => {
-        const btnFirmas = document.getElementById('btn-recoger-firmas');
-        if (btnFirmas) { btnFirmas.dataset.folioId = id; }
-        abrirModalFirmas();
-      }, 400);
+      // CRÍTICO: window.open() DEBE llamarse en el mismo call stack del click del usuario.
+      // Si se llama dentro de setTimeout, el navegador lo bloquea silenciosamente.
+      // Por eso: abrimos la ventana PRIMERO, luego actualizamos la hoja en segundo plano.
+      folioIdFirma = id;
+      const btnFirmas = document.getElementById('btn-recoger-firmas');
+      if (btnFirmas) { btnFirmas.dataset.folioId = id; btnFirmas.style.display = 'inline-flex'; }
+      abrirVentanaFirmas(id); // ← apertura inmediata, misma respuesta al click
+      cargarFolioEnVista(id); // ← carga en segundo plano (no bloquea el popup)
     }
 
     function imprimirFolioActual() {

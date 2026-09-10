@@ -103,19 +103,77 @@
     }
 
     /* ===== MODAL DE FIRMAS DIGITALES ===== */
-    #modal-firmas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.92); z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
-    .firmas-card { background: white; border-radius: 18px; padding: 28px 30px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
-    .firmas-progress { display: flex; justify-content: center; gap: 10px; margin-bottom: 22px; }
-    .firma-step-dot { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #cbd5e1; background: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #94a3b8; transition: all 0.3s; }
-    .firma-step-dot.active { border-color: #1e3a8a; background: #1e3a8a; color: white; transform: scale(1.15); }
-    .firma-step-dot.done { border-color: #059669; background: #059669; color: white; }
+    #modal-firmas {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15,23,42,0.95); z-index: 99999;
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    .firmas-card {
+      background: white; border-radius: 16px;
+      padding: 20px 22px;
+      max-width: 520px; width: 100%;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    }
+    .firmas-progress { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; }
+    .firma-step-dot {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 2px solid #cbd5e1; background: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: #94a3b8;
+      transition: all 0.3s; cursor: pointer;
+    }
+    .firma-step-dot.active  { border-color: #1e3a8a; background: #1e3a8a; color: white; transform: scale(1.15); }
+    .firma-step-dot.done    { border-color: #059669; background: #059669; color: white; }
     .firma-step-dot.skipped { border-color: #94a3b8; background: #f1f5f9; color: #94a3b8; }
-    .canvas-firma-wrapper { border: 2px dashed #94a3b8; border-radius: 10px; background: #f8fafc; margin: 16px 0; position: relative; overflow: hidden; }
+    .canvas-firma-wrapper {
+      border: 2.5px dashed #7c3aed; border-radius: 12px;
+      background: #faf8ff; margin: 12px 0;
+      position: relative; overflow: hidden;
+      /* Área grande para firma táctil */
+    }
     #canvas-firma { display: block; width: 100%; touch-action: none; cursor: crosshair; }
     .firma-instructions { font-size: 12px; color: #64748b; text-align: center; margin-bottom: 4px; }
+    .firma-hint-rotate {
+      display: none;
+      background: #fffbeb; border: 1px solid #fcd34d;
+      border-radius: 8px; padding: 8px 12px;
+      font-size: 11.5px; font-weight: 700; color: #92400e;
+      text-align: center; margin-bottom: 10px;
+    }
     .sig-image { width: 100%; height: 100%; object-fit: contain; }
     .sig-line-firmada { border-bottom: none !important; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 2px; }
     .sig-line-firmada img { max-height: 28px; max-width: 100%; object-fit: contain; }
+
+    /* === PORTRAIT (celular vertical) === */
+    @media (orientation: portrait) and (max-width: 600px) {
+      #modal-firmas { padding: 8px; justify-content: flex-start; padding-top: 10px; }
+      .firmas-card { padding: 14px 14px; border-radius: 14px; max-width: 100%; }
+      .firma-hint-rotate { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    }
+
+    /* === LANDSCAPE (celular horizontal) — modo firma maximizado === */
+    @media (orientation: landscape) and (max-height: 500px) {
+      #modal-firmas { padding: 0; align-items: stretch; justify-content: stretch; overflow: hidden; }
+      .firmas-card {
+        border-radius: 0; padding: 0;
+        max-width: 100%; height: 100vh;
+        display: grid;
+        grid-template-columns: 1fr 130px;
+        grid-template-rows: auto 1fr auto;
+        gap: 0;
+      }
+      .firmas-card-header-ls  { grid-column: 1 / 3; padding: 8px 14px 6px 14px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .firmas-card-canvas-ls  { grid-column: 1; padding: 8px 0 8px 8px; display: flex; align-items: center; }
+      .firmas-card-btns-ls    { grid-column: 2; padding: 8px; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+      /* Ocultar en landscape lo que no cabe */
+      .firma-hint-rotate, .firmas-progress, #firma-preview-existente, .firma-footer-hint { display: none !important; }
+      /* Dots compactos en el header landscape */
+      .firmas-progress-ls { display: flex; gap: 6px; }
+      .firma-step-dot { width: 26px; height: 26px; font-size: 11px; }
+    }
   </style>
 
   <link rel="stylesheet" href="styles.css">
@@ -2102,11 +2160,39 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     pasoFirmaActual = 0;
     renderizarModalFirma();
     document.getElementById('modal-firmas').style.display = 'flex';
+    // Listener de orientación: redimensiona el canvas al rotar
+    window.addEventListener('orientationchange', _onOrientacionFirma);
+    window.addEventListener('resize', _onOrientacionFirma);
+  }
+
+  function _onOrientacionFirma() {
+    // Pequeño delay para que el navegador termine la rotación
+    setTimeout(() => {
+      const canvas = document.getElementById('canvas-firma');
+      if (!canvas || !signaturePadInstance) return;
+      // Guardar datos actuales
+      const data = signaturePadInstance.isEmpty() ? null : signaturePadInstance.toDataURL();
+      // Recalcular tamaño
+      const isLandscape = window.innerWidth > window.innerHeight;
+      const isMobile = window.innerWidth <= 900;
+      let canvasH;
+      if (isLandscape && isMobile) canvasH = window.innerHeight - 90;
+      else if (isMobile) canvasH = Math.min(260, window.innerHeight * 0.35);
+      else canvasH = 180;
+      canvas.style.height = canvasH + 'px';
+      canvas.width  = canvas.offsetWidth || 400;
+      canvas.height = canvasH;
+      signaturePadInstance.clear();
+      // Restaurar la firma si existía
+      if (data) signaturePadInstance.fromDataURL(data, { ratio: 1, width: canvas.width, height: canvas.height });
+    }, 350);
   }
 
   function cerrarModalFirmas() {
     document.getElementById('modal-firmas').style.display = 'none';
     if (signaturePadInstance) signaturePadInstance.clear();
+    window.removeEventListener('orientationchange', _onOrientacionFirma);
+    window.removeEventListener('resize', _onOrientacionFirma);
   }
 
   function renderizarModalFirma() {
@@ -2116,23 +2202,39 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
     document.getElementById('firma-paso-instruccion').textContent = paso.instruccion;
     document.getElementById('firma-numero').textContent = `Paso ${pasoFirmaActual + 1} de ${PASOS_FIRMA.length}`;
 
-    // Puntos de progreso
+    // Puntos de progreso (portrait y landscape)
     PASOS_FIRMA.forEach((p, i) => {
-      const dot = document.getElementById('firma-dot-' + i);
-      if (!dot) return;
-      dot.className = 'firma-step-dot';
-      if (firmasActuales[p.key] === 'omitida') dot.classList.add('skipped');
-      else if (firmasActuales[p.key]) dot.classList.add('done');
-      else if (i === pasoFirmaActual) dot.classList.add('active');
+      ['firma-dot-' + i, 'firma-dot-ls-' + i].forEach(dotId => {
+        const dot = document.getElementById(dotId);
+        if (!dot) return;
+        dot.className = 'firma-step-dot';
+        if (firmasActuales[p.key] === 'omitida') dot.classList.add('skipped');
+        else if (firmasActuales[p.key]) dot.classList.add('done');
+        else if (i === pasoFirmaActual) dot.classList.add('active');
+      });
     });
 
-    // Inicializar canvas
+    // Inicializar canvas con altura dinámica según orientación
     const canvas = document.getElementById('canvas-firma');
     if (canvas) {
-      canvas.width = canvas.offsetWidth || 400;
-      canvas.height = 160;
+      const isLandscape = window.innerWidth > window.innerHeight;
+      const isMobile = window.innerWidth <= 900;
+      let canvasH;
+      if (isLandscape && isMobile) {
+        // En landscape celular: casi toda la altura disponible
+        canvasH = window.innerHeight - 90;
+      } else if (isMobile) {
+        // Portrait celular: cómodo para firma con dedo
+        canvasH = Math.min(260, window.innerHeight * 0.35);
+      } else {
+        // Desktop
+        canvasH = 180;
+      }
+      canvas.style.height = canvasH + 'px';
+      canvas.width  = canvas.offsetWidth  || 400;
+      canvas.height = canvasH;
       if (signaturePadInstance) signaturePadInstance.clear();
-      else signaturePadInstance = new SignaturePad(canvas, { minWidth: 1.5, maxWidth: 3, penColor: '#1e3a8a' });
+      else signaturePadInstance = new SignaturePad(canvas, { minWidth: 1.8, maxWidth: 3.5, penColor: '#1e3a8a' });
       signaturePadInstance.clear();
     }
 
@@ -2290,58 +2392,75 @@ FECHA DE SEGUIMIENTO: En 8 días hábiles.`;
   <!-- ===== MODAL DE FIRMAS DIGITALES PRESENCIALES ===== -->
   <div id="modal-firmas" class="no-print">
     <div class="firmas-card">
-      <!-- Header -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;" id="firma-numero">Paso 1 de 4</div>
-          <h3 style="margin:2px 0 0 0;font-size:17px;color:#1e3a8a;display:flex;align-items:center;gap:8px;">
-            <span id="firma-paso-icono">👨‍🏫</span>
-            <span id="firma-paso-label">Docente Titular</span>
-          </h3>
+
+      <!-- ── HEADER (visible en portrait y landscape) ── -->
+      <div class="firmas-card-header-ls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <!-- Dots compactos para landscape -->
+          <div class="firmas-progress-ls" style="display:none;gap:6px;">
+            <div class="firma-step-dot active" id="firma-dot-ls-0" onclick="irAPasoFirma(0)" title="Paso 1">1</div>
+            <div class="firma-step-dot" id="firma-dot-ls-1" onclick="irAPasoFirma(1)" title="Paso 2">2</div>
+            <div class="firma-step-dot" id="firma-dot-ls-2" onclick="irAPasoFirma(2)" title="Paso 3">3</div>
+            <div class="firma-step-dot" id="firma-dot-ls-3" onclick="irAPasoFirma(3)" title="Paso 4">4</div>
+          </div>
+          <div style="min-width:0;">
+            <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;" id="firma-numero">Paso 1 de 4</div>
+            <div style="font-size:15px;font-weight:800;color:#1e3a8a;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              <span id="firma-paso-icono">👨‍🏫</span>
+              <span id="firma-paso-label">Docente Titular</span>
+            </div>
+          </div>
         </div>
-        <button type="button" onclick="cerrarModalFirmas()" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:20px;padding:4px;" title="Cerrar">✕</button>
+        <button type="button" onclick="cerrarModalFirmas()" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:22px;padding:4px;flex-shrink:0;" title="Cerrar">✕</button>
       </div>
 
-      <!-- Progress dots -->
+      <!-- ── PORTRAIT: progress dots ── -->
       <div class="firmas-progress">
-        <div class="firma-step-dot active" id="firma-dot-0" onclick="irAPasoFirma(0)" title="Rehacer paso 1" style="cursor:pointer;">1</div>
-        <div class="firma-step-dot" id="firma-dot-1" onclick="irAPasoFirma(1)" title="Rehacer paso 2" style="cursor:pointer;">2</div>
-        <div class="firma-step-dot" id="firma-dot-2" onclick="irAPasoFirma(2)" title="Rehacer paso 3" style="cursor:pointer;">3</div>
-        <div class="firma-step-dot" id="firma-dot-3" onclick="irAPasoFirma(3)" title="Rehacer paso 4" style="cursor:pointer;">4</div>
+        <div class="firma-step-dot active" id="firma-dot-0" onclick="irAPasoFirma(0)" title="Rehacer paso 1">1</div>
+        <div class="firma-step-dot" id="firma-dot-1" onclick="irAPasoFirma(1)" title="Rehacer paso 2">2</div>
+        <div class="firma-step-dot" id="firma-dot-2" onclick="irAPasoFirma(2)" title="Rehacer paso 3">3</div>
+        <div class="firma-step-dot" id="firma-dot-3" onclick="irAPasoFirma(3)" title="Rehacer paso 4">4</div>
       </div>
-      <p style="font-size:10px;color:#94a3b8;text-align:center;margin-top:-12px;margin-bottom:10px;">💡 Toca un número para regresar a ese paso</p>
+      <p style="font-size:10px;color:#94a3b8;text-align:center;margin-top:-10px;margin-bottom:8px;">💡 Toca un número para rehacer ese paso</p>
 
-      <!-- Instrucción -->
+      <!-- ── HINT DE ROTACIÓN (solo portrait en celular) ── -->
+      <div class="firma-hint-rotate">
+        📱↔️ <span>Gira el celular en horizontal para tener más espacio para firmar</span>
+      </div>
+
+      <!-- ── Instrucción ── -->
       <p class="firma-instructions" id="firma-paso-instruccion">El docente firma aquí para registrar la anotación.</p>
 
-      <!-- Vista previa de firma ya capturada en este paso -->
+      <!-- ── Vista previa de firma ya capturada ── -->
       <div id="firma-preview-existente" style="display:none; text-align:center; margin-bottom:6px; padding:6px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px;">
         <div style="font-size:10px;color:#166534;font-weight:700;margin-bottom:4px;">✅ Firma capturada — dibuja de nuevo para reemplazarla</div>
         <img id="firma-preview-img" src="" style="max-height:40px;max-width:100%;object-fit:contain;border:1px dashed #86efac;border-radius:4px;background:white;padding:2px;" alt="Firma previa">
       </div>
 
-      <!-- Canvas de firma táctil -->
-      <div class="canvas-firma-wrapper">
-        <canvas id="canvas-firma" style="height:160px;"></canvas>
+      <!-- ── ÁREA DE CANVAS (columna izquierda en landscape) ── -->
+      <div class="firmas-card-canvas-ls" style="flex:1;">
+        <div class="canvas-firma-wrapper" style="width:100%;">
+          <canvas id="canvas-firma"></canvas>
+        </div>
       </div>
 
-      <!-- Botones -->
-      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;flex-wrap:wrap;">
-        <button type="button" onclick="retrocederPasoFirma()" class="btn btn-outline" style="flex:1;min-width:90px;" id="btn-retroceder-firma">
+      <!-- ── BOTONES (columna derecha en landscape, fila en portrait) ── -->
+      <div class="firmas-card-btns-ls" style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;flex-wrap:wrap;">
+        <button type="button" onclick="retrocederPasoFirma()" class="btn btn-outline" style="flex:1;min-width:80px;" id="btn-retroceder-firma">
           <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Anterior
         </button>
-        <button type="button" onclick="limpiarFirmaCanvas()" class="btn btn-outline" style="flex:1;min-width:90px;color:#dc2626;border-color:#fca5a5;">
-          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Borrar trazo
+        <button type="button" onclick="limpiarFirmaCanvas()" class="btn btn-outline" style="flex:1;min-width:80px;color:#dc2626;border-color:#fca5a5;">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Borrar
         </button>
-        <button type="button" onclick="omitirFirmaActual()" class="btn btn-outline" style="flex:1;min-width:90px;color:#64748b;">
+        <button type="button" onclick="omitirFirmaActual()" class="btn btn-outline" style="flex:1;min-width:80px;color:#64748b;">
           <i data-lucide="skip-forward" style="width:14px;height:14px;"></i> Omitir
         </button>
-        <button type="button" onclick="confirmarFirmaActual()" class="btn btn-success" style="flex:1.5;min-width:120px;">
-          <i data-lucide="check" style="width:14px;height:14px;"></i> Confirmar Firma
+        <button type="button" onclick="confirmarFirmaActual()" class="btn btn-success" style="flex:1.5;min-width:110px;">
+          <i data-lucide="check" style="width:14px;height:14px;"></i> ✔ Confirmar
         </button>
       </div>
 
-      <p style="font-size:10px;color:#94a3b8;text-align:center;margin-top:10px;">✋ Firma con el dedo en pantalla táctil o con el mouse</p>
+      <p class="firma-footer-hint" style="font-size:10px;color:#94a3b8;text-align:center;margin-top:10px;">✋ Firma con el dedo en pantalla táctil o con el mouse</p>
     </div>
   </div>
 
